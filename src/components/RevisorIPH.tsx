@@ -1,0 +1,478 @@
+import { useMemo, useRef, useState, useEffect } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import {
+  HORAS_VACIAS,
+  PASOS_CRONOLOGICOS,
+  PREGUNTAS_ESENCIALES,
+  revisionLocal,
+  type Hallazgo,
+  type Horas,
+} from "@/lib/validacion";
+import { revisarNarrativa } from "@/lib/revision.functions";
+import logoDspm from "@/assets/logo-dspm.png";
+import placa from "@/assets/placa-policial.png";
+import fondoChat from "@/assets/fondo-chat.jpg";
+
+type Paso = "cronologia" | "narrativa" | "revision" | "envio";
+
+interface Mensaje {
+  id: string;
+  autor: "asesor" | "oficial";
+  texto: string;
+}
+
+const PASOS_MENU: { id: Paso; num: string; titulo: string; ayuda: string }[] = [
+  { id: "cronologia", num: "1", titulo: "Cronología", ayuda: "Horas de la intervención" },
+  { id: "narrativa", num: "2", titulo: "Narrativa", ayuda: "Redacción de los hechos" },
+  { id: "revision", num: "3", titulo: "Revisión", ayuda: "Hallazgos y consejos" },
+  { id: "envio", num: "4", titulo: "Envío", ayuda: "Comandancia Sur o Norte" },
+];
+
+const COLOR_SEVERIDAD: Record<string, string> = {
+  critico: "border-destructive/60 bg-destructive/10 text-destructive-foreground",
+  advertencia: "border-warning/50 bg-warning/10 text-foreground",
+  ok: "border-success/50 bg-success/10 text-foreground",
+};
+
+function TextoAsesor({ texto }: { texto: string }) {
+  const lineas = texto.split("\n");
+  return (
+    <div className="space-y-1">
+      {lineas.map((linea, i) => {
+        const limpia = linea.replace(/\*\*/g, "");
+        if (/^#{2,4}\s/.test(linea)) {
+          return (
+            <p key={i} className="texto-institucional pt-2 text-xs font-bold text-accent">
+              {limpia.replace(/^#{2,4}\s/, "")}
+            </p>
+          );
+        }
+        if (/^[-*]\s/.test(limpia)) {
+          return (
+            <p key={i} className="pl-3 -indent-3">
+              • {limpia.replace(/^[-*]\s/, "")}
+            </p>
+          );
+        }
+        if (!limpia.trim()) return <div key={i} className="h-1" />;
+        return <p key={i}>{limpia}</p>;
+      })}
+    </div>
+  );
+}
+
+function BloqueHallazgo({ h }: { h: Hallazgo }) {
+  return (
+    <div className={`rounded-xl border p-3 ${COLOR_SEVERIDAD[h.severidad]}`}>
+      <div className="flex items-center gap-2">
+        <span className="rounded-md bg-background/40 px-2 py-0.5 text-[10px] tracking-wide uppercase">
+          {h.categoria}
+        </span>
+        <span className="text-sm font-semibold">{h.titulo}</span>
+      </div>
+      <p className="mt-1 text-sm text-muted-foreground">{h.detalle}</p>
+      {h.sugerencia && (
+        <p className="mt-1 text-sm">
+          <span className="font-semibold text-accent">Recomendación: </span>
+          {h.sugerencia}
+        </p>
+      )}
+    </div>
+  );
+}
+
+export default function RevisorIPH() {
+  const [paso, setPaso] = useState<Paso>("cronologia");
+  const [horas, setHoras] = useState<Horas>(HORAS_VACIAS);
+  const [narrativa, setNarrativa] = useState("");
+  const [oficial, setOficial] = useState("");
+  const [folio, setFolio] = useState("");
+  const [pregunta, setPregunta] = useState("");
+  const [cargando, setCargando] = useState(false);
+  const [enviando, setEnviando] = useState<null | "sur" | "norte">(null);
+  const [mensajes, setMensajes] = useState<Mensaje[]>([
+    {
+      id: "bienvenida",
+      autor: "asesor",
+      texto:
+        "Buen día, oficial. Soy su asesor de revisión de narrativas IPH. Capture las horas de la intervención y su narrativa; después le indicaré los hallazgos cronológicos, las preguntas esenciales faltantes y las correcciones de estilo policial.",
+    },
+  ]);
+  const finChat = useRef<HTMLDivElement>(null);
+  const revisar = useServerFn(revisarNarrativa);
+
+  const hallazgos = useMemo(() => revisionLocal(horas, narrativa), [horas, narrativa]);
+  const criticos = hallazgos.filter((h) => h.severidad === "critico");
+  const ultimaRevisionIA = [...mensajes].reverse().find((m) => m.autor === "asesor" && m.id.startsWith("ia-"));
+
+  useEffect(() => {
+    finChat.current?.scrollIntoView({ behavior: "smooth" });
+  }, [mensajes]);
+
+  function agregar(autor: Mensaje["autor"], texto: string, id?: string) {
+    setMensajes((prev) => [...prev, { id: id ?? `${Date.now()}-${prev.length}`, autor, texto }]);
+  }
+
+  async function pedirRevision() {
+    if (!narrativa.trim()) {
+      agregar("asesor", "Primero capture la narrativa en el paso 2 para poder revisarla.");
+      setPaso("narrativa");
+      return;
+    }
+    setPaso("revision");
+    setCargando(true);
+    if (pregunta.trim()) agregar("oficial", pregunta.trim());
+    try {
+      const resultado = await revisar({
+        data: {
+          narrativa,
+          horas,
+          hallazgosLocales: hallazgos.map((h) => `${h.categoria}: ${h.titulo} — ${h.detalle}`),
+          pregunta: pregunta.trim() || undefined,
+        },
+      });
+      agregar("asesor", resultado.texto, `ia-${Date.now()}`);
+      setPregunta("");
+    } catch (error) {
+      agregar("asesor", `No fue posible completar la revisión: ${(error as Error).message}`);
+    } finally {
+      setCargando(false);
+    }
+  }
+
+  async function enviar(comandancia: "sur" | "norte") {
+    setEnviando(comandancia);
+    try {
+      const res = await fetch("/api/enviar-narrativa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          comandancia,
+          oficial,
+          folio,
+          narrativa,
+          horas,
+          resumenRevision: ultimaRevisionIA?.texto ?? "",
+        }),
+      });
+      const datos = (await res.json()) as { ok: boolean; mensaje?: string; error?: string };
+      if (datos.ok) {
+        agregar(
+          "asesor",
+          `Narrativa enviada correctamente a Comandancia ${comandancia === "sur" ? "Sur" : "Norte"}.`,
+        );
+      } else if (datos.error === "correo_no_configurado") {
+        const asunto = encodeURIComponent(
+          `[COMANDANCIA ${comandancia.toUpperCase()}] Narrativa IPH ${folio}`.trim(),
+        );
+        const cuerpo = encodeURIComponent(
+          `Oficial: ${oficial}\nFolio: ${folio}\n\nCronología:\n${PASOS_CRONOLOGICOS.map(
+            (p) => `${p.label}: ${horas[p.key] || "—"}`,
+          ).join("\n")}\n\nNarrativa:\n${narrativa}\n\nRevisión:\n${ultimaRevisionIA?.texto ?? ""}`,
+        );
+        window.location.href = `mailto:dspmoficialesacuerdo@gmail.com?subject=${asunto}&body=${cuerpo}`;
+        agregar(
+          "asesor",
+          "El envío automático aún no está habilitado en el servidor; abrí su aplicación de correo con la narrativa lista para enviar.",
+        );
+      } else {
+        agregar("asesor", datos.mensaje ?? "No se pudo enviar el correo.");
+      }
+    } catch (error) {
+      agregar("asesor", `Error de envío: ${(error as Error).message}`);
+    } finally {
+      setEnviando(null);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <header
+        className="border-b border-border/70 shadow-[var(--shadow-placa)]"
+        style={{ backgroundImage: "var(--gradient-marino)" }}
+      >
+        <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-5">
+          <img src={logoDspm} alt="Logo DSPM Chihuahua" width={64} height={64} className="h-16 w-16" />
+          <div className="flex-1">
+            <h1 className="texto-institucional text-xl leading-tight font-bold sm:text-2xl">
+              Revisor de Narrativas IPH
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Dirección de Seguridad Pública Municipal · Chihuahua
+            </p>
+          </div>
+          <img
+            src={placa}
+            alt="Placa de la Policía Municipal"
+            width={56}
+            height={56}
+            loading="lazy"
+            className="hidden h-14 w-14 sm:block"
+          />
+        </div>
+      </header>
+
+      <nav className="border-b border-border/60 bg-card/60">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-2 px-4 py-3 sm:grid-cols-4">
+          {PASOS_MENU.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => setPaso(p.id)}
+              className={`rounded-xl border px-3 py-2 text-left transition-colors ${
+                paso === p.id
+                  ? "border-accent bg-accent/15"
+                  : "border-border bg-secondary/40 hover:bg-secondary/70"
+              }`}
+            >
+              <span className="texto-institucional text-xs text-accent">Paso {p.num}</span>
+              <span className="block text-sm font-semibold">{p.titulo}</span>
+              <span className="block text-xs text-muted-foreground">{p.ayuda}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      <main className="mx-auto grid max-w-6xl gap-5 px-4 py-6 lg:grid-cols-[1.05fr_1fr]">
+        <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-placa)]">
+          {paso === "cronologia" && (
+            <div className="space-y-4">
+              <div>
+                <h2 className="texto-institucional text-lg font-bold">Secuencia cronológica</h2>
+                <p className="text-sm text-muted-foreground">
+                  Orden unidireccional obligatorio, formato de 24 horas (00:00 a 23:59).
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="text-sm">
+                  <span className="mb-1 block text-muted-foreground">Oficial primer respondiente</span>
+                  <input
+                    value={oficial}
+                    onChange={(e) => setOficial(e.target.value)}
+                    maxLength={120}
+                    placeholder="Nombre y número de placa"
+                    className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </label>
+                <label className="text-sm">
+                  <span className="mb-1 block text-muted-foreground">Folio / número de IPH</span>
+                  <input
+                    value={folio}
+                    onChange={(e) => setFolio(e.target.value)}
+                    maxLength={60}
+                    placeholder="Ej. IPH-2026-00123"
+                    className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </label>
+                {PASOS_CRONOLOGICOS.map((p, i) => (
+                  <label key={p.key} className="text-sm">
+                    <span className="mb-1 block text-muted-foreground">
+                      {i + 1}. {p.label}
+                    </span>
+                    <input
+                      type="time"
+                      value={horas[p.key]}
+                      onChange={(e) => setHoras({ ...horas, [p.key]: e.target.value })}
+                      className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  </label>
+                ))}
+              </div>
+              <button
+                onClick={() => setPaso("narrativa")}
+                className="w-full rounded-xl px-4 py-3 font-semibold text-accent-foreground"
+                style={{ backgroundImage: "var(--gradient-dorado)" }}
+              >
+                Continuar a la narrativa
+              </button>
+            </div>
+          )}
+
+          {paso === "narrativa" && (
+            <div className="space-y-4">
+              <div>
+                <h2 className="texto-institucional text-lg font-bold">Narrativa de los hechos</h2>
+                <p className="text-sm text-muted-foreground">
+                  Responda las preguntas esenciales con hechos observables, sin juicios de valor.
+                </p>
+              </div>
+              <ul className="grid gap-2 sm:grid-cols-2">
+                {PREGUNTAS_ESENCIALES.map((p) => (
+                  <li key={p.id} className="rounded-lg border border-border bg-secondary/30 p-2 text-xs">
+                    <span className="font-semibold text-accent">{p.titulo}</span>
+                    <span className="block text-muted-foreground">{p.ayuda}</span>
+                  </li>
+                ))}
+              </ul>
+              <textarea
+                value={narrativa}
+                onChange={(e) => setNarrativa(e.target.value)}
+                rows={14}
+                maxLength={20000}
+                placeholder="Siendo las 21:40 horas del día... el suscrito, en calidad de primer respondiente, tuvo conocimiento..."
+                className="w-full rounded-xl border border-input bg-secondary/30 p-3 text-sm leading-relaxed outline-none focus:ring-2 focus:ring-ring"
+              />
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>{narrativa.trim().length} caracteres</span>
+                <span>
+                  {criticos.length} hallazgo(s) crítico(s) · {hallazgos.length} en total
+                </span>
+              </div>
+              <button
+                onClick={pedirRevision}
+                disabled={cargando}
+                className="w-full rounded-xl px-4 py-3 font-semibold text-accent-foreground disabled:opacity-60"
+                style={{ backgroundImage: "var(--gradient-dorado)" }}
+              >
+                {cargando ? "Revisando..." : "Revisar narrativa"}
+              </button>
+            </div>
+          )}
+
+          {paso === "revision" && (
+            <div className="space-y-3">
+              <div>
+                <h2 className="texto-institucional text-lg font-bold">Hallazgos automáticos</h2>
+                <p className="text-sm text-muted-foreground">
+                  Validación cronológica, preguntas esenciales y estilo policial.
+                </p>
+              </div>
+              {hallazgos.length === 0 ? (
+                <div className="rounded-xl border border-success/50 bg-success/10 p-3 text-sm">
+                  Sin incidencias detectadas por el validador automático.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {hallazgos.map((h) => (
+                    <BloqueHallazgo key={h.id} h={h} />
+                  ))}
+                </div>
+              )}
+              <button
+                onClick={pedirRevision}
+                disabled={cargando}
+                className="w-full rounded-xl border border-accent/60 bg-accent/10 px-4 py-3 font-semibold disabled:opacity-60"
+              >
+                {cargando ? "Consultando al asesor..." : "Volver a revisar con el asesor"}
+              </button>
+              <button
+                onClick={() => setPaso("envio")}
+                className="w-full rounded-xl border border-border bg-secondary/50 px-4 py-3 font-semibold"
+              >
+                Continuar al envío
+              </button>
+            </div>
+          )}
+
+          {paso === "envio" && (
+            <div className="space-y-4">
+              <div>
+                <h2 className="texto-institucional text-lg font-bold">Envío de la narrativa</h2>
+                <p className="text-sm text-muted-foreground">
+                  Seleccione la comandancia destino. Se adjunta la cronología, la narrativa y el resultado de
+                  la revisión.
+                </p>
+              </div>
+              {criticos.length > 0 && (
+                <div className="rounded-xl border border-destructive/60 bg-destructive/10 p-3 text-sm">
+                  Existen {criticos.length} hallazgo(s) crítico(s) sin corregir. Se recomienda subsanarlos
+                  antes de enviar.
+                </div>
+              )}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  onClick={() => enviar("sur")}
+                  disabled={!narrativa.trim() || enviando !== null}
+                  className="rounded-2xl border border-accent/50 px-4 py-6 font-bold text-primary-foreground disabled:opacity-50"
+                  style={{ backgroundImage: "var(--gradient-marino)" }}
+                >
+                  <span className="texto-institucional block text-base">Comandancia Sur</span>
+                  <span className="block text-xs font-normal text-muted-foreground">
+                    {enviando === "sur" ? "Enviando..." : "Enviar narrativa"}
+                  </span>
+                </button>
+                <button
+                  onClick={() => enviar("norte")}
+                  disabled={!narrativa.trim() || enviando !== null}
+                  className="rounded-2xl border border-accent/50 px-4 py-6 font-bold text-primary-foreground disabled:opacity-50"
+                  style={{ backgroundImage: "var(--gradient-marino)" }}
+                >
+                  <span className="texto-institucional block text-base">Comandancia Norte</span>
+                  <span className="block text-xs font-normal text-muted-foreground">
+                    {enviando === "norte" ? "Enviando..." : "Enviar narrativa"}
+                  </span>
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Destinatario configurado: dspmoficialesacuerdo@gmail.com
+              </p>
+            </div>
+          )}
+        </section>
+
+        <section
+          className="flex max-h-[70vh] min-h-[480px] flex-col overflow-hidden rounded-2xl border border-border shadow-[var(--shadow-placa)]"
+          style={{
+            backgroundImage: `linear-gradient(oklch(0.16 0.05 258 / 0.86), oklch(0.16 0.05 258 / 0.94)), url(${fondoChat})`,
+            backgroundSize: "cover",
+          }}
+        >
+          <div className="flex items-center gap-3 border-b border-border/60 bg-card/70 px-4 py-3">
+            <img src={placa} alt="" width={36} height={36} loading="lazy" className="h-9 w-9" />
+            <div>
+              <p className="texto-institucional text-sm font-bold">Asesor IPH</p>
+              <p className="text-xs text-muted-foreground">
+                {cargando ? "Analizando la narrativa..." : "En línea"}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex-1 space-y-3 overflow-y-auto p-4">
+            {mensajes.map((m) => (
+              <div
+                key={m.id}
+                className={`max-w-[92%] rounded-2xl border px-3 py-2 text-sm whitespace-pre-wrap ${
+                  m.autor === "asesor"
+                    ? "border-border bg-card/85"
+                    : "ml-auto border-accent/50 bg-accent/15"
+                }`}
+              >
+                {m.autor === "asesor" ? <TextoAsesor texto={m.texto} /> : m.texto}
+              </div>
+            ))}
+            {cargando && (
+              <div className="max-w-[60%] rounded-2xl border border-border bg-card/85 px-3 py-2 text-sm text-muted-foreground">
+                Revisando cronología, preguntas esenciales y estilo...
+              </div>
+            )}
+            <div ref={finChat} />
+          </div>
+
+          <div className="flex gap-2 border-t border-border/60 bg-card/70 p-3">
+            <input
+              value={pregunta}
+              onChange={(e) => setPregunta(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") pedirRevision();
+              }}
+              maxLength={500}
+              placeholder="Pregunte al asesor: ¿cómo redacto el aseguramiento?"
+              className="flex-1 rounded-xl border border-input bg-secondary/40 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+            <button
+              onClick={pedirRevision}
+              disabled={cargando}
+              className="rounded-xl px-4 py-2 text-sm font-semibold text-accent-foreground disabled:opacity-60"
+              style={{ backgroundImage: "var(--gradient-dorado)" }}
+            >
+              Enviar
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-border/60 py-6 text-center text-xs text-muted-foreground">
+        Uso interno · Dirección de Seguridad Pública Municipal de Chihuahua
+      </footer>
+    </div>
+  );
+}
