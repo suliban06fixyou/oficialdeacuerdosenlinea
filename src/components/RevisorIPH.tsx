@@ -10,7 +10,7 @@ import {
 } from "@/lib/validacion";
 import { revisarNarrativa } from "@/lib/revision.functions";
 import logoDspm from "@/assets/logo-dspm-oficial.png.asset.json";
-import placa from "@/assets/placa-policial.png";
+import oficialAcuerdos from "@/assets/oficial-acuerdos.jpeg.asset.json";
 import fondoChat from "@/assets/fondo-chat.jpg";
 
 type Paso = "cronologia" | "narrativa" | "revision" | "envio";
@@ -208,12 +208,12 @@ export default function RevisorIPH() {
             </p>
           </div>
           <img
-            src={placa}
-            alt="Placa de la Policía Municipal"
+            src={oficialAcuerdos.url}
+            alt="Oficial de Acuerdos de la Policía Municipal de Chihuahua"
             width={56}
             height={56}
             loading="lazy"
-            className="hidden h-14 w-14 sm:block"
+            className="hidden h-14 w-14 rounded-full border border-accent/50 object-cover object-top sm:block"
           />
         </div>
       </header>
@@ -421,7 +421,14 @@ export default function RevisorIPH() {
           }}
         >
           <div className="flex items-center gap-3 border-b border-border/60 bg-card/70 px-4 py-3">
-            <img src={placa} alt="" width={36} height={36} loading="lazy" className="h-9 w-9" />
+            <img
+              src={oficialAcuerdos.url}
+              alt=""
+              width={36}
+              height={36}
+              loading="lazy"
+              className="h-9 w-9 rounded-full object-cover object-top"
+            />
             <div>
               <p className="texto-institucional text-sm font-bold">Asesor IPH</p>
               <p className="text-xs text-muted-foreground">
