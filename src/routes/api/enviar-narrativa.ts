@@ -44,13 +44,21 @@ export const Route = createFileRoute("/api/enviar-narrativa")({
         }
 
         const etiqueta = comandancia === "sur" ? "COMANDANCIA SUR" : "COMANDANCIA NORTE";
+        const color = comandancia === "sur" ? "#facc15" : "#22c55e";
+        const nombreOficial = oficial || "Oficial no especificado";
         const filasHoras = Object.entries(horas)
           .map(([k, v]) => `<tr><td style="padding:4px 10px;">${escapar(k)}</td><td style="padding:4px 10px;"><b>${escapar(v || "—")}</b></td></tr>`)
           .join("");
 
         const html = `<div style="font-family:Arial,Helvetica,sans-serif;color:#0b1a3a;">
-  <h2 style="color:#0b1a3a;">Narrativa IPH — ${escapar(etiqueta)}</h2>
-  <p><b>Oficial:</b> ${escapar(oficial || "No especificado")}<br/><b>Folio / IPH:</b> ${escapar(folio || "No especificado")}</p>
+  <h2 style="color:#0b1a3a;margin-bottom:6px;">
+    <span style="background-color:${color};padding:4px 10px;border-bottom:5px solid ${color};font-weight:bold;">${escapar(etiqueta)}</span>
+  </h2>
+  <p style="font-size:18px;margin:10px 0;">
+    <b>Oficial que redacta:</b>
+    <span style="border-bottom:5px solid ${color};background-color:${color}33;padding:2px 6px;font-weight:bold;">${escapar(nombreOficial)}</span>
+  </p>
+  <p><b>Folio / IPH:</b> ${escapar(folio || "No especificado")}</p>
   <h3>Cronología</h3>
   <table style="border-collapse:collapse;">${filasHoras}</table>
   <h3>Narrativa</h3>
@@ -69,7 +77,7 @@ export const Route = createFileRoute("/api/enviar-narrativa")({
           body: JSON.stringify({
             from: remitente,
             to: [DESTINATARIO],
-            subject: `[${etiqueta}] Narrativa IPH ${folio || ""}`.trim(),
+            subject: `[${etiqueta}] Narrativa IPH ${folio || ""} — ${nombreOficial}`.trim(),
             html,
           }),
         });

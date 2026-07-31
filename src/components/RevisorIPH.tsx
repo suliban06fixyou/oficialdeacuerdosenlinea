@@ -382,22 +382,20 @@ export default function RevisorIPH() {
                 <button
                   onClick={() => enviar("sur")}
                   disabled={!narrativa.trim() || enviando !== null}
-                  className="rounded-2xl border border-accent/50 px-4 py-6 font-bold text-primary-foreground disabled:opacity-50"
-                  style={{ backgroundImage: "var(--gradient-marino)" }}
+                  className="rounded-2xl border-2 border-yellow-300 bg-yellow-400 px-4 py-6 font-bold text-yellow-950 transition-opacity hover:opacity-90 disabled:opacity-50"
                 >
-                  <span className="texto-institucional block text-base">Comandancia Sur</span>
-                  <span className="block text-xs font-normal text-muted-foreground">
+                  <span className="texto-institucional block text-base">Enviar Comandancia Sur</span>
+                  <span className="block text-xs font-normal text-yellow-900">
                     {enviando === "sur" ? "Enviando..." : "Enviar narrativa"}
                   </span>
                 </button>
                 <button
                   onClick={() => enviar("norte")}
                   disabled={!narrativa.trim() || enviando !== null}
-                  className="rounded-2xl border border-accent/50 px-4 py-6 font-bold text-primary-foreground disabled:opacity-50"
-                  style={{ backgroundImage: "var(--gradient-marino)" }}
+                  className="rounded-2xl border-2 border-green-400 bg-green-500 px-4 py-6 font-bold text-green-50 transition-opacity hover:opacity-90 disabled:opacity-50"
                 >
-                  <span className="texto-institucional block text-base">Comandancia Norte</span>
-                  <span className="block text-xs font-normal text-muted-foreground">
+                  <span className="texto-institucional block text-base">Enviar Comandancia Norte</span>
+                  <span className="block text-xs font-normal text-green-50/90">
                     {enviando === "norte" ? "Enviando..." : "Enviar narrativa"}
                   </span>
                 </button>
