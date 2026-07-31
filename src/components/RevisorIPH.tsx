@@ -192,7 +192,13 @@ export default function RevisorIPH() {
         style={{ backgroundImage: "var(--gradient-marino)" }}
       >
         <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-5">
-          <img src={logoDspm} alt="Logo DSPM Chihuahua" width={64} height={64} className="h-16 w-16" />
+          <img
+            src={logoDspm.url}
+            alt="Gobierno Municipal de Chihuahua · Dirección de Seguridad Pública Municipal"
+            width={1320}
+            height={460}
+            className="h-12 w-auto rounded-lg bg-white p-1.5 sm:h-14"
+          />
           <div className="flex-1">
             <h1 className="texto-institucional text-xl leading-tight font-bold sm:text-2xl">
               Revisor de Narrativas IPH
