@@ -10,7 +10,6 @@ import {
 } from "@/lib/validacion";
 import { revisarNarrativa } from "@/lib/revision.functions";
 import logoDspm from "@/assets/logo-dspm-oficial.png.asset.json";
-import placa from "@/assets/placa-policial.png";
 import oficialAcuerdos from "@/assets/oficial-acuerdos.jpeg.asset.json";
 import fondoChat from "@/assets/fondo-chat.jpg";
 
