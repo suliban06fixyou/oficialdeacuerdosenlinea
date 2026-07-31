@@ -163,7 +163,7 @@ export default function RevisorIPH() {
         );
       } else if (datos.error === "correo_no_configurado") {
         const asunto = encodeURIComponent(
-          `[COMANDANCIA ${comandancia.toUpperCase()}] Narrativa IPH ${folio}`.trim(),
+          `[COMANDANCIA ${comandancia.toUpperCase()}] Narrativa IPH ${folio} — ${oficial || "Oficial no especificado"}`.trim(),
         );
         const cuerpo = encodeURIComponent(
           `Oficial: ${oficial}\nFolio: ${folio}\n\nCronología:\n${PASOS_CRONOLOGICOS.map(
