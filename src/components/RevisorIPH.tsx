@@ -9,7 +9,7 @@ import {
   type Horas,
 } from "@/lib/validacion";
 import { revisarNarrativa } from "@/lib/revision.functions";
-import logoDspm from "@/assets/logo-dspm.png";
+import logoDspm from "@/assets/logo-dspm-oficial.png.asset.json";
 import placa from "@/assets/placa-policial.png";
 import fondoChat from "@/assets/fondo-chat.jpg";
 
