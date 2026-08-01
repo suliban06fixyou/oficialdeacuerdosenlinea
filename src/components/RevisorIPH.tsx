@@ -90,6 +90,11 @@ export default function RevisorIPH() {
   const [pregunta, setPregunta] = useState("");
   const [cargando, setCargando] = useState(false);
   const [enviando, setEnviando] = useState<null | "sur" | "norte">(null);
+  const [opcionesEnvio, setOpcionesEnvio] = useState<null | {
+    comandancia: "sur" | "norte";
+    titulo: string;
+    mensaje: string;
+  }>(null);
   const [mensajes, setMensajes] = useState<Mensaje[]>([
     {
       id: "bienvenida",
@@ -137,6 +142,51 @@ export default function RevisorIPH() {
       agregar("asesor", `No fue posible completar la revisión: ${(error as Error).message}`);
     } finally {
       setCargando(false);
+    }
+  }
+
+  function narrativaFinal() {
+    const texto = ultimaRevisionIA?.texto ?? "";
+    const marca = texto.indexOf("### Narrativa corregida sugerida");
+    if (marca >= 0) {
+      const sugerida = texto.slice(marca + "### Narrativa corregida sugerida".length).trim();
+      if (sugerida) return sugerida;
+    }
+    return narrativa.trim();
+  }
+
+  function subrayar(texto: string) {
+    return texto
+      .split("")
+      .map((c) => (c === " " ? c : `${c}\u0332`))
+      .join("");
+  }
+
+  async function compartir(comandancia: "sur" | "norte") {
+    const cuerpoNarrativa = narrativaFinal();
+    if (!cuerpoNarrativa) {
+      agregar("asesor", "Primero capture y revise la narrativa para poder compartirla.");
+      return;
+    }
+    const etiqueta = comandancia === "sur" ? "COMANDANCIA SUR" : "COMANDANCIA NORTE";
+    const nombre = oficial.trim() || "Oficial no especificado";
+    const encabezado = `${subrayar(nombre)}\n${subrayar(etiqueta)}`;
+    const cronologia = PASOS_CRONOLOGICOS.map((p) => `${p.label}: ${horas[p.key] || "—"}`).join("\n");
+    const mensaje = `${encabezado}\n\nFolio / IPH: ${folio || "No especificado"}\n\nCronología:\n${cronologia}\n\nNarrativa:\n${cuerpoNarrativa}`;
+    const titulo = `[${etiqueta}] Narrativa IPH — ${nombre}`;
+
+    setEnviando(comandancia);
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share({ title: titulo, text: mensaje });
+        agregar("asesor", `Se abrió el menú de envío para ${etiqueta.toLowerCase()}.`);
+      } else {
+        setOpcionesEnvio({ comandancia, titulo, mensaje });
+      }
+    } catch {
+      setOpcionesEnvio({ comandancia, titulo, mensaje });
+    } finally {
+      setEnviando(null);
     }
   }
 
@@ -470,16 +520,79 @@ export default function RevisorIPH() {
               className="flex-1 rounded-xl border border-input bg-secondary/40 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
             />
             <button
-              onClick={pedirRevision}
-              disabled={cargando}
-              className="rounded-xl px-4 py-2 text-sm font-semibold text-accent-foreground disabled:opacity-60"
-              style={{ backgroundImage: "var(--gradient-dorado)" }}
+              onClick={() => compartir("sur")}
+              disabled={enviando !== null}
+              className="rounded-xl border-2 border-yellow-300 bg-yellow-400 px-3 py-2 text-xs font-bold text-yellow-950 underline decoration-2 disabled:opacity-60"
             >
-              Enviar
+              Enviar a Comandancia Sur
+            </button>
+            <button
+              onClick={() => compartir("norte")}
+              disabled={enviando !== null}
+              className="rounded-xl border-2 border-green-400 bg-green-500 px-3 py-2 text-xs font-bold text-green-50 underline decoration-2 disabled:opacity-60"
+            >
+              Enviar a Comandancia Norte
             </button>
           </div>
         </section>
       </main>
+
+      {opcionesEnvio && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
+          onClick={() => setOpcionesEnvio(null)}
+        >
+          <div
+            className="w-full max-w-md space-y-3 rounded-2xl border border-border bg-card p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="texto-institucional text-base font-bold">
+              Enviar a {opcionesEnvio.comandancia === "sur" ? "Comandancia Sur" : "Comandancia Norte"}
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Elija la aplicación para compartir la narrativa revisada.
+            </p>
+            <div className="grid gap-2">
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(opcionesEnvio.mensaje)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-xl border-2 border-green-400 bg-green-500 px-4 py-3 text-center text-sm font-bold text-green-50"
+              >
+                WhatsApp
+              </a>
+              <a
+                href={`mailto:dspmoficialesacuerdo@gmail.com?subject=${encodeURIComponent(opcionesEnvio.titulo)}&body=${encodeURIComponent(opcionesEnvio.mensaje)}`}
+                className="rounded-xl border border-border bg-secondary px-4 py-3 text-center text-sm font-semibold text-secondary-foreground"
+              >
+                Correo electrónico
+              </a>
+              <a
+                href={`sms:?&body=${encodeURIComponent(opcionesEnvio.mensaje)}`}
+                className="rounded-xl border border-border bg-secondary px-4 py-3 text-center text-sm font-semibold text-secondary-foreground"
+              >
+                Mensaje SMS
+              </a>
+              <button
+                onClick={() => {
+                  void navigator.clipboard?.writeText(opcionesEnvio.mensaje);
+                  agregar("asesor", "Narrativa copiada al portapapeles.");
+                  setOpcionesEnvio(null);
+                }}
+                className="rounded-xl border border-border px-4 py-3 text-sm font-semibold"
+              >
+                Copiar narrativa
+              </button>
+              <button
+                onClick={() => setOpcionesEnvio(null)}
+                className="px-4 py-2 text-xs text-muted-foreground"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <footer className="border-t border-border/60 py-6 text-center text-xs text-muted-foreground">
         Uso interno · Dirección de Seguridad Pública Municipal de Chihuahua
