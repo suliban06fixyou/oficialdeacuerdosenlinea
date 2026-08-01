@@ -12,11 +12,9 @@ export interface Hallazgo {
 export const PASOS_CRONOLOGICOS = [
   { key: "conocimiento", label: "Conocimiento del hecho" },
   { key: "llegada", label: "Llegada al lugar" },
-  { key: "entrevista", label: "Entrevista" },
   { key: "derechos", label: "Lectura de derechos" },
   { key: "detencion", label: "Detención" },
   { key: "traslado", label: "Traslado a comandancia" },
-  { key: "remision", label: "Remisión" },
 ] as const;
 
 export type ClaveHora = (typeof PASOS_CRONOLOGICOS)[number]["key"];
@@ -25,12 +23,15 @@ export type Horas = Record<ClaveHora, string>;
 export const HORAS_VACIAS: Horas = {
   conocimiento: "",
   llegada: "",
-  entrevista: "",
   derechos: "",
   detencion: "",
   traslado: "",
-  remision: "",
 };
+
+export interface DatosHecho {
+  faltaAdministrativa: string;
+  delito: string;
+}
 
 const FORMATO_24H = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
