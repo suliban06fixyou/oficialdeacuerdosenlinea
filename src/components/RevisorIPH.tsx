@@ -162,33 +162,6 @@ export default function RevisorIPH() {
       .join("");
   }
 
-  async function compartir(comandancia: "sur" | "norte") {
-    const cuerpoNarrativa = narrativaFinal();
-    if (!cuerpoNarrativa) {
-      agregar("asesor", "Primero capture y revise la narrativa para poder compartirla.");
-      return;
-    }
-    const etiqueta = comandancia === "sur" ? "COMANDANCIA SUR" : "COMANDANCIA NORTE";
-    const nombre = oficial.trim() || "Oficial no especificado";
-    const encabezado = `${subrayar(nombre)}\n${subrayar(etiqueta)}`;
-    const cronologia = PASOS_CRONOLOGICOS.map((p) => `${p.label}: ${horas[p.key] || "—"}`).join("\n");
-    const mensaje = `${encabezado}\n\nFolio / IPH: ${folio || "No especificado"}\n\nCronología:\n${cronologia}\n\nNarrativa:\n${cuerpoNarrativa}`;
-    const titulo = `[${etiqueta}] Narrativa IPH — ${nombre}`;
-
-    setEnviando(comandancia);
-    try {
-      if (typeof navigator !== "undefined" && navigator.share) {
-        await navigator.share({ title: titulo, text: mensaje });
-        agregar("asesor", `Se abrió el menú de envío para ${etiqueta.toLowerCase()}.`);
-      } else {
-        setOpcionesEnvio({ comandancia, titulo, mensaje });
-      }
-    } catch {
-      setOpcionesEnvio({ comandancia, titulo, mensaje });
-    } finally {
-      setEnviando(null);
-    }
-  }
 
 
   return (
