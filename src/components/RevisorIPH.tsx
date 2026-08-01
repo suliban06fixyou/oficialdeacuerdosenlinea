@@ -328,8 +328,7 @@ export default function RevisorIPH() {
               <div>
                 <h2 className="texto-institucional text-lg font-bold">Envío de la narrativa</h2>
                 <p className="text-sm text-muted-foreground">
-                  Seleccione la comandancia destino. Se adjunta la cronología, la narrativa y el resultado de
-                  la revisión.
+                  La narrativa revisada queda lista para su envío conforme a los protocolos institucionales.
                 </p>
               </div>
               {criticos.length > 0 && (
