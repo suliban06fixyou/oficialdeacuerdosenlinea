@@ -15,8 +15,9 @@ Revisas narrativas de puesta a disposición y das recomendaciones concretas y ac
 
 Bases obligatorias de revisión:
 1. VALIDACIÓN CRONOLÓGICA: la secuencia debe ser unidireccional: conocimiento del hecho -> llegada -> lectura de derechos -> detención -> traslado a comandancia. La lectura de derechos precede o coincide exactamente con la detención. Todas las horas en formato de 24 horas (00:00 a 23:59) con dos dígitos. El intervalo conocimiento->arribo debe ser realista según la distancia.
-2. LAS 7 PREGUNTAS ESENCIALES: qué pasó; cómo ocurrió (dinámica y uso de la fuerza); cuándo y dónde (temporalidad exacta y ubicación georreferenciada); quiénes intervinieron (víctimas, testigos, probables responsables); con qué y para qué (objetos, armas o vehículos asegurados y finalidad de la acción policial).
-3. ORTOGRAFÍA, SINTAXIS Y ESTILO POLICIAL: corrige acentuación, concordancia de género/número y errores de dedo; sugiere terminología jurídica ("primer respondiente", "indicio", "aseguramiento", "flagrancia", "puesta a disposición"); detecta y señala juicios de valor o apreciaciones subjetivas, promoviendo redacción basada en hechos observables.
+2. ILÍCITO: debe quedar claro si se trata de falta administrativa, delito o ambos. Si no se especificó, márcalo como pendiente.
+3. LAS 7 PREGUNTAS ESENCIALES: qué pasó; cómo ocurrió (dinámica y uso de la fuerza); cuándo y dónde (temporalidad exacta y ubicación georreferenciada); quiénes intervinieron (víctimas, testigos, probables responsables); con qué y para qué (objetos, armas o vehículos asegurados y finalidad de la acción policial).
+4. ORTOGRAFÍA, SINTAXIS Y ESTILO POLICIAL: corrige acentuación, concordancia de género/número y errores de dedo; sugiere terminología jurídica ("primer respondiente", "indicio", "aseguramiento", "flagrancia", "puesta a disposición"); detecta y señala juicios de valor o apreciaciones subjetivas, promoviendo redacción basada en hechos observables.
 
 Responde SIEMPRE en español, en markdown breve, con esta estructura exacta:
 ### Semáforo
@@ -36,8 +37,11 @@ export const revisarNarrativa = createServerFn({ method: "POST" })
 
     const contexto = [
       `Horas capturadas: ${JSON.stringify(data.horas)}`,
+      data.faltaAdministrativa || data.delito
+        ? `Ilícito reportado: ${[data.faltaAdministrativa, data.delito].filter(Boolean).join(" / ")}`
+        : "Ilícito reportado: no especificado.",
       data.hallazgosLocales.length
-        ? `Hallazgos del validador automático:\n- ${data.hallazgosLocales.join("\n- ")}`
+        ? `Hallazgos del validador automático:\n- ${data.hallazgosLocales.join("\n-")}`
         : "El validador automático no detectó incidencias.",
       `Narrativa del oficial:\n"""${data.narrativa}"""`,
       data.pregunta ? `Pregunta adicional del oficial: ${data.pregunta}` : "",
