@@ -89,12 +89,6 @@ export default function RevisorIPH() {
   const [folio, setFolio] = useState("");
   const [pregunta, setPregunta] = useState("");
   const [cargando, setCargando] = useState(false);
-  const [enviando, setEnviando] = useState<null | "sur" | "norte">(null);
-  const [opcionesEnvio, setOpcionesEnvio] = useState<null | {
-    comandancia: "sur" | "norte";
-    titulo: string;
-    mensaje: string;
-  }>(null);
   const [mensajes, setMensajes] = useState<Mensaje[]>([
     {
       id: "bienvenida",
