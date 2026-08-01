@@ -404,7 +404,6 @@ export default function RevisorIPH() {
         </section>
       </main>
 
-
       <footer className="border-t border-border/60 py-6 text-center text-xs text-muted-foreground">
         Uso interno · Dirección de Seguridad Pública Municipal de Chihuahua
       </footer>
