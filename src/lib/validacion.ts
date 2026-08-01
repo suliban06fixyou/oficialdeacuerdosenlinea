@@ -124,20 +124,24 @@ export function validarCronologia(horas: Horas): Hallazgo[] {
     });
   }
 
-  const traslado = aMinutos(horas.traslado);
-  const remision = aMinutos(horas.remision);
-  if (traslado !== null && remision !== null) {
-    const t = delta(traslado, remision);
-    if (t <= 12 * 60 && t > 180) {
-      hallazgos.push({
-        id: "traslado-prolongado",
-        categoria: "Cronología",
-        severidad: "advertencia",
-        titulo: "Traslado prolongado sin justificación",
-        detalle: `Entre el traslado y la remisión transcurrieron ${t} minutos.`,
-        sugerencia: "Explique la causa de la demora (atención médica, tráfico, apoyo a otra unidad).",
-      });
-    }
+  return hallazgos;
+}
+
+export function validarDelitoFalta(datos: DatosHecho): Hallazgo[] {
+  const hallazgos: Hallazgo[] = [];
+  const falta = datos.faltaAdministrativa.trim();
+  const delito = datos.delito.trim();
+
+  if (!falta && !delito) {
+    hallazgos.push({
+      id: "falta-delito-vacio",
+      categoria: "Formato",
+      severidad: "critico",
+      titulo: "Falta administrativa y/o delito no especificado",
+      detalle:
+        "El IPH debe identificar el presunto ilícito que fundamenta la intervención: falta administrativa, delito o ambos.",
+      sugerencia: "Capture la falta administrativa, el delito o ambos conceptos conforme al acta.",
+    });
   }
 
   return hallazgos;
