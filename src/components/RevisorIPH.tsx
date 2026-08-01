@@ -190,50 +190,6 @@ export default function RevisorIPH() {
     }
   }
 
-  async function enviar(comandancia: "sur" | "norte") {
-    setEnviando(comandancia);
-    try {
-      const res = await fetch("/api/enviar-narrativa", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          comandancia,
-          oficial,
-          folio,
-          narrativa,
-          horas,
-          resumenRevision: ultimaRevisionIA?.texto ?? "",
-        }),
-      });
-      const datos = (await res.json()) as { ok: boolean; mensaje?: string; error?: string };
-      if (datos.ok) {
-        agregar(
-          "asesor",
-          `Narrativa enviada correctamente a Comandancia ${comandancia === "sur" ? "Sur" : "Norte"}.`,
-        );
-      } else if (datos.error === "correo_no_configurado") {
-        const asunto = encodeURIComponent(
-          `[COMANDANCIA ${comandancia.toUpperCase()}] Narrativa IPH ${folio} — ${oficial || "Oficial no especificado"}`.trim(),
-        );
-        const cuerpo = encodeURIComponent(
-          `Oficial: ${oficial}\nFolio: ${folio}\n\nCronología:\n${PASOS_CRONOLOGICOS.map(
-            (p) => `${p.label}: ${horas[p.key] || "—"}`,
-          ).join("\n")}\n\nNarrativa:\n${narrativa}\n\nRevisión:\n${ultimaRevisionIA?.texto ?? ""}`,
-        );
-        window.location.href = `mailto:dspmoficialesacuerdo@gmail.com?subject=${asunto}&body=${cuerpo}`;
-        agregar(
-          "asesor",
-          "El envío automático aún no está habilitado en el servidor; abrí su aplicación de correo con la narrativa lista para enviar.",
-        );
-      } else {
-        agregar("asesor", datos.mensaje ?? "No se pudo enviar el correo.");
-      }
-    } catch (error) {
-      agregar("asesor", `Error de envío: ${(error as Error).message}`);
-    } finally {
-      setEnviando(null);
-    }
-  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
