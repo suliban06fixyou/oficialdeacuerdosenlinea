@@ -537,62 +537,6 @@ export default function RevisorIPH() {
         </section>
       </main>
 
-      {opcionesEnvio && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
-          onClick={() => setOpcionesEnvio(null)}
-        >
-          <div
-            className="w-full max-w-md space-y-3 rounded-2xl border border-border bg-card p-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="texto-institucional text-base font-bold">
-              Enviar a {opcionesEnvio.comandancia === "sur" ? "Comandancia Sur" : "Comandancia Norte"}
-            </h3>
-            <p className="text-xs text-muted-foreground">
-              Elija la aplicación para compartir la narrativa revisada.
-            </p>
-            <div className="grid gap-2">
-              <a
-                href={`https://wa.me/?text=${encodeURIComponent(opcionesEnvio.mensaje)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-xl border-2 border-green-400 bg-green-500 px-4 py-3 text-center text-sm font-bold text-green-50"
-              >
-                WhatsApp
-              </a>
-              <a
-                href={`mailto:dspmoficialesacuerdo@gmail.com?subject=${encodeURIComponent(opcionesEnvio.titulo)}&body=${encodeURIComponent(opcionesEnvio.mensaje)}`}
-                className="rounded-xl border border-border bg-secondary px-4 py-3 text-center text-sm font-semibold text-secondary-foreground"
-              >
-                Correo electrónico
-              </a>
-              <a
-                href={`sms:?&body=${encodeURIComponent(opcionesEnvio.mensaje)}`}
-                className="rounded-xl border border-border bg-secondary px-4 py-3 text-center text-sm font-semibold text-secondary-foreground"
-              >
-                Mensaje SMS
-              </a>
-              <button
-                onClick={() => {
-                  void navigator.clipboard?.writeText(opcionesEnvio.mensaje);
-                  agregar("asesor", "Narrativa copiada al portapapeles.");
-                  setOpcionesEnvio(null);
-                }}
-                className="rounded-xl border border-border px-4 py-3 text-sm font-semibold"
-              >
-                Copiar narrativa
-              </button>
-              <button
-                onClick={() => setOpcionesEnvio(null)}
-                className="px-4 py-2 text-xs text-muted-foreground"
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <footer className="border-t border-border/60 py-6 text-center text-xs text-muted-foreground">
         Uso interno · Dirección de Seguridad Pública Municipal de Chihuahua
