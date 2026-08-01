@@ -4,6 +4,8 @@ import { z } from "zod";
 const EntradaRevision = z.object({
   narrativa: z.string().min(1),
   horas: z.record(z.string()),
+  faltaAdministrativa: z.string().optional(),
+  delito: z.string().optional(),
   hallazgosLocales: z.array(z.string()),
   pregunta: z.string().optional(),
 });
