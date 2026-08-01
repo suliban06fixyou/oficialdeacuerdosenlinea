@@ -158,7 +158,7 @@ export default function RevisorIPH() {
               REVISOR DE NARRATIVAS IPH OFICIAL DE ACUERDOS EN LINEA
             </h1>
             <p className="text-sm text-muted-foreground">
-              Dirección de Seguridad Pública Municipal · Chihuahua
+              Dirección de Seguridad Pública Municipal Chihuahua, Cordinacion Juridica de la Subdireccion Tactica
             </p>
           </div>
           <img
