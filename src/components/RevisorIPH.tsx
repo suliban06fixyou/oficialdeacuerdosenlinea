@@ -434,28 +434,6 @@ export default function RevisorIPH() {
                   antes de enviar.
                 </div>
               )}
-              <div className="grid gap-3 sm:grid-cols-2">
-                <button
-                  onClick={() => enviar("sur")}
-                  disabled={!narrativa.trim() || enviando !== null}
-                  className="rounded-2xl border-2 border-yellow-300 bg-yellow-400 px-4 py-6 font-bold text-yellow-950 transition-opacity hover:opacity-90 disabled:opacity-50"
-                >
-                  <span className="texto-institucional block text-base">Enviar Comandancia Sur</span>
-                  <span className="block text-xs font-normal text-yellow-900">
-                    {enviando === "sur" ? "Enviando..." : "Enviar narrativa"}
-                  </span>
-                </button>
-                <button
-                  onClick={() => enviar("norte")}
-                  disabled={!narrativa.trim() || enviando !== null}
-                  className="rounded-2xl border-2 border-green-400 bg-green-500 px-4 py-6 font-bold text-green-50 transition-opacity hover:opacity-90 disabled:opacity-50"
-                >
-                  <span className="texto-institucional block text-base">Enviar Comandancia Norte</span>
-                  <span className="block text-xs font-normal text-green-50/90">
-                    {enviando === "norte" ? "Enviando..." : "Enviar narrativa"}
-                  </span>
-                </button>
-              </div>
               <p className="text-xs text-muted-foreground">
                 Destinatario configurado: dspmoficialesacuerdo@gmail.com
               </p>
