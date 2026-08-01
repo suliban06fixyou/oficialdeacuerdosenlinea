@@ -5,6 +5,7 @@ import {
   PASOS_CRONOLOGICOS,
   PREGUNTAS_ESENCIALES,
   revisionLocal,
+  type DatosHecho,
   type Hallazgo,
   type Horas,
 } from "@/lib/validacion";
@@ -87,8 +88,15 @@ export default function RevisorIPH() {
   const [narrativa, setNarrativa] = useState("");
   const [oficial, setOficial] = useState("");
   const [folio, setFolio] = useState("");
+  const [faltaAdministrativa, setFaltaAdministrativa] = useState("");
+  const [delito, setDelito] = useState("");
   const [pregunta, setPregunta] = useState("");
   const [cargando, setCargando] = useState(false);
+
+  const datosHecho: DatosHecho = useMemo(
+    () => ({ faltaAdministrativa, delito }),
+    [faltaAdministrativa, delito],
+  );
   const [mensajes, setMensajes] = useState<Mensaje[]>([
     {
       id: "bienvenida",
@@ -100,7 +108,7 @@ export default function RevisorIPH() {
   const finChat = useRef<HTMLDivElement>(null);
   const revisar = useServerFn(revisarNarrativa);
 
-  const hallazgos = useMemo(() => revisionLocal(horas, narrativa), [horas, narrativa]);
+  const hallazgos = useMemo(() => revisionLocal(horas, narrativa, datosHecho), [horas, narrativa, datosHecho]);
   const criticos = hallazgos.filter((h) => h.severidad === "critico");
   const ultimaRevisionIA = [...mensajes].reverse().find((m) => m.autor === "asesor" && m.id.startsWith("ia-"));
 
@@ -126,6 +134,8 @@ export default function RevisorIPH() {
         data: {
           narrativa,
           horas,
+          faltaAdministrativa: faltaAdministrativa.trim() || undefined,
+          delito: delito.trim() || undefined,
           hallazgosLocales: hallazgos.map((h) => `${h.categoria}: ${h.titulo} — ${h.detalle}`),
           pregunta: pregunta.trim() || undefined,
         },
@@ -220,6 +230,26 @@ export default function RevisorIPH() {
                     onChange={(e) => setFolio(e.target.value)}
                     maxLength={60}
                     placeholder="Ej. IPH-2026-00123"
+                    className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </label>
+                <label className="text-sm">
+                  <span className="mb-1 block text-muted-foreground">Falta administrativa</span>
+                  <input
+                    value={faltaAdministrativa}
+                    onChange={(e) => setFaltaAdministrativa(e.target.value)}
+                    maxLength={200}
+                    placeholder="Ej. 38 CFF, 40 CFF, consumir bebidas alcohólicas..."
+                    className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </label>
+                <label className="text-sm">
+                  <span className="mb-1 block text-muted-foreground">Delito</span>
+                  <input
+                    value={delito}
+                    onChange={(e) => setDelito(e.target.value)}
+                    maxLength={200}
+                    placeholder="Ej. Robo calificado, lesiones, portación de arma..."
                     className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
                   />
                 </label>

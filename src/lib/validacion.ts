@@ -12,11 +12,9 @@ export interface Hallazgo {
 export const PASOS_CRONOLOGICOS = [
   { key: "conocimiento", label: "Conocimiento del hecho" },
   { key: "llegada", label: "Llegada al lugar" },
-  { key: "entrevista", label: "Entrevista" },
   { key: "derechos", label: "Lectura de derechos" },
   { key: "detencion", label: "Detención" },
   { key: "traslado", label: "Traslado a comandancia" },
-  { key: "remision", label: "Remisión" },
 ] as const;
 
 export type ClaveHora = (typeof PASOS_CRONOLOGICOS)[number]["key"];
@@ -25,12 +23,15 @@ export type Horas = Record<ClaveHora, string>;
 export const HORAS_VACIAS: Horas = {
   conocimiento: "",
   llegada: "",
-  entrevista: "",
   derechos: "",
   detencion: "",
   traslado: "",
-  remision: "",
 };
+
+export interface DatosHecho {
+  faltaAdministrativa: string;
+  delito: string;
+}
 
 const FORMATO_24H = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
@@ -123,20 +124,24 @@ export function validarCronologia(horas: Horas): Hallazgo[] {
     });
   }
 
-  const traslado = aMinutos(horas.traslado);
-  const remision = aMinutos(horas.remision);
-  if (traslado !== null && remision !== null) {
-    const t = delta(traslado, remision);
-    if (t <= 12 * 60 && t > 180) {
-      hallazgos.push({
-        id: "traslado-prolongado",
-        categoria: "Cronología",
-        severidad: "advertencia",
-        titulo: "Traslado prolongado sin justificación",
-        detalle: `Entre el traslado y la remisión transcurrieron ${t} minutos.`,
-        sugerencia: "Explique la causa de la demora (atención médica, tráfico, apoyo a otra unidad).",
-      });
-    }
+  return hallazgos;
+}
+
+export function validarDelitoFalta(datos: DatosHecho): Hallazgo[] {
+  const hallazgos: Hallazgo[] = [];
+  const falta = datos.faltaAdministrativa.trim();
+  const delito = datos.delito.trim();
+
+  if (!falta && !delito) {
+    hallazgos.push({
+      id: "falta-delito-vacio",
+      categoria: "Formato",
+      severidad: "critico",
+      titulo: "Falta administrativa y/o delito no especificado",
+      detalle:
+        "El IPH debe identificar el presunto ilícito que fundamenta la intervención: falta administrativa, delito o ambos.",
+      sugerencia: "Capture la falta administrativa, el delito o ambos conceptos conforme al acta.",
+    });
   }
 
   return hallazgos;
@@ -268,6 +273,15 @@ export function validarEstilo(narrativa: string): Hallazgo[] {
   return hallazgos;
 }
 
-export function revisionLocal(horas: Horas, narrativa: string): Hallazgo[] {
-  return [...validarCronologia(horas), ...validarPreguntas(narrativa), ...validarEstilo(narrativa)];
+export function revisionLocal(
+  horas: Horas,
+  narrativa: string,
+  datosHecho: DatosHecho,
+): Hallazgo[] {
+  return [
+    ...validarCronologia(horas),
+    ...validarDelitoFalta(datosHecho),
+    ...validarPreguntas(narrativa),
+    ...validarEstilo(narrativa),
+  ];
 }
