@@ -134,6 +134,8 @@ export default function RevisorIPH() {
         data: {
           narrativa,
           horas,
+          faltaAdministrativa: faltaAdministrativa.trim() || undefined,
+          delito: delito.trim() || undefined,
           hallazgosLocales: hallazgos.map((h) => `${h.categoria}: ${h.titulo} — ${h.detalle}`),
           pregunta: pregunta.trim() || undefined,
         },
