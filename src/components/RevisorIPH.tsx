@@ -145,22 +145,6 @@ export default function RevisorIPH() {
     }
   }
 
-  function narrativaFinal() {
-    const texto = ultimaRevisionIA?.texto ?? "";
-    const marca = texto.indexOf("### Narrativa corregida sugerida");
-    if (marca >= 0) {
-      const sugerida = texto.slice(marca + "### Narrativa corregida sugerida".length).trim();
-      if (sugerida) return sugerida;
-    }
-    return narrativa.trim();
-  }
-
-  function subrayar(texto: string) {
-    return texto
-      .split("")
-      .map((c) => (c === " " ? c : `${c}\u0332`))
-      .join("");
-  }
 
 
 
