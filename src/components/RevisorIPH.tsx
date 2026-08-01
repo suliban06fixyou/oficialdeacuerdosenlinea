@@ -155,7 +155,7 @@ export default function RevisorIPH() {
           />
           <div className="flex-1">
             <h1 className="texto-institucional text-xl leading-tight font-bold sm:text-2xl">
-              Revisor de Narrativas IPH
+              REVISOR DE NARRATIVAS IPH OFICIAL DE ACUERDOS EN LINEA
             </h1>
             <p className="text-sm text-muted-foreground">
               Dirección de Seguridad Pública Municipal · Chihuahua
