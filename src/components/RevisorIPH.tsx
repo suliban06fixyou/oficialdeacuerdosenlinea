@@ -231,6 +231,26 @@ export default function RevisorIPH() {
                     className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
                   />
                 </label>
+                <label className="text-sm">
+                  <span className="mb-1 block text-muted-foreground">Falta administrativa</span>
+                  <input
+                    value={faltaAdministrativa}
+                    onChange={(e) => setFaltaAdministrativa(e.target.value)}
+                    maxLength={200}
+                    placeholder="Ej. 38 CFF, 40 CFF, consumir bebidas alcohólicas..."
+                    className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </label>
+                <label className="text-sm">
+                  <span className="mb-1 block text-muted-foreground">Delito</span>
+                  <input
+                    value={delito}
+                    onChange={(e) => setDelito(e.target.value)}
+                    maxLength={200}
+                    placeholder="Ej. Robo calificado, lesiones, portación de arma..."
+                    className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </label>
                 {PASOS_CRONOLOGICOS.map((p, i) => (
                   <label key={p.key} className="text-sm">
                     <span className="mb-1 block text-muted-foreground">
