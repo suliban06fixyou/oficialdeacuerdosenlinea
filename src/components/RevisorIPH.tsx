@@ -88,8 +88,15 @@ export default function RevisorIPH() {
   const [narrativa, setNarrativa] = useState("");
   const [oficial, setOficial] = useState("");
   const [folio, setFolio] = useState("");
+  const [faltaAdministrativa, setFaltaAdministrativa] = useState("");
+  const [delito, setDelito] = useState("");
   const [pregunta, setPregunta] = useState("");
   const [cargando, setCargando] = useState(false);
+
+  const datosHecho: DatosHecho = useMemo(
+    () => ({ faltaAdministrativa, delito }),
+    [faltaAdministrativa, delito],
+  );
   const [mensajes, setMensajes] = useState<Mensaje[]>([
     {
       id: "bienvenida",
