@@ -273,6 +273,15 @@ export function validarEstilo(narrativa: string): Hallazgo[] {
   return hallazgos;
 }
 
-export function revisionLocal(horas: Horas, narrativa: string): Hallazgo[] {
-  return [...validarCronologia(horas), ...validarPreguntas(narrativa), ...validarEstilo(narrativa)];
+export function revisionLocal(
+  horas: Horas,
+  narrativa: string,
+  datosHecho: DatosHecho,
+): Hallazgo[] {
+  return [
+    ...validarCronologia(horas),
+    ...validarDelitoFalta(datosHecho),
+    ...validarPreguntas(narrativa),
+    ...validarEstilo(narrativa),
+  ];
 }
