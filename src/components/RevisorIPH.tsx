@@ -5,6 +5,7 @@ import {
   PASOS_CRONOLOGICOS,
   PREGUNTAS_ESENCIALES,
   revisionLocal,
+  type DatosHecho,
   type Hallazgo,
   type Horas,
 } from "@/lib/validacion";
