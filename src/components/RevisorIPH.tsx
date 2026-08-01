@@ -108,7 +108,7 @@ export default function RevisorIPH() {
   const finChat = useRef<HTMLDivElement>(null);
   const revisar = useServerFn(revisarNarrativa);
 
-  const hallazgos = useMemo(() => revisionLocal(horas, narrativa), [horas, narrativa]);
+  const hallazgos = useMemo(() => revisionLocal(horas, narrativa, datosHecho), [horas, narrativa, datosHecho]);
   const criticos = hallazgos.filter((h) => h.severidad === "critico");
   const ultimaRevisionIA = [...mensajes].reverse().find((m) => m.autor === "asesor" && m.id.startsWith("ia-"));
 
