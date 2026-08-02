@@ -110,6 +110,18 @@ export default function RevisorIPH() {
 
   const hallazgos = useMemo(() => revisionLocal(horas, narrativa, datosHecho), [horas, narrativa, datosHecho]);
   const criticos = hallazgos.filter((h) => h.severidad === "critico");
+  const resumen = useMemo(() => {
+    const items: { etiqueta: string; valor: string }[] = [];
+    if (oficial.trim()) items.push({ etiqueta: "Oficial", valor: oficial.trim() });
+    if (folio.trim()) items.push({ etiqueta: "Folio", valor: folio.trim() });
+    if (faltaAdministrativa.trim()) items.push({ etiqueta: "Falta adm.", valor: faltaAdministrativa.trim() });
+    if (delito.trim()) items.push({ etiqueta: "Delito", valor: delito.trim() });
+    PASOS_CRONOLOGICOS.forEach((p) => {
+      const v = horas[p.key];
+      if (v) items.push({ etiqueta: p.label, valor: v });
+    });
+    return items;
+  }, [oficial, folio, faltaAdministrativa, delito, horas]);
   const ultimaRevisionIA = [...mensajes].reverse().find((m) => m.autor === "asesor" && m.id.startsWith("ia-"));
 
   useEffect(() => {
@@ -201,6 +213,26 @@ export default function RevisorIPH() {
           ))}
         </div>
       </nav>
+
+      {paso !== "cronologia" && resumen.length > 0 && (
+        <div className="border-b border-border/60 bg-secondary/25">
+          <div className="mx-auto max-w-6xl px-4 py-2">
+            <p className="texto-institucional mb-1 text-[10px] tracking-wide text-accent uppercase">
+              Datos capturados (solo referencia)
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {resumen.map((r) => (
+                <span
+                  key={r.etiqueta}
+                  className="rounded-md border border-border bg-card/60 px-2 py-0.5 text-[11px] text-muted-foreground"
+                >
+                  <span className="font-semibold text-foreground">{r.etiqueta}:</span> {r.valor}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="mx-auto grid max-w-6xl gap-5 px-4 py-6 lg:grid-cols-[1.05fr_1fr]">
         <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-placa)]">
