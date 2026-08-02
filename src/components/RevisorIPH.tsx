@@ -256,7 +256,7 @@ export default function RevisorIPH() {
                   />
                 </label>
                 <label className="text-sm">
-                  <span className="mb-1 block text-muted-foreground">Folio / número de IPH</span>
+                  <span className="mb-1 block text-muted-foreground">Folio llamada / Flagrancia (observacion directa)</span>
                   <input
                     value={folio}
                     onChange={(e) => setFolio(e.target.value)}
