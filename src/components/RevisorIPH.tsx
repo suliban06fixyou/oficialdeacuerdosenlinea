@@ -12,7 +12,7 @@ import {
 import { revisarNarrativa } from "@/lib/revision.functions";
 import logoDspm from "@/assets/logo-dspm-oficial.png.asset.json";
 import oficialAcuerdos from "@/assets/oficial-acuerdos.jpeg.asset.json";
-import fondoChat from "@/assets/fondo-chat.jpg";
+const fondoChat = "/fondo-chat.jpg";
 
 type Paso = "cronologia" | "narrativa" | "revision" | "envio";
 
