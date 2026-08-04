@@ -520,7 +520,7 @@ export default function RevisorIPH() {
             <div ref={finChat} />
           </div>
 
-          <div className="flex gap-2 border-t border-border/60 bg-card/70 p-3">
+          <div className="space-y-2 border-t border-border/60 bg-card/70 p-3">
             <input
               value={pregunta}
               onChange={(e) => setPregunta(e.target.value)}
@@ -529,8 +529,32 @@ export default function RevisorIPH() {
               }}
               maxLength={500}
               placeholder="Pregunte al asesor: ¿cómo redacto el aseguramiento?"
-              className="flex-1 rounded-xl border border-input bg-secondary/40 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+              className="w-full rounded-xl border border-input bg-secondary/40 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
             />
+            <label className="block text-xs">
+              <span className="mb-1 block text-muted-foreground">
+                Narrativa corregida sugerida (editable)
+              </span>
+              <textarea
+                value={narrativaFinal}
+                onChange={(e) => {
+                  setNarrativaFinal(e.target.value);
+                  setEditadaPorUsuario(true);
+                }}
+                rows={5}
+                maxLength={20000}
+                placeholder="Aquí aparecerá la narrativa sugerida por el asesor para su edición."
+                className="w-full rounded-xl border border-input bg-secondary/30 p-2 text-sm leading-relaxed outline-none focus:ring-2 focus:ring-ring"
+              />
+            </label>
+            <button
+              onClick={enviarNarrativaLista}
+              className="w-full rounded-xl px-4 py-3 font-semibold text-accent-foreground"
+              style={{ backgroundImage: "var(--gradient-dorado)" }}
+            >
+              Enviar narrativa lista
+            </button>
+            {avisoEnvio && <p className="text-xs text-muted-foreground">{avisoEnvio}</p>}
           </div>
         </section>
       </main>
