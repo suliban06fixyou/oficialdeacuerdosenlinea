@@ -103,18 +103,15 @@ export default function RevisorIPH() {
   const [narrativa, setNarrativa] = useState("");
   const [oficial, setOficial] = useState("");
   const [folio, setFolio] = useState("");
-  const [faltaAdministrativa, setFaltaAdministrativa] = useState("");
-  const [delito, setDelito] = useState("");
+  const [faltaODelito, setFaltaODelito] = useState("");
+  const [lugar, setLugar] = useState("");
   const [pregunta, setPregunta] = useState("");
   const [cargando, setCargando] = useState(false);
   const [narrativaFinal, setNarrativaFinal] = useState("");
   const [editadaPorUsuario, setEditadaPorUsuario] = useState(false);
   const [avisoEnvio, setAvisoEnvio] = useState("");
 
-  const datosHecho: DatosHecho = useMemo(
-    () => ({ faltaAdministrativa, delito }),
-    [faltaAdministrativa, delito],
-  );
+  const datosHecho: DatosHecho = useMemo(() => ({ faltaODelito, lugar }), [faltaODelito, lugar]);
   const [mensajes, setMensajes] = useState<Mensaje[]>([
     {
       id: "bienvenida",
@@ -132,14 +129,15 @@ export default function RevisorIPH() {
     const items: { etiqueta: string; valor: string }[] = [];
     if (oficial.trim()) items.push({ etiqueta: "Oficial", valor: oficial.trim() });
     if (folio.trim()) items.push({ etiqueta: "Folio", valor: folio.trim() });
-    if (faltaAdministrativa.trim()) items.push({ etiqueta: "Falta adm.", valor: faltaAdministrativa.trim() });
-    if (delito.trim()) items.push({ etiqueta: "Delito", valor: delito.trim() });
+    if (faltaODelito.trim())
+      items.push({ etiqueta: "Falta adm. y/o delito", valor: faltaODelito.trim() });
+    if (lugar.trim()) items.push({ etiqueta: "Lugar del evento", valor: lugar.trim() });
     PASOS_CRONOLOGICOS.forEach((p) => {
       const v = horas[p.key];
       if (v) items.push({ etiqueta: p.label, valor: v });
     });
     return items;
-  }, [oficial, folio, faltaAdministrativa, delito, horas]);
+  }, [oficial, folio, faltaODelito, lugar, horas]);
   const ultimaRevisionIA = [...mensajes].reverse().find((m) => m.autor === "asesor" && m.id.startsWith("ia-"));
 
   useEffect(() => {
@@ -196,8 +194,8 @@ export default function RevisorIPH() {
         data: {
           narrativa,
           horas,
-          faltaAdministrativa: faltaAdministrativa.trim() || undefined,
-          delito: delito.trim() || undefined,
+          faltaODelito: faltaODelito.trim() || undefined,
+          lugar: lugar.trim() || undefined,
           hallazgosLocales: hallazgos.map((h) => `${h.categoria}: ${h.titulo} — ${h.detalle}`),
           pregunta: pregunta.trim() || undefined,
         },
@@ -316,22 +314,22 @@ export default function RevisorIPH() {
                   />
                 </label>
                 <label className="text-sm">
-                  <span className="mb-1 block text-muted-foreground">Falta administrativa</span>
+                  <span className="mb-1 block text-muted-foreground">Falta administrativa y/o Delito</span>
                   <input
-                    value={faltaAdministrativa}
-                    onChange={(e) => setFaltaAdministrativa(e.target.value)}
-                    maxLength={200}
-                    placeholder="Ej. 38 CFF, 40 CFF, consumir bebidas alcohólicas..."
+                    value={faltaODelito}
+                    onChange={(e) => setFaltaODelito(e.target.value)}
+                    maxLength={300}
+                    placeholder="Ej. 38 CFF, consumir bebidas alcohólicas / Robo calificado..."
                     className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
                   />
                 </label>
                 <label className="text-sm">
-                  <span className="mb-1 block text-muted-foreground">Delito</span>
+                  <span className="mb-1 block text-muted-foreground">Lugar del evento</span>
                   <input
-                    value={delito}
-                    onChange={(e) => setDelito(e.target.value)}
-                    maxLength={200}
-                    placeholder="Ej. Robo calificado, lesiones, portación de arma..."
+                    value={lugar}
+                    onChange={(e) => setLugar(e.target.value)}
+                    maxLength={300}
+                    placeholder="Calle, número, cruce, colonia y sector"
                     className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
                   />
                 </label>

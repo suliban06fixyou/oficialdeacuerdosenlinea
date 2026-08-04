@@ -12,8 +12,8 @@ export interface Hallazgo {
 export const PASOS_CRONOLOGICOS = [
   { key: "conocimiento", label: "Conocimiento del hecho" },
   { key: "llegada", label: "Llegada al lugar" },
-  { key: "derechos", label: "Lectura de derechos" },
   { key: "detencion", label: "Detención" },
+  { key: "derechos", label: "Lectura de derechos" },
   { key: "traslado", label: "Traslado a comandancia" },
 ] as const;
 
@@ -23,14 +23,14 @@ export type Horas = Record<ClaveHora, string>;
 export const HORAS_VACIAS: Horas = {
   conocimiento: "",
   llegada: "",
-  derechos: "",
   detencion: "",
+  derechos: "",
   traslado: "",
 };
 
 export interface DatosHecho {
-  faltaAdministrativa: string;
-  delito: string;
+  faltaODelito: string;
+  lugar: string;
 }
 
 const FORMATO_24H = /^([01]\d|2[0-3]):([0-5]\d)$/;
@@ -110,29 +110,13 @@ export function validarCronologia(horas: Horas): Hallazgo[] {
     }
   }
 
-  const derechos = aMinutos(horas.derechos);
-  const detencion = aMinutos(horas.detencion);
-  if (derechos !== null && detencion !== null && delta(derechos, detencion) > 12 * 60) {
-    hallazgos.push({
-      id: "derechos-posteriores",
-      categoria: "Cronología",
-      severidad: "critico",
-      titulo: "La lectura de derechos es posterior a la detención",
-      detalle:
-        "La lectura de derechos debe preceder o coincidir exactamente con el momento formal de la detención.",
-      sugerencia: "Ajuste la hora de lectura de derechos o precise el momento formal de la detención.",
-    });
-  }
-
   return hallazgos;
 }
 
 export function validarDelitoFalta(datos: DatosHecho): Hallazgo[] {
   const hallazgos: Hallazgo[] = [];
-  const falta = datos.faltaAdministrativa.trim();
-  const delito = datos.delito.trim();
 
-  if (!falta && !delito) {
+  if (!datos.faltaODelito.trim()) {
     hallazgos.push({
       id: "falta-delito-vacio",
       categoria: "Formato",
@@ -141,6 +125,18 @@ export function validarDelitoFalta(datos: DatosHecho): Hallazgo[] {
       detalle:
         "El IPH debe identificar el presunto ilícito que fundamenta la intervención: falta administrativa, delito o ambos.",
       sugerencia: "Capture la falta administrativa, el delito o ambos conceptos conforme al acta.",
+    });
+  }
+
+  if (!datos.lugar.trim()) {
+    hallazgos.push({
+      id: "lugar-vacio",
+      categoria: "7 Preguntas",
+      severidad: "critico",
+      titulo: "Lugar del evento no especificado",
+      detalle:
+        "El IPH debe precisar la ubicación del sitio de intervención (calle, número, cruce, colonia y sector).",
+      sugerencia: "Capture el lugar del evento con la mayor precisión posible.",
     });
   }
 
