@@ -9,9 +9,10 @@ export const revisarNarrativa = createServerFn({ method: "POST" })
 
     const contexto = [
       `Horas capturadas: ${JSON.stringify(data.horas)}`,
-      data.faltaAdministrativa || data.delito
-        ? `Ilícito reportado: ${[data.faltaAdministrativa, data.delito].filter(Boolean).join(" / ")}`
-        : "Ilícito reportado: no especificado.",
+      data.faltaODelito
+        ? `Falta administrativa y/o delito: ${data.faltaODelito}`
+        : "Falta administrativa y/o delito: no especificado.",
+      data.lugar ? `Lugar del evento: ${data.lugar}` : "Lugar del evento: no especificado.",
       data.hallazgosLocales.length
         ? `Hallazgos del validador automático:\n- ${data.hallazgosLocales.join("\n-")}`
         : "El validador automático no detectó incidencias.",
