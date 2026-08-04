@@ -314,22 +314,22 @@ export default function RevisorIPH() {
                   />
                 </label>
                 <label className="text-sm">
-                  <span className="mb-1 block text-muted-foreground">Falta administrativa</span>
+                  <span className="mb-1 block text-muted-foreground">Falta administrativa y/o Delito</span>
                   <input
-                    value={faltaAdministrativa}
-                    onChange={(e) => setFaltaAdministrativa(e.target.value)}
-                    maxLength={200}
-                    placeholder="Ej. 38 CFF, 40 CFF, consumir bebidas alcohólicas..."
+                    value={faltaODelito}
+                    onChange={(e) => setFaltaODelito(e.target.value)}
+                    maxLength={300}
+                    placeholder="Ej. 38 CFF, consumir bebidas alcohólicas / Robo calificado..."
                     className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
                   />
                 </label>
                 <label className="text-sm">
-                  <span className="mb-1 block text-muted-foreground">Delito</span>
+                  <span className="mb-1 block text-muted-foreground">Lugar del evento</span>
                   <input
-                    value={delito}
-                    onChange={(e) => setDelito(e.target.value)}
-                    maxLength={200}
-                    placeholder="Ej. Robo calificado, lesiones, portación de arma..."
+                    value={lugar}
+                    onChange={(e) => setLugar(e.target.value)}
+                    maxLength={300}
+                    placeholder="Calle, número, cruce, colonia y sector"
                     className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
                   />
                 </label>
