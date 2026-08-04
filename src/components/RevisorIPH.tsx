@@ -92,6 +92,9 @@ export default function RevisorIPH() {
   const [delito, setDelito] = useState("");
   const [pregunta, setPregunta] = useState("");
   const [cargando, setCargando] = useState(false);
+  const [narrativaFinal, setNarrativaFinal] = useState("");
+  const [editadaPorUsuario, setEditadaPorUsuario] = useState(false);
+  const [avisoEnvio, setAvisoEnvio] = useState("");
 
   const datosHecho: DatosHecho = useMemo(
     () => ({ faltaAdministrativa, delito }),
@@ -127,6 +130,38 @@ export default function RevisorIPH() {
   useEffect(() => {
     finChat.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensajes]);
+
+  useEffect(() => {
+    if (editadaPorUsuario) return;
+    const sugerida = ultimaRevisionIA ? extraerNarrativaSugerida(ultimaRevisionIA.texto) : "";
+    setNarrativaFinal(sugerida || narrativa);
+  }, [ultimaRevisionIA, narrativa, editadaPorUsuario]);
+
+  async function enviarNarrativaLista() {
+    const texto = narrativaFinal.trim();
+    if (!texto) {
+      setAvisoEnvio("No hay narrativa para enviar.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(texto);
+      setAvisoEnvio("Narrativa copiada al portapapeles.");
+    } catch {
+      setAvisoEnvio("No fue posible copiar automáticamente; copie el texto manualmente.");
+    }
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ text: texto });
+        setAvisoEnvio("Narrativa copiada y compartida.");
+      } catch {
+        // el usuario canceló el menú de compartir
+      }
+    } else {
+      setAvisoEnvio(
+        "Narrativa copiada. Este dispositivo no ofrece el menú de mensajería; péguela en la aplicación que desee.",
+      );
+    }
+  }
 
   function agregar(autor: Mensaje["autor"], texto: string, id?: string) {
     setMensajes((prev) => [...prev, { id: id ?? `${Date.now()}-${prev.length}`, autor, texto }]);
@@ -399,9 +434,30 @@ export default function RevisorIPH() {
                   antes de enviar.
                 </div>
               )}
-              <p className="text-xs text-muted-foreground">
-                Destinatario configurado: dspmoficialesacuerdo@gmail.com
-              </p>
+              <label className="block text-sm">
+                <span className="mb-1 block text-muted-foreground">
+                  Narrativa sugerida (editable)
+                </span>
+                <textarea
+                  value={narrativaFinal}
+                  onChange={(e) => {
+                    setNarrativaFinal(e.target.value);
+                    setEditadaPorUsuario(true);
+                  }}
+                  rows={14}
+                  maxLength={20000}
+                  placeholder="Aquí aparecerá la narrativa sugerida por el asesor para su edición."
+                  className="w-full rounded-xl border border-input bg-secondary/30 p-3 text-sm leading-relaxed outline-none focus:ring-2 focus:ring-ring"
+                />
+              </label>
+              <button
+                onClick={enviarNarrativaLista}
+                className="w-full rounded-xl px-4 py-3 font-semibold text-accent-foreground"
+                style={{ backgroundImage: "var(--gradient-dorado)" }}
+              >
+                Enviar narrativa lista
+              </button>
+              {avisoEnvio && <p className="text-xs text-muted-foreground">{avisoEnvio}</p>}
             </div>
           )}
         </section>
