@@ -62,6 +62,47 @@ function TextoAsesor({ texto }: { texto: string }) {
   );
 }
 
+function extraerNarrativaSugerida(texto: string): string {
+  const lineas = texto.split("\n");
+  const inicio = lineas.findIndex(
+    (l) =>
+      /^#{1,4}\s/.test(l) &&
+      /narrativa\s+(sugerida|corregida|propuesta|mejorada|reescrita|final)/i.test(l),
+  );
+  if (inicio === -1) return "";
+  const resto = lineas.slice(inicio + 1);
+  const fin = resto.findIndex((l) => /^#{1,4}\s/.test(l));
+  const cuerpo = (fin === -1 ? resto : resto.slice(0, fin)).join("\n");
+  return cuerpo.replace(/```/g, "").replace(/\*\*/g, "").trim();
+}
+
+function TextoAsesorLegacy({ texto }: { texto: string }) {
+  const lineas = texto.split("\n");
+  return (
+    <div className="space-y-1">
+      {lineas.map((linea, i) => {
+        const limpia = linea.replace(/\*\*/g, "");
+        if (/^#{2,4}\s/.test(linea)) {
+          return (
+            <p key={i} className="texto-institucional pt-2 text-xs font-bold text-accent">
+              {limpia.replace(/^#{2,4}\s/, "")}
+            </p>
+          );
+        }
+        if (/^[-*]\s/.test(limpia)) {
+          return (
+            <p key={i} className="pl-3 -indent-3">
+              • {limpia.replace(/^[-*]\s/, "")}
+            </p>
+          );
+        }
+        if (!limpia.trim()) return <div key={i} className="h-1" />;
+        return <p key={i}>{limpia}</p>;
+      })}
+    </div>
+  );
+}
+
 function BloqueHallazgo({ h }: { h: Hallazgo }) {
   return (
     <div className={`rounded-xl border p-3 ${COLOR_SEVERIDAD[h.severidad]}`}>
