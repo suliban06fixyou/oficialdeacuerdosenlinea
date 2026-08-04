@@ -103,18 +103,15 @@ export default function RevisorIPH() {
   const [narrativa, setNarrativa] = useState("");
   const [oficial, setOficial] = useState("");
   const [folio, setFolio] = useState("");
-  const [faltaAdministrativa, setFaltaAdministrativa] = useState("");
-  const [delito, setDelito] = useState("");
+  const [faltaODelito, setFaltaODelito] = useState("");
+  const [lugar, setLugar] = useState("");
   const [pregunta, setPregunta] = useState("");
   const [cargando, setCargando] = useState(false);
   const [narrativaFinal, setNarrativaFinal] = useState("");
   const [editadaPorUsuario, setEditadaPorUsuario] = useState(false);
   const [avisoEnvio, setAvisoEnvio] = useState("");
 
-  const datosHecho: DatosHecho = useMemo(
-    () => ({ faltaAdministrativa, delito }),
-    [faltaAdministrativa, delito],
-  );
+  const datosHecho: DatosHecho = useMemo(() => ({ faltaODelito, lugar }), [faltaODelito, lugar]);
   const [mensajes, setMensajes] = useState<Mensaje[]>([
     {
       id: "bienvenida",
@@ -132,14 +129,15 @@ export default function RevisorIPH() {
     const items: { etiqueta: string; valor: string }[] = [];
     if (oficial.trim()) items.push({ etiqueta: "Oficial", valor: oficial.trim() });
     if (folio.trim()) items.push({ etiqueta: "Folio", valor: folio.trim() });
-    if (faltaAdministrativa.trim()) items.push({ etiqueta: "Falta adm.", valor: faltaAdministrativa.trim() });
-    if (delito.trim()) items.push({ etiqueta: "Delito", valor: delito.trim() });
+    if (faltaODelito.trim())
+      items.push({ etiqueta: "Falta adm. y/o delito", valor: faltaODelito.trim() });
+    if (lugar.trim()) items.push({ etiqueta: "Lugar del evento", valor: lugar.trim() });
     PASOS_CRONOLOGICOS.forEach((p) => {
       const v = horas[p.key];
       if (v) items.push({ etiqueta: p.label, valor: v });
     });
     return items;
-  }, [oficial, folio, faltaAdministrativa, delito, horas]);
+  }, [oficial, folio, faltaODelito, lugar, horas]);
   const ultimaRevisionIA = [...mensajes].reverse().find((m) => m.autor === "asesor" && m.id.startsWith("ia-"));
 
   useEffect(() => {
@@ -196,8 +194,8 @@ export default function RevisorIPH() {
         data: {
           narrativa,
           horas,
-          faltaAdministrativa: faltaAdministrativa.trim() || undefined,
-          delito: delito.trim() || undefined,
+          faltaODelito: faltaODelito.trim() || undefined,
+          lugar: lugar.trim() || undefined,
           hallazgosLocales: hallazgos.map((h) => `${h.categoria}: ${h.titulo} — ${h.detalle}`),
           pregunta: pregunta.trim() || undefined,
         },
