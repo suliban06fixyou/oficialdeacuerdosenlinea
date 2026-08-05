@@ -110,6 +110,7 @@ export default function RevisorIPH() {
   const [narrativaFinal, setNarrativaFinal] = useState("");
   const [editadaPorUsuario, setEditadaPorUsuario] = useState(false);
   const [avisoEnvio, setAvisoEnvio] = useState("");
+  const [menuEnvio, setMenuEnvio] = useState(false);
 
   const datosHecho: DatosHecho = useMemo(() => ({ faltaODelito, lugar }), [faltaODelito, lugar]);
   const [mensajes, setMensajes] = useState<Mensaje[]>([
@@ -156,23 +157,26 @@ export default function RevisorIPH() {
       setAvisoEnvio("No hay narrativa para enviar.");
       return;
     }
-    try {
-      await navigator.clipboard.writeText(texto);
-      setAvisoEnvio("Narrativa copiada al portapapeles.");
-    } catch {
-      setAvisoEnvio("No fue posible copiar automáticamente; copie el texto manualmente.");
-    }
-    if (typeof navigator !== "undefined" && navigator.share) {
+    copiar(texto);
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
       try {
         await navigator.share({ text: texto });
         setAvisoEnvio("Narrativa copiada y compartida.");
+        return;
       } catch {
-        // el usuario canceló el menú de compartir
+        setAvisoEnvio("Envío cancelado. La narrativa quedó copiada.");
+        return;
       }
-    } else {
-      setAvisoEnvio(
-        "Narrativa copiada. Este dispositivo no ofrece el menú de mensajería; péguela en la aplicación que desee.",
-      );
+    }
+    setMenuEnvio(true);
+  }
+
+  function copiar(texto: string) {
+    try {
+      void navigator.clipboard?.writeText(texto);
+      setAvisoEnvio("Narrativa copiada al portapapeles.");
+    } catch {
+      setAvisoEnvio("No fue posible copiar automáticamente; copie el texto manualmente.");
     }
   }
 
