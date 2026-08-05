@@ -110,6 +110,7 @@ export default function RevisorIPH() {
   const [narrativaFinal, setNarrativaFinal] = useState("");
   const [editadaPorUsuario, setEditadaPorUsuario] = useState(false);
   const [avisoEnvio, setAvisoEnvio] = useState("");
+  const [menuEnvio, setMenuEnvio] = useState(false);
 
   const datosHecho: DatosHecho = useMemo(() => ({ faltaODelito, lugar }), [faltaODelito, lugar]);
   const [mensajes, setMensajes] = useState<Mensaje[]>([
@@ -156,23 +157,26 @@ export default function RevisorIPH() {
       setAvisoEnvio("No hay narrativa para enviar.");
       return;
     }
-    try {
-      await navigator.clipboard.writeText(texto);
-      setAvisoEnvio("Narrativa copiada al portapapeles.");
-    } catch {
-      setAvisoEnvio("No fue posible copiar automáticamente; copie el texto manualmente.");
-    }
-    if (typeof navigator !== "undefined" && navigator.share) {
+    copiar(texto);
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
       try {
         await navigator.share({ text: texto });
         setAvisoEnvio("Narrativa copiada y compartida.");
+        return;
       } catch {
-        // el usuario canceló el menú de compartir
+        setAvisoEnvio("Envío cancelado. La narrativa quedó copiada.");
+        return;
       }
-    } else {
-      setAvisoEnvio(
-        "Narrativa copiada. Este dispositivo no ofrece el menú de mensajería; péguela en la aplicación que desee.",
-      );
+    }
+    setMenuEnvio(true);
+  }
+
+  function copiar(texto: string) {
+    try {
+      void navigator.clipboard?.writeText(texto);
+      setAvisoEnvio("Narrativa copiada al portapapeles.");
+    } catch {
+      setAvisoEnvio("No fue posible copiar automáticamente; copie el texto manualmente.");
     }
   }
 
@@ -542,6 +546,55 @@ export default function RevisorIPH() {
       <footer className="border-t border-border/60 py-6 text-center text-xs text-muted-foreground">
         Uso interno · Dirección de Seguridad Pública Municipal de Chihuahua
       </footer>
+
+      {menuEnvio && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
+          onClick={() => setMenuEnvio(false)}
+        >
+          <div
+            className="w-full max-w-sm space-y-2 rounded-2xl border border-border bg-card p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="texto-institucional text-sm font-bold">Enviar narrativa por</p>
+            <p className="text-xs text-muted-foreground">
+              La narrativa ya está copiada; elija la aplicación de mensajería.
+            </p>
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(narrativaFinal.trim())}`}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => setMenuEnvio(false)}
+              className="block rounded-xl border border-border bg-secondary/40 px-4 py-3 text-center text-sm font-semibold"
+            >
+              WhatsApp
+            </a>
+            <a
+              href={`sms:?body=${encodeURIComponent(narrativaFinal.trim())}`}
+              onClick={() => setMenuEnvio(false)}
+              className="block rounded-xl border border-border bg-secondary/40 px-4 py-3 text-center text-sm font-semibold"
+            >
+              Mensaje SMS
+            </a>
+            <a
+              href={`mailto:?subject=${encodeURIComponent("Narrativa IPH")}&body=${encodeURIComponent(narrativaFinal.trim())}`}
+              onClick={() => setMenuEnvio(false)}
+              className="block rounded-xl border border-border bg-secondary/40 px-4 py-3 text-center text-sm font-semibold"
+            >
+              Correo electrónico
+            </a>
+            <button
+              onClick={() => {
+                copiar(narrativaFinal.trim());
+                setMenuEnvio(false);
+              }}
+              className="w-full rounded-xl border border-border px-4 py-3 text-sm font-semibold"
+            >
+              Copiar de nuevo
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
