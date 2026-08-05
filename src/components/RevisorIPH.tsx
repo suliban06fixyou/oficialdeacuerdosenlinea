@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, useEffect } from "react";
+import { Fragment, useMemo, useRef, useState, useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   HORAS_VACIAS,
@@ -485,16 +485,35 @@ export default function RevisorIPH() {
 
           <div className="flex-1 space-y-3 overflow-y-auto p-4">
             {mensajes.map((m) => (
-              <div
-                key={m.id}
-                className={`max-w-[92%] rounded-2xl border px-3 py-2 text-sm whitespace-pre-wrap ${
-                  m.autor === "asesor"
-                    ? "border-border bg-card/85"
-                    : "ml-auto border-accent/50 bg-accent/15"
-                }`}
-              >
-                {m.autor === "asesor" ? <TextoAsesor texto={m.texto} /> : m.texto}
-              </div>
+              <Fragment key={m.id}>
+                <div
+                  className={`max-w-[92%] rounded-2xl border px-3 py-2 text-sm whitespace-pre-wrap ${
+                    m.autor === "asesor"
+                      ? "border-border bg-card/85"
+                      : "ml-auto border-accent/50 bg-accent/15"
+                  }`}
+                >
+                  {m.autor === "asesor" ? <TextoAsesor texto={m.texto} /> : m.texto}
+                </div>
+                {m.id === "bienvenida" && (
+                  <div className="max-w-[92%] rounded-2xl border border-border bg-card/85 px-3 py-2">
+                    <span className="mb-1 block text-xs text-muted-foreground">
+                      Narrativa corregida sugerida (editable)
+                    </span>
+                    <textarea
+                      value={narrativaFinal}
+                      onChange={(e) => {
+                        setNarrativaFinal(e.target.value);
+                        setEditadaPorUsuario(true);
+                      }}
+                      rows={5}
+                      maxLength={20000}
+                      placeholder="Aquí aparecerá la narrativa sugerida por el asesor para su edición."
+                      className="w-full rounded-xl border border-input bg-secondary/30 p-2 text-sm leading-relaxed outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  </div>
+                )}
+              </Fragment>
             ))}
             {cargando && (
               <div className="max-w-[60%] rounded-2xl border border-border bg-card/85 px-3 py-2 text-sm text-muted-foreground">
@@ -515,22 +534,6 @@ export default function RevisorIPH() {
               placeholder="Pregunte al asesor: ¿cómo redacto el aseguramiento?"
               className="w-full rounded-xl border border-input bg-secondary/40 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
             />
-            <label className="block text-xs">
-              <span className="mb-1 block text-muted-foreground">
-                Narrativa corregida sugerida (editable)
-              </span>
-              <textarea
-                value={narrativaFinal}
-                onChange={(e) => {
-                  setNarrativaFinal(e.target.value);
-                  setEditadaPorUsuario(true);
-                }}
-                rows={5}
-                maxLength={20000}
-                placeholder="Aquí aparecerá la narrativa sugerida por el asesor para su edición."
-                className="w-full rounded-xl border border-input bg-secondary/30 p-2 text-sm leading-relaxed outline-none focus:ring-2 focus:ring-ring"
-              />
-            </label>
             <button
               onClick={enviarNarrativaLista}
               className="w-full rounded-xl px-4 py-3 font-semibold text-accent-foreground"
