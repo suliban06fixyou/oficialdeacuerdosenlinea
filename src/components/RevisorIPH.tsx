@@ -534,22 +534,6 @@ export default function RevisorIPH() {
               placeholder="Pregunte al asesor: ¿cómo redacto el aseguramiento?"
               className="w-full rounded-xl border border-input bg-secondary/40 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
             />
-            <label className="block text-xs">
-              <span className="mb-1 block text-muted-foreground">
-                Narrativa corregida sugerida (editable)
-              </span>
-              <textarea
-                value={narrativaFinal}
-                onChange={(e) => {
-                  setNarrativaFinal(e.target.value);
-                  setEditadaPorUsuario(true);
-                }}
-                rows={5}
-                maxLength={20000}
-                placeholder="Aquí aparecerá la narrativa sugerida por el asesor para su edición."
-                className="w-full rounded-xl border border-input bg-secondary/30 p-2 text-sm leading-relaxed outline-none focus:ring-2 focus:ring-ring"
-              />
-            </label>
             <button
               onClick={enviarNarrativaLista}
               className="w-full rounded-xl px-4 py-3 font-semibold text-accent-foreground"
