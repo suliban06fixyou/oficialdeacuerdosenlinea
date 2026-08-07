@@ -26,7 +26,7 @@ const PASOS_MENU: { id: Paso; num: string; titulo: string; ayuda: string }[] = [
   { id: "cronologia", num: "1", titulo: "Cronología", ayuda: "Horas de la intervención" },
   { id: "narrativa", num: "2", titulo: "Narrativa", ayuda: "Redacción de los hechos" },
   { id: "revision", num: "3", titulo: "Revisión", ayuda: "Hallazgos y consejos" },
-  { id: "envio", num: "4", titulo: "Envío", ayuda: "Comandancia Sur o Norte" },
+  { id: "envio", num: "4", titulo: "Copiar", ayuda: "Copiar narrativa lista" },
 ];
 
 const COLOR_SEVERIDAD: Record<string, string> = {
@@ -440,7 +440,7 @@ export default function RevisorIPH() {
           {paso === "envio" && (
             <div className="space-y-4">
               <div>
-                <h2 className="texto-institucional text-lg font-bold">Envío de la narrativa</h2>
+                <h2 className="texto-institucional text-lg font-bold">Copiar narrativa lista</h2>
                 <p className="text-sm text-muted-foreground">
                   La narrativa revisada queda lista para su envío conforme a los protocolos institucionales.
                 </p>
