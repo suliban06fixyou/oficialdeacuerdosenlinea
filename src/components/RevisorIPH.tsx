@@ -453,7 +453,7 @@ export default function RevisorIPH() {
               )}
               <p className="rounded-xl border border-border bg-secondary/30 p-3 text-sm text-muted-foreground">
                 Edite la narrativa sugerida en el cuadro del chat del Asesor IPH y presione ahí
-                “Enviar narrativa lista”.
+                “Copiar narrativa lista”.
               </p>
             </div>
           )}
@@ -539,7 +539,7 @@ export default function RevisorIPH() {
               className="w-full rounded-xl px-4 py-3 font-semibold text-accent-foreground"
               style={{ backgroundImage: "var(--gradient-dorado)" }}
             >
-              Enviar narrativa lista
+              Copiar narrativa lista
             </button>
             {avisoEnvio && <p className="text-xs text-muted-foreground">{avisoEnvio}</p>}
           </div>
