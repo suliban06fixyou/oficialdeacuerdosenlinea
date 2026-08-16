@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader, setResponseHeaders } from "@tanstack/react-start/server";
+import { getRequestIP, setResponseHeaders } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { EntradaRevision, SISTEMA } from "./revision.prompt";
 
@@ -11,21 +11,13 @@ const OPENAI_MODEL = "gpt-5.4-mini";
 
 type DatosRevision = z.infer<typeof EntradaRevision>;
 
-// Best-effort per-instance limiter. En producción, Cloudflare Rate Limiting será
-// la capa principal para que el límite funcione de forma consistente entre réplicas.
+// Límite de respaldo por instancia. En producción, el límite distribuido de
+// Cloudflare será la capa principal para que funcione de forma consistente entre réplicas.
 const solicitudes = new Map<string, { inicio: number; cantidad: number }>();
-
-function obtenerIdentificadorSolicitud() {
-  return (
-    getRequestHeader("cf-connecting-ip") ??
-    getRequestHeader("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "unknown"
-  );
-}
 
 function verificarLimiteSolicitud() {
   const ahora = Date.now();
-  const identificador = obtenerIdentificadorSolicitud();
+  const identificador = getRequestIP({ xForwardedFor: true }) ?? "unknown";
   const actual = solicitudes.get(identificador);
 
   if (!actual || ahora - actual.inicio >= RATE_WINDOW_MS) {
@@ -38,6 +30,13 @@ function verificarLimiteSolicitud() {
   }
 
   actual.cantidad += 1;
+
+  // Evita que el mapa crezca indefinidamente si recibe muchas IP distintas.
+  if (solicitudes.size > 10_000) {
+    for (const [clave, valor] of solicitudes) {
+      if (ahora - valor.inicio >= RATE_WINDOW_MS) solicitudes.delete(clave);
+    }
+  }
 }
 
 function limitarCampo(valor: string | undefined, maximo = MAX_CAMPO) {
