@@ -1,9 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { EntradaRevision, SISTEMA } from "./revision.prompt";
 
 const MAX_NARRATIVA = 40_000;
 const MAX_CAMPO = 2_000;
 const OPENAI_MODEL = "gpt-5.4-mini";
+
+type DatosRevision = z.infer<typeof EntradaRevision>;
 
 function limitarCampo(valor: string | undefined, maximo = MAX_CAMPO) {
   if (!valor) return valor;
@@ -16,7 +19,7 @@ function limitarCampo(valor: string | undefined, maximo = MAX_CAMPO) {
  * necesario para revisar la narrativa policial y una sustitución automática
  * podría alterar el sentido jurídico del IPH.
  */
-function minimizarDatosParaIA(data: EntradaRevision) {
+function minimizarDatosParaIA(data: DatosRevision) {
   const narrativa = data.narrativa.trim();
   if (narrativa.length > MAX_NARRATIVA) {
     throw new Error(`La narrativa supera el máximo permitido de ${MAX_NARRATIVA.toLocaleString()} caracteres.`);
