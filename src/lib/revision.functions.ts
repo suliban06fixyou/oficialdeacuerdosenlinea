@@ -1,3 +1,4 @@
+import { env } from "cloudflare:workers";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestIP, setResponseHeaders } from "@tanstack/react-start/server";
 import { z } from "zod";
@@ -78,7 +79,9 @@ export const revisarNarrativa = createServerFn({ method: "POST" })
 
     verificarLimiteSolicitud();
 
-    const key = process.env.OPENAI_API_KEY;
+    // En Cloudflare Workers, los secretos son bindings del Worker. Leemos
+    // primero desde `cloudflare:workers` y dejamos process.env como respaldo.
+    const key = env.OPENAI_API_KEY ?? process.env.OPENAI_API_KEY;
     if (!key) throw new Error("Falta la configuración segura del servicio de IA.");
 
     const segura = minimizarDatosParaIA(data);
