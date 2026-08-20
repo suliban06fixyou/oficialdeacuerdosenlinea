@@ -170,5 +170,5 @@ export const revisarNarrativa = createServerFn({ method: "POST" })
     const resultado = texto.trim();
     if (!resultado) throw new Error("El servicio de IA no devolvió contenido.");
 
-    return { resultado };
+    return { texto: resultado, resultado };
   });
