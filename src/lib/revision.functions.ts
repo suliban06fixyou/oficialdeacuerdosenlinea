@@ -1,36 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestIP, setResponseHeaders } from "@tanstack/react-start/server";
+import { setResponseHeaders } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { EntradaRevision, SISTEMA } from "./revision.prompt";
 
 const MAX_NARRATIVA = 40_000;
 const MAX_CAMPO = 2_000;
-const MAX_REVISIONS_PER_WINDOW = 10;
-const RATE_WINDOW_MS = 10 * 60 * 1000;
 const OPENAI_MODEL = "gpt-5.4-mini";
 
 type DatosRevision = z.infer<typeof EntradaRevision>;
-
-const solicitudes = new Map<string, { inicio: number; cantidad: number }>();
-
-function verificarLimiteSolicitud() {
-  const ahora = Date.now();
-  const identificador = getRequestIP({ xForwardedFor: true }) ?? "unknown";
-  const actual = solicitudes.get(identificador);
-  if (!actual || ahora - actual.inicio >= RATE_WINDOW_MS) {
-    solicitudes.set(identificador, { inicio: ahora, cantidad: 1 });
-    return;
-  }
-  if (actual.cantidad >= MAX_REVISIONS_PER_WINDOW) {
-    throw new Error("Límite temporal de revisiones alcanzado. Espere unos minutos antes de volver a intentarlo.");
-  }
-  actual.cantidad += 1;
-  if (solicitudes.size > 10_000) {
-    for (const [clave, valor] of solicitudes) {
-      if (ahora - valor.inicio >= RATE_WINDOW_MS) solicitudes.delete(clave);
-    }
-  }
-}
 
 function limitarCampo(valor: string | undefined, maximo = MAX_CAMPO) {
   if (!valor) return valor;
@@ -63,10 +40,6 @@ export const revisarNarrativa = createServerFn({ method: "POST" })
       }),
     );
 
-    verificarLimiteSolicitud();
-
-    // The custom Cloudflare server entry injects the Worker secret into
-    // process.env at request time. This keeps the OpenAI key server-only.
     const key = process.env.OPENAI_API_KEY;
     if (!key) throw new Error("Falta la configuración segura del servicio de IA.");
 
