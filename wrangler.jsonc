@@ -9,5 +9,15 @@
   },
   "secrets": {
     "required": ["OPENAI_API_KEY"]
-  }
+  },
+  "ratelimits": [
+    {
+      "name": "IPH_RATE_LIMITER",
+      "namespace_id": "2026082001",
+      "simple": {
+        "limit": 10,
+        "period": 60
+      }
+    }
+  ]
 }
