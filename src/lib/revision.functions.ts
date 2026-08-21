@@ -1,4 +1,3 @@
-import { env } from "cloudflare:workers";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestIP, setResponseHeaders } from "@tanstack/react-start/server";
 import { z } from "zod";
@@ -11,7 +10,6 @@ const RATE_WINDOW_MS = 10 * 60 * 1000;
 const OPENAI_MODEL = "gpt-5.4-mini";
 
 type DatosRevision = z.infer<typeof EntradaRevision>;
-type CloudflareEnv = { OPENAI_API_KEY?: string };
 
 const solicitudes = new Map<string, { inicio: number; cantidad: number }>();
 
@@ -67,7 +65,9 @@ export const revisarNarrativa = createServerFn({ method: "POST" })
 
     verificarLimiteSolicitud();
 
-    const key = (env as CloudflareEnv).OPENAI_API_KEY ?? process.env.OPENAI_API_KEY;
+    // The custom Cloudflare server entry injects the Worker secret into
+    // process.env at request time. This keeps the OpenAI key server-only.
+    const key = process.env.OPENAI_API_KEY;
     if (!key) throw new Error("Falta la configuración segura del servicio de IA.");
 
     const segura = minimizarDatosParaIA(data);
