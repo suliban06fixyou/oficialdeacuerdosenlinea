@@ -19,5 +19,12 @@
         "period": 60
       }
     }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "oficial-acuerdos-uso",
+      "database_id": "70272a2a-d86b-4e3a-b3c5-fbb1c0fe7904"
+    }
   ]
 }
