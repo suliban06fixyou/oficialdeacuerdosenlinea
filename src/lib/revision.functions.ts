@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader, setResponseHeaders } from "@tanstack/react-start/server";
+import { env as cloudflareEnv } from "cloudflare:workers";
 import { z } from "zod";
 import { EntradaRevision, SISTEMA } from "./revision.prompt";
 
@@ -22,8 +23,12 @@ type D1DatabaseLike = {
   prepare: (query: string) => D1Statement;
 };
 
+type CloudflareBindings = {
+  DB?: D1DatabaseLike;
+};
+
 function getDb(): D1DatabaseLike {
-  const db = (process.env as unknown as Record<string, unknown>).DB as D1DatabaseLike | undefined;
+  const db = (cloudflareEnv as unknown as CloudflareBindings).DB;
   if (!db || typeof db.prepare !== "function") {
     throw new Error("Falta la configuración segura del contador de uso.");
   }
