@@ -185,6 +185,9 @@ export default function RevisorIPH() {
   }
 
   async function pedirRevision() {
+    // Evita solicitudes duplicadas por doble clic o por presionar Enter repetidamente.
+    if (cargando) return;
+
     if (!narrativa.trim()) {
       agregar("asesor", "Primero capture la narrativa en el paso 2 para poder revisarla.");
       setPaso("narrativa");
@@ -528,7 +531,10 @@ export default function RevisorIPH() {
               value={pregunta}
               onChange={(e) => setPregunta(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") pedirRevision();
+                if (e.key === "Enter" && !cargando) {
+                  e.preventDefault();
+                  pedirRevision();
+                }
               }}
               maxLength={500}
               placeholder="Pregunte al asesor: ¿cómo redacto el aseguramiento?"
