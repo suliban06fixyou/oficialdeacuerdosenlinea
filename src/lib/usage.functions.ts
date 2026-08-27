@@ -10,10 +10,17 @@ type D1DatabaseLike = {
   prepare: (query: string) => D1Statement;
 };
 
-type CloudflareBindings = { DB?: D1DatabaseLike };
+type CloudflareBindings = {
+  DB?: D1DatabaseLike;
+  ADMIN_USAGE_TOKEN?: string;
+};
+
+function getEnv(): CloudflareBindings {
+  return cloudflareEnv as unknown as CloudflareBindings;
+}
 
 function getDb(): D1DatabaseLike {
-  const db = (cloudflareEnv as unknown as CloudflareBindings).DB;
+  const db = getEnv().DB;
   if (!db || typeof db.prepare !== "function") {
     throw new Error("No está disponible el contador de uso.");
   }
@@ -24,8 +31,24 @@ function fechaUTC() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export const obtenerEstadisticasUso = createServerFn({ method: "GET" })
-  .handler(async () => {
+export const obtenerEstadisticasUso = createServerFn({ method: "POST" })
+  .validator((data: unknown) => {
+    if (!data || typeof data !== "object" || typeof (data as { token?: unknown }).token !== "string") {
+      throw new Error("Solicitud administrativa no válida.");
+    }
+    return data as { token: string };
+  })
+  .handler(async ({ data }) => {
+    const tokenConfigurado = getEnv().ADMIN_USAGE_TOKEN;
+
+    if (!tokenConfigurado) {
+      throw new Error("El acceso administrativo no está configurado.");
+    }
+
+    if (data.token !== tokenConfigurado) {
+      throw new Error("Acceso no autorizado.");
+    }
+
     const db = getDb();
     const fecha = fechaUTC();
 
