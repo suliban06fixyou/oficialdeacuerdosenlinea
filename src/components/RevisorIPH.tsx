@@ -380,6 +380,14 @@ export default function RevisorIPH() {
                   </li>
                 ))}
               </ul>
+              <div className="rounded-xl border border-accent/40 bg-accent/10 p-3 text-xs text-foreground">
+                <p className="font-semibold">Uso responsable de la herramienta</p>
+                <p className="mt-1 text-muted-foreground">
+                  La IA es un apoyo de redacción y revisión. Antes de enviar cualquier documento, el oficial debe verificar
+                  personalmente los hechos, fundamentos y datos. Evite incluir información personal o sensible que no sea necesaria
+                  para la revisión.
+                </p>
+              </div>
               <textarea
                 value={narrativa}
                 onChange={(e) => setNarrativa(e.target.value)}
