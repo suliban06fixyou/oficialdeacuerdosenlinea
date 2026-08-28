@@ -191,6 +191,38 @@ export const obtenerEstadisticasUso = createServerFn({ method: "GET" }).handler(
   };
 });
 
+export const obtenerEstadoSistema = createServerFn({ method: "GET" }).handler(async () => {
+  exigirAdmin();
+
+  const bindings = cloudflareEnv as unknown as CloudflareBindings;
+  let d1 = false;
+  let revisionesHoy = 0;
+
+  try {
+    const db = getDb();
+    const resultado = await db.prepare("SELECT review_count FROM daily_usage WHERE usage_date = ?").bind(fechaUTC()).all<{ review_count: number }>();
+    d1 = true;
+    revisionesHoy = Number(resultado.results?.[0]?.review_count ?? 0);
+  } catch {
+    d1 = false;
+  }
+
+  const ia = !!bindings.OPENAI_API_KEY;
+  const admin = !!bindings.ADMIN_PANEL_PASSWORD && !!bindings.ADMIN_SESSION_TOKEN;
+
+  return {
+    fecha: fechaUTC(),
+    d1,
+    ia,
+    admin,
+    limiteDiario: DAILY_GLOBAL_LIMIT,
+    revisionesHoy,
+    disponible: Math.max(DAILY_GLOBAL_LIMIT - revisionesHoy, 0),
+    capacidadDisponible: revisionesHoy < DAILY_GLOBAL_LIMIT,
+    respaldo: true,
+  };
+});
+
 export const obtenerRespaldoUso = createServerFn({ method: "POST" }).handler(async () => {
   const db = getDb();
 
