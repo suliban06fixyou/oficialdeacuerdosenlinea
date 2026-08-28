@@ -12,6 +12,7 @@ import {
 import { revisarNarrativa } from "@/lib/revision.functions";
 import logoDspm from "@/assets/logo-dspm-oficial.png.asset.json";
 import oficialAcuerdos from "@/assets/oficial-acuerdos-nn.jpg.asset.json";
+import placaPolicial from "@/assets/placa-policial.png";
 const fondoChat = "/fondo-chat.jpg";
 
 type Paso = "cronologia" | "narrativa" | "revision" | "envio";
@@ -218,56 +219,70 @@ export default function RevisorIPH() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header
-        className="border-b border-border/70 shadow-[var(--shadow-placa)]"
-        style={{ backgroundImage: "var(--gradient-marino)" }}
-      >
-        <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-5">
+      <header className="border-b border-blue-400/30 bg-[#08264a] shadow-lg">
+        <div className="mx-auto grid max-w-7xl grid-cols-[auto_1fr] items-center gap-4 px-4 py-4 sm:grid-cols-[auto_1fr_auto] sm:gap-8 sm:py-5">
           <img
-            src={logoDspm.url}
-            alt="Gobierno Municipal de Chihuahua · Dirección de Seguridad Pública Municipal"
-            width={1320}
-            height={460}
-            className="h-12 w-auto rounded-lg bg-white p-1.5 sm:h-14"
+            src={placaPolicial}
+            alt="Placa Policía Chihuahua"
+            className="h-20 w-16 object-contain sm:h-28 sm:w-24"
           />
-          <div className="flex-1">
-            <h1 className="texto-institucional text-xl leading-tight font-bold sm:text-2xl">
-              REVISOR DE NARRATIVAS IPH OFICIAL DE ACUERDOS EN LINEA
+          <div className="min-w-0 text-center">
+            <h1 className="text-xl font-bold tracking-tight text-white sm:text-3xl">
+              Oficial de Acuerdos en Línea
             </h1>
-            <p className="text-sm text-muted-foreground">
-              Dirección de Seguridad Pública Municipal Chihuahua, Cordinacion Juridica de la Subdireccion Tactica
+            <p className="mt-1 text-sm font-semibold text-sky-300 sm:text-base">
+              Revisión de narrativas de IPH con apoyo de IA
             </p>
           </div>
-          <img
-            src={oficialAcuerdos.url}
-            alt="Oficial de Acuerdos de la Policía Municipal de Chihuahua"
-            width={56}
-            height={56}
-            loading="lazy"
-            className="hidden h-14 w-14 rounded-full border border-accent/50 object-cover object-top sm:block"
-          />
+          <div className="hidden min-w-[150px] text-right sm:block">
+            <p className="text-sm font-semibold text-sky-200">Dirección de Seguridad Pública Municipal</p>
+            <p className="text-xs text-sky-300">Chihuahua, Chih.</p>
+          </div>
         </div>
       </header>
 
-      <nav className="border-b border-border/60 bg-card/60">
-        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-2 px-4 py-3 sm:grid-cols-4">
+      <nav className="border-b border-border bg-white/95 shadow-sm">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-2 px-4 py-3 sm:grid-cols-4">
           {PASOS_MENU.map((p) => (
             <button
               key={p.id}
               onClick={() => setPaso(p.id)}
               className={`rounded-xl border px-3 py-2 text-left transition-colors ${
                 paso === p.id
-                  ? "border-accent bg-accent/15"
-                  : "border-border bg-secondary/40 hover:bg-secondary/70"
+                  ? "border-blue-700 bg-blue-50 text-blue-950 shadow-sm"
+                  : "border-slate-200 bg-white hover:bg-slate-50"
               }`}
             >
-              <span className="texto-institucional text-xs text-accent">Paso {p.num}</span>
+              <span className="text-xs font-bold text-blue-700">Paso {p.num}</span>
               <span className="block text-sm font-semibold">{p.titulo}</span>
               <span className="block text-xs text-muted-foreground">{p.ayuda}</span>
             </button>
           ))}
         </div>
       </nav>
+
+      <section className="mx-auto grid max-w-7xl gap-3 px-4 pt-5 sm:grid-cols-3">
+        <div className="institucional-card relative min-h-40 overflow-hidden rounded-xl border border-blue-950/20 p-5 text-white shadow-md" style={{ backgroundImage: `linear-gradient(90deg, rgba(4,24,50,.88), rgba(4,24,50,.45)), url(${fondoChat})`, backgroundSize: "cover", backgroundPosition: "center" }}>
+          <img src={placaPolicial} alt="" className="h-20 w-16 object-contain drop-shadow-lg" />
+          <div className="absolute inset-x-5 bottom-4">
+            <p className="text-2xl font-bold">Cercanía</p>
+            <p className="text-sm text-blue-100">con la ciudadanía</p>
+          </div>
+        </div>
+        <div className="institucional-card relative min-h-40 overflow-hidden rounded-xl border border-blue-950/20 bg-[linear-gradient(135deg,#123b6d,#0b2342)] p-5 text-white shadow-md">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(96,165,250,.35),transparent_45%)]" />
+          <div className="relative flex h-full flex-col justify-end">
+            <p className="text-3xl font-bold">Chihuahua</p>
+            <p className="text-blue-100">nuestra casa, nuestro compromiso</p>
+          </div>
+        </div>
+        <div className="institucional-card relative min-h-40 overflow-hidden rounded-xl border border-blue-950/20 p-5 text-white shadow-md" style={{ backgroundImage: `linear-gradient(90deg, rgba(4,24,50,.35), rgba(4,24,50,.88)), url(${oficialAcuerdos.url})`, backgroundSize: "cover", backgroundPosition: "center 25%" }}>
+          <div className="absolute inset-x-5 bottom-4">
+            <p className="text-3xl font-bold">Servir</p>
+            <p className="text-blue-100">es nuestra vocación</p>
+          </div>
+        </div>
+      </section>
 
       {paso !== "cronologia" && resumen.length > 0 && (
         <div className="border-b border-border/60 bg-secondary/25">
@@ -289,14 +304,14 @@ export default function RevisorIPH() {
         </div>
       )}
 
-      <main className="mx-auto grid max-w-6xl gap-5 px-4 py-6 lg:grid-cols-[1.05fr_1fr]">
-        <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-placa)]">
+      <main className="mx-auto grid max-w-7xl gap-5 px-4 py-5 lg:grid-cols-[1.1fr_.9fr]">
+        <section className="rounded-2xl border border-slate-200 bg-card p-5 shadow-[var(--shadow-placa)]">
           {paso === "cronologia" && (
             <div className="space-y-4">
               <div>
-                <h2 className="texto-institucional text-lg font-bold">Secuencia cronológica</h2>
+                <h2 className="text-2xl font-bold text-[#12345b]">Fase de cronología</h2>
                 <p className="text-sm text-muted-foreground">
-                  Orden unidireccional obligatorio, formato de 24 horas (00:00 a 23:59).
+                  Describe de forma clara y ordenada los hechos. Las horas se capturan en formato de 24 horas (00:00 a 23:59).
                 </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -471,7 +486,7 @@ export default function RevisorIPH() {
         </section>
 
         <section
-          className="flex max-h-[70vh] min-h-[480px] flex-col overflow-hidden rounded-2xl border border-border shadow-[var(--shadow-placa)]"
+          className="flex max-h-[70vh] min-h-[480px] flex-col overflow-hidden rounded-2xl border border-slate-200 shadow-[var(--shadow-placa)]"
           style={{
             backgroundImage: `linear-gradient(oklch(0.16 0.05 258 / 0.86), oklch(0.16 0.05 258 / 0.94)), url(${fondoChat})`,
             backgroundSize: "cover",
@@ -560,8 +575,8 @@ export default function RevisorIPH() {
         </section>
       </main>
 
-      <footer className="border-t border-border/60 py-6 text-center text-xs text-muted-foreground">
-        Uso interno · Dirección de Seguridad Pública Municipal de Chihuahua
+      <footer className="mt-3 border-t border-blue-950/30 bg-[#08264a] py-6 text-center text-xs text-blue-100">
+        Dirección de Seguridad Pública Municipal · Chihuahua, Chih. · Uso interno
       </footer>
 
       {menuEnvio && (
