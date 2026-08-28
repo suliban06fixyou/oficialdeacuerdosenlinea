@@ -305,15 +305,6 @@ export default function RevisorIPH() {
         </div>
       )}
 
-      <section className="mx-auto max-w-6xl px-4 pt-5">
-        <div className="grid gap-3 sm:grid-cols-4">
-          <div className="rounded-xl border border-border bg-card p-3 shadow-sm"><p className="text-xs text-muted-foreground">Revisiones hoy</p><p className="text-2xl font-bold text-accent">{estadisticas?.hoy ?? "—"}</p></div>
-          <div className="rounded-xl border border-border bg-card p-3 shadow-sm"><p className="text-xs text-muted-foreground">Disponibles hoy</p><p className="text-2xl font-bold">{estadisticas?.disponible ?? "—"}</p></div>
-          <div className="rounded-xl border border-border bg-card p-3 shadow-sm"><p className="text-xs text-muted-foreground">Uso de capacidad</p><p className="text-2xl font-bold">{estadisticas ? estadisticas.porcentaje + "%" : "—"}</p><div className="mt-2 h-2 overflow-hidden rounded bg-secondary"><div className="h-full rounded bg-accent" style={{ width: `${Math.min(estadisticas?.porcentaje ?? 0, 100)}%` }} /></div></div>
-          <div className="rounded-xl border border-border bg-card p-3 shadow-sm"><p className="text-xs text-muted-foreground">Revisiones últimos 7 días</p><p className="text-2xl font-bold">{estadisticas?.totalSemana ?? "—"}</p></div>
-        </div>
-      </section>
-
       <main className="mx-auto grid max-w-6xl gap-5 px-4 py-6 lg:grid-cols-[1.05fr_1fr]">
         <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-placa)]">
           {paso === "cronologia" && (
