@@ -94,6 +94,24 @@ function PanelAdministrativo() {
   }
 
   const porcentaje = Math.min(datos?.porcentaje ?? 0, 100);
+  const nivelAlerta = porcentaje >= 95 ? "critico" : porcentaje >= 85 ? "alto" : porcentaje >= 70 ? "preventivo" : "normal";
+  const mensajeAlerta =
+    nivelAlerta === "critico"
+      ? "Capacidad crítica: la plataforma está muy cerca del límite diario de 1,300 revisiones."
+      : nivelAlerta === "alto"
+        ? "Capacidad alta: conviene vigilar el consumo durante el resto del día."
+        : nivelAlerta === "preventivo"
+          ? "Alerta preventiva: el consumo diario ya superó el 70% de la capacidad."
+          : "Operación normal: la capacidad diaria se encuentra dentro de parámetros seguros.";
+  const claseAlerta =
+    nivelAlerta === "critico"
+      ? "border-destructive/50 bg-destructive/10"
+      : nivelAlerta === "alto"
+        ? "border-orange-500/50 bg-orange-500/10"
+        : nivelAlerta === "preventivo"
+          ? "border-yellow-500/50 bg-yellow-500/10"
+          : "border-green-500/40 bg-green-500/10";
+
   return (
     <main className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border bg-card">
@@ -118,9 +136,26 @@ function PanelAdministrativo() {
           <article className="rounded-2xl border border-border bg-card p-5"><p className="text-sm text-muted-foreground">Últimos 7 días</p><p className="mt-2 text-3xl font-bold">{datos?.totalSemana ?? "—"}</p><p className="mt-1 text-xs text-muted-foreground">Total acumulado</p></article>
         </div>
 
+        <section className={"mt-5 rounded-2xl border p-5 " + claseAlerta}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="texto-institucional text-xs">ESTADO DE CAPACIDAD</p>
+              <h2 className="mt-1 text-lg font-bold">
+                {nivelAlerta === "critico" ? "🚨 Crítico" : nivelAlerta === "alto" ? "⚠️ Alto" : nivelAlerta === "preventivo" ? "⚡ Preventivo" : "✅ Normal"}
+              </h2>
+            </div>
+            <p className="text-sm font-medium">{mensajeAlerta}</p>
+          </div>
+        </section>
+
         <section className="mt-5 rounded-2xl border border-border bg-card p-5">
           <div className="flex items-end justify-between gap-4"><div><h2 className="text-lg font-bold">Capacidad diaria</h2><p className="text-sm text-muted-foreground">{datos?.fecha ?? ""}</p></div><p className="text-2xl font-bold">{datos?.porcentaje ?? 0}%</p></div>
           <div className="mt-4 h-4 overflow-hidden rounded-full bg-secondary"><div className="h-full rounded-full bg-accent transition-all" style={{ width: porcentaje + "%" }} /></div>
+          <div className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
+            <div className="rounded-lg bg-secondary/40 p-3"><strong>70%</strong><br /><span className="text-muted-foreground">Alerta preventiva</span></div>
+            <div className="rounded-lg bg-secondary/40 p-3"><strong>85%</strong><br /><span className="text-muted-foreground">Consumo alto</span></div>
+            <div className="rounded-lg bg-secondary/40 p-3"><strong>95%</strong><br /><span className="text-muted-foreground">Capacidad crítica</span></div>
+          </div>
         </section>
 
         <section className="mt-5 rounded-2xl border border-border bg-card p-5">
