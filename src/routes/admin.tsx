@@ -5,6 +5,7 @@ import {
   cerrarSesionAdmin,
   iniciarSesionAdmin,
   obtenerEstadisticasUso,
+  obtenerEstadoSistema,
   obtenerRespaldoUso,
   verificarSesionAdmin,
 } from "@/lib/revision.functions";
@@ -25,6 +26,7 @@ function PanelAdministrativo() {
   const cerrar = useServerFn(cerrarSesionAdmin);
   const verificar = useServerFn(verificarSesionAdmin);
   const obtener = useServerFn(obtenerEstadisticasUso);
+  const obtenerEstado = useServerFn(obtenerEstadoSistema);
   const obtenerRespaldo = useServerFn(obtenerRespaldoUso);
 
   const [autenticado, setAutenticado] = useState(false);
@@ -32,10 +34,15 @@ function PanelAdministrativo() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [datos, setDatos] = useState<Estadisticas | null>(null);
+  const [estadoSistema, setEstadoSistema] = useState<{ fecha: string; d1: boolean; ia: boolean; admin: boolean; limiteDiario: number; revisionesHoy: number; disponible: number; capacidadDisponible: boolean; respaldo: boolean } | null>(null);
 
   const cargar = async () => {
-    const resultado = await obtener({ data: undefined });
+    const [resultado, estado] = await Promise.all([
+      obtener({ data: undefined }),
+      obtenerEstado({ data: undefined }),
+    ]);
     setDatos(resultado);
+    setEstadoSistema(estado);
   };
 
   useEffect(() => {
@@ -151,6 +158,23 @@ function PanelAdministrativo() {
       </header>
 
       <section className="mx-auto max-w-6xl px-4 py-6">
+        <section className="mb-5 rounded-2xl border border-border bg-card p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="texto-institucional text-xs text-accent">DIAGNÓSTICO PRIVADO</p>
+              <h2 className="mt-1 text-lg font-bold">Estado del sistema</h2>
+              <p className="text-sm text-muted-foreground">Verificación general de los servicios necesarios para operar.</p>
+            </div>
+            <p className="text-sm text-muted-foreground">{estadoSistema?.fecha ?? ""}</p>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-border p-4"><p className="text-sm text-muted-foreground">Base de datos D1</p><p className="mt-2 font-bold">{estadoSistema?.d1 ? "🟢 Operativa" : "🔴 Error"}</p></div>
+            <div className="rounded-xl border border-border p-4"><p className="text-sm text-muted-foreground">Servicio de IA</p><p className="mt-2 font-bold">{estadoSistema?.ia ? "🟢 Configurado" : "🔴 Sin configurar"}</p></div>
+            <div className="rounded-xl border border-border p-4"><p className="text-sm text-muted-foreground">Seguridad administrativa</p><p className="mt-2 font-bold">{estadoSistema?.admin ? "🟢 Protegida" : "🔴 Error"}</p></div>
+            <div className="rounded-xl border border-border p-4"><p className="text-sm text-muted-foreground">Capacidad diaria</p><p className="mt-2 font-bold">{estadoSistema?.capacidadDisponible ? "🟢 Disponible" : "🔴 Límite alcanzado"}</p><p className="mt-1 text-xs text-muted-foreground">{estadoSistema ? estadoSistema.disponible + " disponibles" : ""}</p></div>
+          </div>
+        </section>
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <article className="rounded-2xl border border-border bg-card p-5"><p className="text-sm text-muted-foreground">Revisiones hoy</p><p className="mt-2 text-3xl font-bold">{datos?.hoy ?? "—"}</p><p className="mt-1 text-xs text-muted-foreground">Límite: {datos?.limiteDiario ?? 1300}</p></article>
           <article className="rounded-2xl border border-border bg-card p-5"><p className="text-sm text-muted-foreground">Disponibles hoy</p><p className="mt-2 text-3xl font-bold">{datos?.disponible ?? "—"}</p><p className="mt-1 text-xs text-muted-foreground">Capacidad restante</p></article>
