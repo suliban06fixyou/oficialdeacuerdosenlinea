@@ -193,11 +193,6 @@ export const obtenerEstadisticasUso = createServerFn({ method: "GET" }).handler(
 
 export const obtenerRespaldoUso = createServerFn({ method: "POST" }).handler(async () => {
   const db = getDb();
-  // La exportación se protege mediante un token administrativo enviado por el
-  // cliente autenticado. Esto evita depender de la propagación de cookies entre
-  // las llamadas RPC del framework.
-  const config = obtenerAdminConfig();
-  const db = getDb();
 
   const [diarioRes, dispositivosRes] = await Promise.all([
     db.prepare("SELECT usage_date, review_count FROM daily_usage ORDER BY usage_date DESC").all<{ usage_date: string; review_count: number }>(),
