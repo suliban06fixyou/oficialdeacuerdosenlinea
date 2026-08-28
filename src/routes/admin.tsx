@@ -5,6 +5,7 @@ import {
   cerrarSesionAdmin,
   iniciarSesionAdmin,
   obtenerEstadisticasUso,
+  obtenerRespaldoUso,
   verificarSesionAdmin,
 } from "@/lib/revision.functions";
 
@@ -24,6 +25,7 @@ function PanelAdministrativo() {
   const cerrar = useServerFn(cerrarSesionAdmin);
   const verificar = useServerFn(verificarSesionAdmin);
   const obtener = useServerFn(obtenerEstadisticasUso);
+  const obtenerRespaldo = useServerFn(obtenerRespaldoUso);
 
   const [autenticado, setAutenticado] = useState(false);
   const [verificando, setVerificando] = useState(true);
@@ -62,6 +64,25 @@ function PanelAdministrativo() {
     await cerrar({ data: undefined });
     setDatos(null);
     setAutenticado(false);
+  };
+
+  const descargarRespaldo = async () => {
+    setError("");
+    try {
+      const respaldo = await obtenerRespaldo({ data: undefined });
+      const contenido = JSON.stringify(respaldo, null, 2);
+      const blob = new Blob([contenido], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const enlace = document.createElement("a");
+      enlace.href = url;
+      enlace.download = "respaldo-uso-oficial-acuerdos-" + new Date().toISOString().slice(0, 10) + ".json";
+      document.body.appendChild(enlace);
+      enlace.click();
+      enlace.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No fue posible generar el respaldo.");
+    }
   };
 
   if (verificando) {
@@ -121,8 +142,9 @@ function PanelAdministrativo() {
             <h1 className="text-2xl font-bold">Panel administrativo</h1>
             <p className="text-sm text-muted-foreground">Monitoreo de revisiones y capacidad diaria.</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button onClick={() => void cargar()} className="rounded-xl border border-border px-3 py-2 text-sm font-semibold">Actualizar</button>
+            <button onClick={() => void descargarRespaldo()} className="rounded-xl border border-border bg-secondary/40 px-3 py-2 text-sm font-semibold">Descargar respaldo</button>
             <button onClick={() => void salir()} className="rounded-xl border border-border px-3 py-2 text-sm font-semibold">Cerrar sesión</button>
           </div>
         </div>
@@ -156,6 +178,13 @@ function PanelAdministrativo() {
             <div className="rounded-lg bg-secondary/40 p-3"><strong>85%</strong><br /><span className="text-muted-foreground">Consumo alto</span></div>
             <div className="rounded-lg bg-secondary/40 p-3"><strong>95%</strong><br /><span className="text-muted-foreground">Capacidad crítica</span></div>
           </div>
+        </section>
+
+        <section className="mt-5 rounded-2xl border border-border bg-card p-5">
+          <h2 className="text-lg font-bold">Respaldo administrativo</h2>
+          <p className="mt-2 text-sm text-muted-foreground">Puede descargar una copia de las estadísticas almacenadas en D1. El respaldo no contiene narrativas de IPH, contraseñas ni claves de OpenAI.</p>
+          {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+          <button onClick={() => void descargarRespaldo()} className="mt-4 rounded-xl border border-border px-4 py-3 text-sm font-semibold">Generar respaldo JSON</button>
         </section>
 
         <section className="mt-5 rounded-2xl border border-border bg-card p-5">
