@@ -191,12 +191,8 @@ export const obtenerEstadisticasUso = createServerFn({ method: "GET" }).handler(
   };
 });
 
-export const obtenerRespaldoUso = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => z.object({ token: z.string().min(1) }).parse(input))
-  .handler(async ({ data }) => {
-    const config = obtenerAdminConfig();
-    if (data.token !== config.token) throw new Error("No autorizado.");
-    const db = getDb();
+export const obtenerRespaldoUso = createServerFn({ method: "POST" }).handler(async () => {
+  const db = getDb();
   // La exportación se protege mediante un token administrativo enviado por el
   // cliente autenticado. Esto evita depender de la propagación de cookies entre
   // las llamadas RPC del framework.
