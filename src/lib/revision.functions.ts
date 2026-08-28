@@ -191,6 +191,36 @@ export const obtenerEstadisticasUso = createServerFn({ method: "GET" }).handler(
   };
 });
 
+export const obtenerRespaldoUso = createServerFn({ method: "GET" }).handler(async () => {
+  exigirAdmin();
+  const db = getDb();
+
+  const [diarioRes, dispositivosRes] = await Promise.all([
+    db.prepare("SELECT usage_date, review_count FROM daily_usage ORDER BY usage_date DESC").all<{ usage_date: string; review_count: number }>(),
+    db.prepare("SELECT usage_date, device_id, review_count FROM device_usage ORDER BY usage_date DESC").all<{ usage_date: string; device_id: string; review_count: number }>(),
+  ]);
+
+  const diario = (diarioRes.results ?? []).map((fila) => ({
+    fecha: fila.usage_date,
+    revisiones: Number(fila.review_count ?? 0),
+  }));
+
+  const dispositivos = (dispositivosRes.results ?? []).map((fila) => ({
+    fecha: fila.usage_date,
+    dispositivo: fila.device_id,
+    revisiones: Number(fila.review_count ?? 0),
+  }));
+
+  return {
+    version: 1,
+    generadoEn: new Date().toISOString(),
+    tipo: "respaldo-de-uso",
+    descripcion: "Respaldo administrativo de estadísticas de uso. No incluye narrativas, credenciales ni claves de API.",
+    daily_usage: diario,
+    device_usage: dispositivos,
+  };
+});
+
 export const revisarNarrativa = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => EntradaRevision.parse(input))
   .handler(async ({ data }) => {
