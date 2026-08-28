@@ -29,6 +29,10 @@ type D1DatabaseLike = {
 
 type CloudflareBindings = {
   DB?: D1DatabaseLike;
+  ADMIN_PANEL_PASSWORD?: string;
+  ADMIN_SESSION_TOKEN?: string;
+  ADMIN_USAGE_TOKEN?: string;
+  OPENAI_API_KEY?: string;
 };
 
 function getDb(): D1DatabaseLike {
@@ -54,8 +58,9 @@ function obtenerCookie(nombre: string) {
 }
 
 function obtenerAdminConfig() {
-  const password = process.env.ADMIN_PANEL_PASSWORD;
-  const token = process.env.ADMIN_SESSION_TOKEN;
+  const bindings = cloudflareEnv as unknown as CloudflareBindings;
+  const password = bindings.ADMIN_PANEL_PASSWORD;
+  const token = bindings.ADMIN_SESSION_TOKEN;
   if (!password || !token) throw new Error("El panel administrativo no está configurado.");
   return { password, token };
 }
