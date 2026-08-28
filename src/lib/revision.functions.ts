@@ -15,9 +15,12 @@ const DEVICE_COOKIE = "iph_device_id";
 type DatosRevision = z.infer<typeof EntradaRevision>;
 
 type D1Result = { success: boolean; meta?: { changes?: number } };
+type D1Row = Record<string, unknown>;
+type D1AllResult = { results?: D1Row[] };
 type D1Statement = {
   bind: (...values: unknown[]) => D1Statement;
   run: () => Promise<D1Result>;
+  all: <T = D1Row>() => Promise<{ results?: T[] }>;
 };
 type D1DatabaseLike = {
   prepare: (query: string) => D1Statement;
@@ -111,6 +114,34 @@ async function liberarUso(db: D1DatabaseLike, fecha: string, dispositivo: string
     .bind(fecha, dispositivo)
     .run();
 }
+
+export const obtenerEstadisticasUso = createServerFn({ method: "GET" }).handler(async () => {
+  const db = getDb();
+  const hoy = fechaUTC();
+  const desde = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+  const [hoyRes, semanaRes, dispositivosRes] = await Promise.all([
+    db.prepare("SELECT review_count FROM daily_usage WHERE usage_date = ?").bind(hoy).all<{ review_count: number }>(),
+    db.prepare("SELECT usage_date, review_count FROM daily_usage WHERE usage_date >= ? ORDER BY usage_date ASC").bind(desde).all<{ usage_date: string; review_count: number }>(),
+    db.prepare("SELECT COUNT(*) AS total FROM device_usage WHERE usage_date = ?").bind(hoy).all<{ total: number }>(),
+  ]);
+
+  const hoyCount = Number(hoyRes.results?.[0]?.review_count ?? 0);
+  const semana = semanaRes.results ?? [];
+  const totalSemana = semana.reduce((sum, fila) => sum + Number(fila.review_count ?? 0), 0);
+  const dispositivosHoy = Number(dispositivosRes.results?.[0]?.total ?? 0);
+
+  return {
+    fecha: hoy,
+    hoy: hoyCount,
+    limiteDiario: DAILY_GLOBAL_LIMIT,
+    disponible: Math.max(DAILY_GLOBAL_LIMIT - hoyCount, 0),
+    porcentaje: Math.round((hoyCount / DAILY_GLOBAL_LIMIT) * 100),
+    semana: semana.map((fila) => ({ fecha: fila.usage_date, revisiones: Number(fila.review_count ?? 0) })),
+    totalSemana,
+    dispositivosHoy,
+  };
+});
 
 export const revisarNarrativa = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => EntradaRevision.parse(input))
