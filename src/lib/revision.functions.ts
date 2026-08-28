@@ -11,6 +11,7 @@ const OPENAI_MODEL = "gpt-5-mini";
 const DAILY_GLOBAL_LIMIT = 1_300;
 const DAILY_DEVICE_LIMIT = 10;
 const DEVICE_COOKIE = "iph_device_id";
+const ADMIN_COOKIE = "iph_admin_session";
 
 type DatosRevision = z.infer<typeof EntradaRevision>;
 
@@ -51,6 +52,47 @@ function obtenerCookie(nombre: string) {
   const parte = cookie.split(";").map((item) => item.trim()).find((item) => item.startsWith(`${nombre}=`));
   return parte ? decodeURIComponent(parte.slice(nombre.length + 1)) : null;
 }
+
+function obtenerAdminConfig() {
+  const password = process.env.ADMIN_PANEL_PASSWORD;
+  const token = process.env.ADMIN_SESSION_TOKEN;
+  if (!password || !token) throw new Error("El panel administrativo no está configurado.");
+  return { password, token };
+}
+
+function esAdminAutenticado() {
+  const token = obtenerCookie(ADMIN_COOKIE);
+  const config = obtenerAdminConfig();
+  return !!token && token === config.token;
+}
+
+function exigirAdmin() {
+  if (!esAdminAutenticado()) throw new Error("No autorizado.");
+}
+
+export const iniciarSesionAdmin = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => z.object({ password: z.string().min(1).max(256) }).parse(input))
+  .handler(async ({ data }) => {
+    const config = obtenerAdminConfig();
+    if (data.password !== config.password) throw new Error("Contraseña incorrecta.");
+    setResponseHeaders(new Headers({
+      "Cache-Control": "no-store",
+      "Set-Cookie": ADMIN_COOKIE + "=" + encodeURIComponent(config.token) + "; Max-Age=28800; Path=/; SameSite=Strict; Secure; HttpOnly",
+    }));
+    return { ok: true };
+  });
+
+export const cerrarSesionAdmin = createServerFn({ method: "POST" }).handler(async () => {
+  setResponseHeaders(new Headers({
+    "Cache-Control": "no-store",
+    "Set-Cookie": ADMIN_COOKIE + "=; Max-Age=0; Path=/; SameSite=Strict; Secure; HttpOnly",
+  }));
+  return { ok: true };
+});
+
+export const verificarSesionAdmin = createServerFn({ method: "GET" }).handler(async () => ({
+  autenticado: esAdminAutenticado(),
+}));
 
 function limitarCampo(valor: string | undefined, maximo = MAX_CAMPO) {
   if (!valor) return valor;
@@ -116,6 +158,7 @@ async function liberarUso(db: D1DatabaseLike, fecha: string, dispositivo: string
 }
 
 export const obtenerEstadisticasUso = createServerFn({ method: "GET" }).handler(async () => {
+  exigirAdmin();
   const db = getDb();
   const hoy = fechaUTC();
   const desde = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
