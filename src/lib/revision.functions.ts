@@ -192,29 +192,24 @@ export const obtenerEstadisticasUso = createServerFn({ method: "GET" }).handler(
 });
 
 export const obtenerEstadoSistema = createServerFn({ method: "GET" }).handler(async () => {
+  // Si esta función responde, el acceso administrativo ya fue validado.
   exigirAdmin();
 
-  const bindings = cloudflareEnv as unknown as CloudflareBindings;
-  let d1 = false;
-  let revisionesHoy = 0;
+  const db = getDb();
+  const resultado = await db
+    .prepare("SELECT review_count FROM daily_usage WHERE usage_date = ?")
+    .bind(fechaUTC())
+    .all<{ review_count: number }>();
 
-  try {
-    const db = getDb();
-    const resultado = await db.prepare("SELECT review_count FROM daily_usage WHERE usage_date = ?").bind(fechaUTC()).all<{ review_count: number }>();
-    d1 = true;
-    revisionesHoy = Number(resultado.results?.[0]?.review_count ?? 0);
-  } catch {
-    d1 = false;
-  }
-
-  const ia = !!bindings.OPENAI_API_KEY;
-  const admin = !!bindings.ADMIN_PANEL_PASSWORD && !!bindings.ADMIN_SESSION_TOKEN;
+  const revisionesHoy = Number(resultado.results?.[0]?.review_count ?? 0);
 
   return {
     fecha: fechaUTC(),
-    d1,
-    ia,
-    admin,
+    d1: true,
+    // La IA se verifica por la misma fuente de configuración que utiliza
+    // la función real de revisión.
+    ia: !!process.env.OPENAI_API_KEY,
+    admin: true,
     limiteDiario: DAILY_GLOBAL_LIMIT,
     revisionesHoy,
     disponible: Math.max(DAILY_GLOBAL_LIMIT - revisionesHoy, 0),
