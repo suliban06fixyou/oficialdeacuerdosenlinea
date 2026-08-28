@@ -9,7 +9,7 @@ import {
   type Hallazgo,
   type Horas,
 } from "@/lib/validacion";
-import { revisarNarrativa } from "@/lib/revision.functions";
+import { obtenerEstadisticasUso, revisarNarrativa } from "@/lib/revision.functions";
 import logoDspm from "@/assets/logo-dspm-oficial.png.asset.json";
 import oficialAcuerdos from "@/assets/oficial-acuerdos-nn.jpg.asset.json";
 const fondoChat = "/fondo-chat.jpg";
@@ -133,6 +133,8 @@ export default function RevisorIPH() {
   ]);
   const finChat = useRef<HTMLDivElement>(null);
   const revisar = useServerFn(revisarNarrativa);
+  const obtenerEstadisticas = useServerFn(obtenerEstadisticasUso);
+  const [estadisticas, setEstadisticas] = useState<{ hoy: number; limiteDiario: number; disponible: number; porcentaje: number; totalSemana: number; dispositivosHoy: number } | null>(null);
 
   const hallazgos = useMemo(() => revisionLocal(horas, narrativa, datosHecho), [horas, narrativa, datosHecho]);
   const criticos = hallazgos.filter((h) => h.severidad === "critico");
@@ -154,6 +156,10 @@ export default function RevisorIPH() {
   useEffect(() => {
     finChat.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensajes]);
+
+  useEffect(() => {
+    void obtenerEstadisticas({ data: undefined }).then((datos) => setEstadisticas(datos)).catch(() => setEstadisticas(null));
+  }, [obtenerEstadisticas]);
 
   useEffect(() => {
     if (editadaPorUsuario) return;
@@ -298,6 +304,15 @@ export default function RevisorIPH() {
           </div>
         </div>
       )}
+
+      <section className="mx-auto max-w-6xl px-4 pt-5">
+        <div className="grid gap-3 sm:grid-cols-4">
+          <div className="rounded-xl border border-border bg-card p-3 shadow-sm"><p className="text-xs text-muted-foreground">Revisiones hoy</p><p className="text-2xl font-bold text-accent">{estadisticas?.hoy ?? "—"}</p></div>
+          <div className="rounded-xl border border-border bg-card p-3 shadow-sm"><p className="text-xs text-muted-foreground">Disponibles hoy</p><p className="text-2xl font-bold">{estadisticas?.disponible ?? "—"}</p></div>
+          <div className="rounded-xl border border-border bg-card p-3 shadow-sm"><p className="text-xs text-muted-foreground">Uso de capacidad</p><p className="text-2xl font-bold">{estadisticas ? estadisticas.porcentaje + "%" : "—"}</p><div className="mt-2 h-2 overflow-hidden rounded bg-secondary"><div className="h-full rounded bg-accent" style={{ width: `${Math.min(estadisticas?.porcentaje ?? 0, 100)}%` }} /></div></div>
+          <div className="rounded-xl border border-border bg-card p-3 shadow-sm"><p className="text-xs text-muted-foreground">Revisiones últimos 7 días</p><p className="text-2xl font-bold">{estadisticas?.totalSemana ?? "—"}</p></div>
+        </div>
+      </section>
 
       <main className="mx-auto grid max-w-6xl gap-5 px-4 py-6 lg:grid-cols-[1.05fr_1fr]">
         <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-placa)]">
