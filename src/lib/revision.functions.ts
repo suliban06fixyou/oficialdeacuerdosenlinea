@@ -191,7 +191,9 @@ export const obtenerEstadisticasUso = createServerFn({ method: "GET" }).handler(
   };
 });
 
-export const obtenerRespaldoUso = createServerFn({ method: "GET" }).handler(async () => {
+export const obtenerRespaldoUso = createServerFn({ method: "POST" }).handler(async () => {
+  // Se usa POST para que la solicitud del panel viaje como una acción autenticada
+  // y conserve de forma consistente la cookie HttpOnly de la sesión administrativa.
   exigirAdmin();
   const db = getDb();
 
