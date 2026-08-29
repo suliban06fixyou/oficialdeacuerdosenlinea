@@ -43,8 +43,23 @@ function getDb(): D1DatabaseLike {
   return db;
 }
 
-function fechaUTC() {
-  return new Date().toISOString().slice(0, 10);
+function fechaOperativa() {
+  // La operación de la DSPM se mide por día calendario en Chihuahua,
+  // no por el cambio de fecha UTC.
+  const partes = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Chihuahua",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+
+  const obtener = (tipo: string) => partes.find((parte) => parte.type === tipo)?.value;
+  const anio = obtener("year");
+  const mes = obtener("month");
+  const dia = obtener("day");
+
+  if (!anio || !mes || !dia) throw new Error("No fue posible determinar la fecha operativa.");
+  return `${anio}-${mes}-${dia}`;
 }
 
 function crearIdDispositivo() {
@@ -175,7 +190,7 @@ export const obtenerEstadisticasUso = createServerFn({ method: "POST" }).handler
   exigirAdmin();
   marcarRespuestaPrivada();
   const db = getDb();
-  const hoy = fechaUTC();
+  const hoy = fechaOperativa();
   const desde = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
   const [hoyRes, semanaRes, dispositivosRes] = await Promise.all([
@@ -206,7 +221,7 @@ export const obtenerAnaliticaAvanzada = createServerFn({ method: "POST" }).handl
   marcarRespuestaPrivada();
 
   const db = getDb();
-  const hoy = fechaUTC();
+  const hoy = fechaOperativa();
   const hace29Dias = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
   const resultado = await db
@@ -259,13 +274,13 @@ export const obtenerEstadoSistema = createServerFn({ method: "POST" }).handler(a
   const db = getDb();
   const resultado = await db
     .prepare("SELECT review_count FROM daily_usage WHERE usage_date = ?")
-    .bind(fechaUTC())
+    .bind(fechaOperativa())
     .all<{ review_count: number }>();
 
   const revisionesHoy = Number(resultado.results?.[0]?.review_count ?? 0);
 
   return {
-    fecha: fechaUTC(),
+    fecha: fechaOperativa(),
     d1: true,
     // La IA se verifica por la misma fuente de configuración que utiliza
     // la función real de revisión.
@@ -330,7 +345,7 @@ export const revisarNarrativa = createServerFn({ method: "POST" })
 
     const segura = minimizarDatosParaIA(data);
     const db = getDb();
-    const fecha = fechaUTC();
+    const fecha = fechaOperativa();
     await reservarUso(db, fecha, deviceId);
 
     try {
