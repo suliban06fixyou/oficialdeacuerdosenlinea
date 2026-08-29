@@ -43,7 +43,7 @@ function getDb(): D1DatabaseLike {
   return db;
 }
 
-function fechaOperativa() {
+function fechaOperativaDe(fecha: Date) {
   // La operación de la DSPM se mide por día calendario en Chihuahua,
   // no por el cambio de fecha UTC.
   const partes = new Intl.DateTimeFormat("en-CA", {
@@ -51,7 +51,7 @@ function fechaOperativa() {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).formatToParts(new Date());
+  }).formatToParts(fecha);
 
   const obtener = (tipo: string) => partes.find((parte) => parte.type === tipo)?.value;
   const anio = obtener("year");
@@ -60,6 +60,16 @@ function fechaOperativa() {
 
   if (!anio || !mes || !dia) throw new Error("No fue posible determinar la fecha operativa.");
   return `${anio}-${mes}-${dia}`;
+}
+
+function fechaOperativa() {
+  return fechaOperativaDe(new Date());
+}
+
+function fechaOperativaHaceDias(dias: number) {
+  const fecha = new Date();
+  fecha.setDate(fecha.getDate() - dias);
+  return fechaOperativaDe(fecha);
 }
 
 function crearIdDispositivo() {
@@ -191,7 +201,7 @@ export const obtenerEstadisticasUso = createServerFn({ method: "POST" }).handler
   marcarRespuestaPrivada();
   const db = getDb();
   const hoy = fechaOperativa();
-  const desde = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const desde = fechaOperativaHaceDias(6);
 
   const [hoyRes, semanaRes, dispositivosRes] = await Promise.all([
     db.prepare("SELECT review_count FROM daily_usage WHERE usage_date = ?").bind(hoy).all<{ review_count: number }>(),
@@ -222,7 +232,7 @@ export const obtenerAnaliticaAvanzada = createServerFn({ method: "POST" }).handl
 
   const db = getDb();
   const hoy = fechaOperativa();
-  const hace29Dias = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const hace29Dias = fechaOperativaHaceDias(29);
 
   const resultado = await db
     .prepare("SELECT usage_date, review_count FROM daily_usage WHERE usage_date >= ? ORDER BY usage_date ASC")
@@ -236,7 +246,7 @@ export const obtenerAnaliticaAvanzada = createServerFn({ method: "POST" }).handl
 
   const mapa = new Map(filas.map((fila) => [fila.fecha, fila.revisiones]));
   const dias = Array.from({ length: 14 }, (_, indice) => {
-    const fecha = new Date(Date.now() - (13 - indice) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const fecha = fechaOperativaHaceDias(13 - indice);
     return { fecha, revisiones: mapa.get(fecha) ?? 0 };
   });
 
