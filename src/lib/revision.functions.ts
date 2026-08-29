@@ -201,6 +201,57 @@ export const obtenerEstadisticasUso = createServerFn({ method: "POST" }).handler
   };
 });
 
+export const obtenerAnaliticaAvanzada = createServerFn({ method: "POST" }).handler(async () => {
+  exigirAdmin();
+  marcarRespuestaPrivada();
+
+  const db = getDb();
+  const hoy = fechaUTC();
+  const hace29Dias = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+  const resultado = await db
+    .prepare("SELECT usage_date, review_count FROM daily_usage WHERE usage_date >= ? ORDER BY usage_date ASC")
+    .bind(hace29Dias)
+    .all<{ usage_date: string; review_count: number }>();
+
+  const filas = (resultado.results ?? []).map((fila) => ({
+    fecha: fila.usage_date,
+    revisiones: Number(fila.review_count ?? 0),
+  }));
+
+  const mapa = new Map(filas.map((fila) => [fila.fecha, fila.revisiones]));
+  const dias = Array.from({ length: 14 }, (_, indice) => {
+    const fecha = new Date(Date.now() - (13 - indice) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    return { fecha, revisiones: mapa.get(fecha) ?? 0 };
+  });
+
+  const ultimos7 = dias.slice(7);
+  const sieteAnteriores = dias.slice(0, 7);
+  const totalUltimos7 = ultimos7.reduce((suma, dia) => suma + dia.revisiones, 0);
+  const totalAnteriores = sieteAnteriores.reduce((suma, dia) => suma + dia.revisiones, 0);
+  const promedio7 = Math.round(totalUltimos7 / 7);
+  const variacion = totalAnteriores === 0
+    ? (totalUltimos7 > 0 ? 100 : 0)
+    : Math.round(((totalUltimos7 - totalAnteriores) / totalAnteriores) * 100);
+
+  const diaPico = [...filas].sort((a, b) => b.revisiones - a.revisiones)[0] ?? null;
+  const promedio30 = filas.length
+    ? Math.round(filas.reduce((suma, dia) => suma + dia.revisiones, 0) / filas.length)
+    : 0;
+
+  return {
+    fecha: hoy,
+    promedio7,
+    promedio30,
+    variacionSemanal: variacion,
+    tendencia: variacion > 5 ? "creciente" : variacion < -5 ? "descendente" : "estable",
+    diaPico,
+    capacidadPromedioPorcentaje: Math.round((promedio7 / DAILY_GLOBAL_LIMIT) * 100),
+    margenPromedio: Math.max(DAILY_GLOBAL_LIMIT - promedio7, 0),
+    ultimos14: dias,
+  };
+});
+
 export const obtenerEstadoSistema = createServerFn({ method: "POST" }).handler(async () => {
   exigirAdmin();
   marcarRespuestaPrivada();
