@@ -37,12 +37,29 @@ function PanelAdministrativo() {
   const [estadoSistema, setEstadoSistema] = useState<{ fecha: string; d1: boolean; ia: boolean; admin: boolean; limiteDiario: number; revisionesHoy: number; disponible: number; capacidadDisponible: boolean; respaldo: boolean } | null>(null);
 
   const cargar = async () => {
-    const [resultado, estado] = await Promise.all([
+    setError("");
+    const [estadisticas, estado] = await Promise.allSettled([
       obtener({ data: undefined }),
       obtenerEstado({ data: undefined }),
     ]);
-    setDatos(resultado);
-    setEstadoSistema(estado);
+
+    const errores: string[] = [];
+
+    if (estadisticas.status === "fulfilled") {
+      setDatos(estadisticas.value);
+    } else {
+      setDatos(null);
+      errores.push(estadisticas.reason instanceof Error ? estadisticas.reason.message : "No fue posible consultar las estadísticas.");
+    }
+
+    if (estado.status === "fulfilled") {
+      setEstadoSistema(estado.value);
+    } else {
+      setEstadoSistema(null);
+      errores.push(estado.reason instanceof Error ? estado.reason.message : "No fue posible verificar el estado del sistema.");
+    }
+
+    if (errores.length) setError(errores.join(" · "));
   };
 
   useEffect(() => {
@@ -60,6 +77,9 @@ function PanelAdministrativo() {
     try {
       await iniciar({ data: { password } });
       setPassword("");
+      // La cookie segura queda disponible para las llamadas privadas posteriores.
+      const sesion = await verificar({ data: undefined });
+      if (!sesion.autenticado) throw new Error("No fue posible establecer la sesión administrativa.");
       setAutenticado(true);
       await cargar();
     } catch (e) {
