@@ -3,6 +3,13 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 
+type CloudflareRuntimeEnv = {
+  OPENAI_API_KEY?: string;
+  IPH_RATE_LIMITER?: {
+    limit: (options: { key: string }) => Promise<{ success: boolean }>;
+  };
+};
+
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
@@ -16,6 +23,46 @@ async function getServerEntry(): Promise<ServerEntry> {
     );
   }
   return serverEntryPromise;
+}
+
+function getClientKey(request: Request) {
+  return request.headers.get("cf-connecting-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+}
+
+async function enforceRateLimit(request: Request, env: CloudflareRuntimeEnv) {
+  // Server functions that send the IPH to OpenAI use POST. Limiting POSTs here
+  // protects the AI endpoint before the request reaches the application logic.
+  if (request.method !== "POST" || !env.IPH_RATE_LIMITER) return;
+
+  const { success } = await env.IPH_RATE_LIMITER.limit({
+    key: `revision:${getClientKey(request)}`,
+  });
+
+  if (!success) {
+    return new Response(
+      JSON.stringify({ error: "Límite temporal de revisiones alcanzado. Espere un minuto antes de volver a intentarlo." }),
+      {
+        status: 429,
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+          "cache-control": "no-store",
+        },
+      },
+    );
+  }
+
+  return undefined;
+}
+
+// TanStack Start server functions in this deployment read server-only secrets
+// from process.env at request time. Cloudflare provides the real secret through
+// the Worker env binding, so bridge that binding into process.env before Start
+// handles the request. The secret never enters the client bundle or response.
+function exposeRuntimeSecrets(env: unknown) {
+  const runtimeEnv = env as CloudflareRuntimeEnv;
+  if (runtimeEnv.OPENAI_API_KEY) {
+    process.env.OPENAI_API_KEY = runtimeEnv.OPENAI_API_KEY;
+  }
 }
 
 // h3 swallows in-handler throws into a normal 500 Response with body
@@ -47,6 +94,10 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const rateLimitResponse = await enforceRateLimit(request, env as CloudflareRuntimeEnv);
+      if (rateLimitResponse) return rateLimitResponse;
+
+      exposeRuntimeSecrets(env);
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

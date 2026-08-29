@@ -9,7 +9,7 @@ import {
   type Hallazgo,
   type Horas,
 } from "@/lib/validacion";
-import { revisarNarrativa } from "@/lib/revision.functions";
+import { obtenerEstadisticasUso, revisarNarrativa } from "@/lib/revision.functions";
 import logoDspm from "@/assets/logo-dspm-oficial.png.asset.json";
 import oficialAcuerdos from "@/assets/oficial-acuerdos-nn.jpg.asset.json";
 const fondoChat = "/fondo-chat.jpg";
@@ -97,6 +97,16 @@ function BloqueHallazgo({ h }: { h: Hallazgo }) {
   );
 }
 
+function formatearHora24(valor: string): string {
+  const digitos = valor.replace(/\D/g, "").slice(0, 4);
+  if (digitos.length <= 2) return digitos;
+  return `${digitos.slice(0, 2)}:${digitos.slice(2)}`;
+}
+
+function esHora24Valida(valor: string): boolean {
+  return /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(valor);
+}
+
 export default function RevisorIPH() {
   const [paso, setPaso] = useState<Paso>("cronologia");
   const [horas, setHoras] = useState<Horas>(HORAS_VACIAS);
@@ -123,6 +133,8 @@ export default function RevisorIPH() {
   ]);
   const finChat = useRef<HTMLDivElement>(null);
   const revisar = useServerFn(revisarNarrativa);
+  const obtenerEstadisticas = useServerFn(obtenerEstadisticasUso);
+  const [estadisticas, setEstadisticas] = useState<{ hoy: number; limiteDiario: number; disponible: number; porcentaje: number; totalSemana: number; dispositivosHoy: number } | null>(null);
 
   const hallazgos = useMemo(() => revisionLocal(horas, narrativa, datosHecho), [horas, narrativa, datosHecho]);
   const criticos = hallazgos.filter((h) => h.severidad === "critico");
@@ -144,6 +156,10 @@ export default function RevisorIPH() {
   useEffect(() => {
     finChat.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensajes]);
+
+  useEffect(() => {
+    void obtenerEstadisticas({ data: undefined }).then((datos) => setEstadisticas(datos)).catch(() => setEstadisticas(null));
+  }, [obtenerEstadisticas]);
 
   useEffect(() => {
     if (editadaPorUsuario) return;
@@ -185,6 +201,9 @@ export default function RevisorIPH() {
   }
 
   async function pedirRevision() {
+    // Evita solicitudes duplicadas por doble clic o por presionar Enter repetidamente.
+    if (cargando) return;
+
     if (!narrativa.trim()) {
       agregar("asesor", "Primero capture la narrativa en el paso 2 para poder revisarla.");
       setPaso("narrativa");
@@ -343,9 +362,24 @@ export default function RevisorIPH() {
                       {i + 1}. {p.label}
                     </span>
                     <input
-                      type="time"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="HH:mm"
+                      maxLength={5}
+                      pattern="(?:[01]\\d|2[0-3]):[0-5]\\d"
                       value={horas[p.key]}
-                      onChange={(e) => setHoras({ ...horas, [p.key]: e.target.value })}
+                      onChange={(e) => {
+                        const hora = formatearHora24(e.target.value);
+                        setHoras({ ...horas, [p.key]: hora });
+                      }}
+                      onBlur={(e) => {
+                        const hora = e.target.value;
+                        if (hora && !esHora24Valida(hora)) {
+                          setHoras({ ...horas, [p.key]: "" });
+                        }
+                      }}
+                      title="Capture la hora en formato de 24 horas, de 00:00 a 23:59"
+                      aria-label={`${p.label}. Hora en formato de 24 horas HH:mm`}
                       className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
                     />
                   </label>
@@ -377,6 +411,14 @@ export default function RevisorIPH() {
                   </li>
                 ))}
               </ul>
+              <div className="rounded-xl border border-accent/40 bg-accent/10 p-3 text-xs text-foreground">
+                <p className="font-semibold">Uso responsable de la herramienta</p>
+                <p className="mt-1 text-muted-foreground">
+                  La IA es un apoyo de redacción y revisión. Antes de enviar cualquier documento, el oficial debe verificar
+                  personalmente los hechos, fundamentos y datos. Evite incluir información personal o sensible que no sea necesaria
+                  para la revisión.
+                </p>
+              </div>
               <textarea
                 value={narrativa}
                 onChange={(e) => setNarrativa(e.target.value)}
@@ -528,7 +570,10 @@ export default function RevisorIPH() {
               value={pregunta}
               onChange={(e) => setPregunta(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") pedirRevision();
+                if (e.key === "Enter" && !cargando) {
+                  e.preventDefault();
+                  pedirRevision();
+                }
               }}
               maxLength={500}
               placeholder="Pregunte al asesor: ¿cómo redacto el aseguramiento?"
