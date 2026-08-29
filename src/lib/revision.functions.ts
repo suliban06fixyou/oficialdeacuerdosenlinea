@@ -98,7 +98,7 @@ export const iniciarSesionAdmin = createServerFn({ method: "POST" })
   });
 
 export const cerrarSesionAdmin = createServerFn({ method: "POST" }).handler(async () => {
-  deleteCookie(ADMIN_COOKIE, { path: "/" });
+  deleteCookie(ADMIN_COOKIE);
   marcarRespuestaPrivada();
   return { ok: true };
 });
