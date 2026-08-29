@@ -5,6 +5,7 @@ import {
   cerrarSesionAdmin,
   iniciarSesionAdmin,
   obtenerEstadisticasUso,
+  obtenerAnaliticaAvanzada,
   obtenerEstadoSistema,
   obtenerRespaldoUso,
   verificarSesionAdmin,
@@ -26,6 +27,7 @@ function PanelAdministrativo() {
   const cerrar = useServerFn(cerrarSesionAdmin);
   const verificar = useServerFn(verificarSesionAdmin);
   const obtener = useServerFn(obtenerEstadisticasUso);
+  const obtenerAnalitica = useServerFn(obtenerAnaliticaAvanzada);
   const obtenerEstado = useServerFn(obtenerEstadoSistema);
   const obtenerRespaldo = useServerFn(obtenerRespaldoUso);
 
@@ -34,12 +36,14 @@ function PanelAdministrativo() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [datos, setDatos] = useState<Estadisticas | null>(null);
+  const [analitica, setAnalitica] = useState<{ promedio7: number; promedio30: number; variacionSemanal: number; tendencia: string; diaPico: { fecha: string; revisiones: number } | null; capacidadPromedioPorcentaje: number; margenPromedio: number; ultimos14: { fecha: string; revisiones: number }[] } | null>(null);
   const [estadoSistema, setEstadoSistema] = useState<{ fecha: string; d1: boolean; ia: boolean; admin: boolean; limiteDiario: number; revisionesHoy: number; disponible: number; capacidadDisponible: boolean; respaldo: boolean } | null>(null);
 
   const cargar = async () => {
     setError("");
-    const [estadisticas, estado] = await Promise.allSettled([
+    const [estadisticas, analisis, estado] = await Promise.allSettled([
       obtener({ data: undefined }),
+      obtenerAnalitica({ data: undefined }),
       obtenerEstado({ data: undefined }),
     ]);
 
@@ -50,6 +54,13 @@ function PanelAdministrativo() {
     } else {
       setDatos(null);
       errores.push(estadisticas.reason instanceof Error ? estadisticas.reason.message : "No fue posible consultar las estadísticas.");
+    }
+
+    if (analisis.status === "fulfilled") {
+      setAnalitica(analisis.value);
+    } else {
+      setAnalitica(null);
+      errores.push(analisis.reason instanceof Error ? analisis.reason.message : "No fue posible obtener la analítica avanzada.");
     }
 
     if (estado.status === "fulfilled") {
@@ -201,6 +212,29 @@ function PanelAdministrativo() {
           <article className="rounded-2xl border border-border bg-card p-5"><p className="text-sm text-muted-foreground">Dispositivos activos hoy</p><p className="mt-2 text-3xl font-bold">{datos?.dispositivosHoy ?? "—"}</p><p className="mt-1 text-xs text-muted-foreground">Con al menos una revisión</p></article>
           <article className="rounded-2xl border border-border bg-card p-5"><p className="text-sm text-muted-foreground">Últimos 7 días</p><p className="mt-2 text-3xl font-bold">{datos?.totalSemana ?? "—"}</p><p className="mt-1 text-xs text-muted-foreground">Total acumulado</p></article>
         </div>
+
+        <section className="mt-5 rounded-2xl border border-border bg-card p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="texto-institucional text-xs text-accent">ANÁLISIS ADMINISTRATIVO</p>
+              <h2 className="mt-1 text-lg font-bold">Tendencia de consumo</h2>
+              <p className="text-sm text-muted-foreground">Resumen basado en los registros reales almacenados en D1.</p>
+            </div>
+            <p className="text-sm font-semibold">
+              {analitica?.tendencia === "creciente" ? "📈 Tendencia creciente" : analitica?.tendencia === "descendente" ? "📉 Tendencia descendente" : "➡️ Tendencia estable"}
+            </p>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-border p-4"><p className="text-sm text-muted-foreground">Promedio últimos 7 días</p><p className="mt-2 text-2xl font-bold">{analitica?.promedio7 ?? "—"}</p><p className="mt-1 text-xs text-muted-foreground">revisiones por día</p></div>
+            <div className="rounded-xl border border-border p-4"><p className="text-sm text-muted-foreground">Variación semanal</p><p className="mt-2 text-2xl font-bold">{analitica ? (analitica.variacionSemanal > 0 ? "+" : "") + analitica.variacionSemanal + "%" : "—"}</p><p className="mt-1 text-xs text-muted-foreground">vs. 7 días anteriores</p></div>
+            <div className="rounded-xl border border-border p-4"><p className="text-sm text-muted-foreground">Día de mayor consumo</p><p className="mt-2 text-xl font-bold">{analitica?.diaPico?.revisiones ?? "—"}</p><p className="mt-1 text-xs text-muted-foreground">{analitica?.diaPico?.fecha ?? "Sin registros"}</p></div>
+            <div className="rounded-xl border border-border p-4"><p className="text-sm text-muted-foreground">Margen promedio</p><p className="mt-2 text-2xl font-bold">{analitica?.margenPromedio ?? "—"}</p><p className="mt-1 text-xs text-muted-foreground">hasta el límite de 1,300</p></div>
+          </div>
+          <div className="mt-5">
+            <div className="flex items-center justify-between text-sm"><span className="text-muted-foreground">Uso promedio de capacidad</span><strong>{analitica?.capacidadPromedioPorcentaje ?? 0}%</strong></div>
+            <div className="mt-2 h-3 overflow-hidden rounded-full bg-secondary"><div className="h-full rounded-full bg-accent transition-all" style={{ width: Math.min(analitica?.capacidadPromedioPorcentaje ?? 0, 100) + "%" }} /></div>
+          </div>
+        </section>
 
         <section className={"mt-5 rounded-2xl border p-5 " + claseAlerta}>
           <div className="flex flex-wrap items-center justify-between gap-3">
