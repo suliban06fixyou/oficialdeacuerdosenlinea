@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader, setResponseHeaders } from "@tanstack/react-start/server";
+import { getCookie, setCookie, deleteCookie, setResponseHeaders } from "@tanstack/react-start/server";
 import { env as cloudflareEnv } from "cloudflare:workers";
 import { z } from "zod";
 import { EntradaRevision, SISTEMA } from "./revision.prompt";
@@ -11,7 +11,7 @@ const OPENAI_MODEL = "gpt-5-mini";
 const DAILY_GLOBAL_LIMIT = 1_300;
 const DAILY_DEVICE_LIMIT = 10;
 const DEVICE_COOKIE = "iph_device_id";
-const ADMIN_COOKIE = "iph_admin_session";
+const ADMIN_COOKIE = "__Host-iph_admin_session";
 
 type DatosRevision = z.infer<typeof EntradaRevision>;
 
@@ -52,9 +52,15 @@ function crearIdDispositivo() {
 }
 
 function obtenerCookie(nombre: string) {
-  const cookie = getRequestHeader("Cookie") ?? "";
-  const parte = cookie.split(";").map((item) => item.trim()).find((item) => item.startsWith(`${nombre}=`));
-  return parte ? decodeURIComponent(parte.slice(nombre.length + 1)) : null;
+  return getCookie(nombre) ?? null;
+}
+
+function marcarRespuestaPrivada() {
+  setResponseHeaders(new Headers({
+    "Cache-Control": "no-store, private",
+    "CDN-Cache-Control": "no-store",
+    "Vary": "Cookie, Authorization",
+  }));
 }
 
 function obtenerAdminConfig() {
@@ -80,24 +86,27 @@ export const iniciarSesionAdmin = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const config = obtenerAdminConfig();
     if (data.password !== config.password) throw new Error("Contraseña incorrecta.");
-    setResponseHeaders(new Headers({
-      "Cache-Control": "no-store",
-      "Set-Cookie": ADMIN_COOKIE + "=" + encodeURIComponent(config.token) + "; Max-Age=28800; Path=/; SameSite=Strict; Secure; HttpOnly",
-    }));
+    setCookie(ADMIN_COOKIE, config.token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 28800,
+    });
+    marcarRespuestaPrivada();
     return { ok: true };
   });
 
 export const cerrarSesionAdmin = createServerFn({ method: "POST" }).handler(async () => {
-  setResponseHeaders(new Headers({
-    "Cache-Control": "no-store",
-    "Set-Cookie": ADMIN_COOKIE + "=; Max-Age=0; Path=/; SameSite=Strict; Secure; HttpOnly",
-  }));
+  deleteCookie(ADMIN_COOKIE, { path: "/" });
+  marcarRespuestaPrivada();
   return { ok: true };
 });
 
-export const verificarSesionAdmin = createServerFn({ method: "GET" }).handler(async () => ({
-  autenticado: esAdminAutenticado(),
-}));
+export const verificarSesionAdmin = createServerFn({ method: "POST" }).handler(async () => {
+  marcarRespuestaPrivada();
+  return { autenticado: esAdminAutenticado() };
+});
 
 function limitarCampo(valor: string | undefined, maximo = MAX_CAMPO) {
   if (!valor) return valor;
@@ -162,8 +171,9 @@ async function liberarUso(db: D1DatabaseLike, fecha: string, dispositivo: string
     .run();
 }
 
-export const obtenerEstadisticasUso = createServerFn({ method: "GET" }).handler(async () => {
+export const obtenerEstadisticasUso = createServerFn({ method: "POST" }).handler(async () => {
   exigirAdmin();
+  marcarRespuestaPrivada();
   const db = getDb();
   const hoy = fechaUTC();
   const desde = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -191,9 +201,9 @@ export const obtenerEstadisticasUso = createServerFn({ method: "GET" }).handler(
   };
 });
 
-export const obtenerEstadoSistema = createServerFn({ method: "GET" }).handler(async () => {
-  // Si esta función responde, el acceso administrativo ya fue validado.
+export const obtenerEstadoSistema = createServerFn({ method: "POST" }).handler(async () => {
   exigirAdmin();
+  marcarRespuestaPrivada();
 
   const db = getDb();
   const resultado = await db
@@ -208,7 +218,7 @@ export const obtenerEstadoSistema = createServerFn({ method: "GET" }).handler(as
     d1: true,
     // La IA se verifica por la misma fuente de configuración que utiliza
     // la función real de revisión.
-    ia: !!process.env.OPENAI_API_KEY,
+    ia: !!(process.env.OPENAI_API_KEY || (cloudflareEnv as unknown as CloudflareBindings).OPENAI_API_KEY),
     admin: true,
     limiteDiario: DAILY_GLOBAL_LIMIT,
     revisionesHoy,
@@ -219,6 +229,8 @@ export const obtenerEstadoSistema = createServerFn({ method: "GET" }).handler(as
 });
 
 export const obtenerRespaldoUso = createServerFn({ method: "POST" }).handler(async () => {
+  exigirAdmin();
+  marcarRespuestaPrivada();
   const db = getDb();
 
   const [diarioRes, dispositivosRes] = await Promise.all([
