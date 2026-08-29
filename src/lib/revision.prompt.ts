@@ -1,12 +1,14 @@
 import { z } from "zod";
 
 export const EntradaRevision = z.object({
-  narrativa: z.string().min(1),
-  horas: z.record(z.string()),
-  faltaODelito: z.string().optional(),
-  lugar: z.string().optional(),
-  hallazgosLocales: z.array(z.string()),
-  pregunta: z.string().optional(),
+  narrativa: z.string().min(1).max(40_000),
+  horas: z
+    .record(z.string().max(20))
+    .refine((valor) => Object.keys(valor).length <= 20, "Demasiados campos de hora."),
+  faltaODelito: z.string().max(2_000).optional(),
+  lugar: z.string().max(2_000).optional(),
+  hallazgosLocales: z.array(z.string().max(500)).max(30),
+  pregunta: z.string().max(2_000).optional(),
 });
 
 export const SISTEMA = `Eres un asesor jurídico-policial experto en la redacción del Informe Policial Homologado (IPH) en México, adscrito a la Dirección de Seguridad Pública Municipal de Chihuahua (DSPM).
