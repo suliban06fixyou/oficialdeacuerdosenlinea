@@ -133,3 +133,46 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+
+/* Imagen institucional solicitada: solo presentación, sin tocar la lógica. */
+header > div > img:first-child {
+  content: url('/revisor-iph-brand.svg');
+  width: 220px;
+  height: 56px;
+  object-fit: cover;
+  object-position: left center;
+  padding: 0;
+  background: transparent;
+  border-radius: 0.5rem;
+}
+
+header > div > img:last-child {
+  content: url('/revisor-iph-brand.svg');
+  object-fit: cover;
+  object-position: 63% 28%;
+}
+
+main > section:nth-child(2) > div:first-child img {
+  content: url('/revisor-iph-brand.svg');
+  width: 150px;
+  height: 40px;
+  object-fit: cover;
+  object-position: 52% 28%;
+  border-radius: 0.35rem;
+}
+
+@media (max-width: 639px) {
+  header > div > img:first-child {
+    width: 150px;
+    height: 46px;
+  }
+
+  header > div > img:last-child {
+    display: none;
+  }
+
+  main > section:nth-child(2) > div:first-child img {
+    width: 120px;
+    height: 36px;
+  }
+}
