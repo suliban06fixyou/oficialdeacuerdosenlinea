@@ -134,13 +134,14 @@
   text-transform: uppercase;
 }
 
-/* Imagen institucional solicitada: solo presentación, sin tocar la lógica. */
+/* Imagen institucional: conservar la proporción completa y evitar ampliaciones/recortes que produzcan borrosidad. */
 header > div > img:first-child {
   content: url('/revisor-iph-brand.svg');
   width: 220px;
   height: 56px;
-  object-fit: cover;
-  object-position: left center;
+  object-fit: contain;
+  object-position: center;
+  image-rendering: auto;
   padding: 0;
   background: transparent;
   border-radius: 0.5rem;
@@ -148,16 +149,18 @@ header > div > img:first-child {
 
 header > div > img:last-child {
   content: url('/revisor-iph-brand.svg');
-  object-fit: cover;
-  object-position: 63% 28%;
+  object-fit: contain;
+  object-position: center;
+  image-rendering: auto;
 }
 
 main > section:nth-child(2) > div:first-child img {
   content: url('/revisor-iph-brand.svg');
   width: 150px;
   height: 40px;
-  object-fit: cover;
-  object-position: 52% 28%;
+  object-fit: contain;
+  object-position: center;
+  image-rendering: auto;
   border-radius: 0.35rem;
 }
 
