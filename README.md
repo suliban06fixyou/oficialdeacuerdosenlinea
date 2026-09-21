@@ -37,7 +37,7 @@ This project was built with [Lovable](https://lovable.dev).
 Continue developing this project in the [Lovable editor](https://lovable.dev/projects/6b65c398-85fc-46b0-a4fb-ebfe552dacfc).
 
 - **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Stay in sync**: every change made in Lovable is committed straight into this repository.
 - **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
 ## Development
@@ -50,3 +50,7 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Cloudflare migration
+
+Production branch for the independent Cloudflare deployment: `migracion-ia-economica`.
