@@ -113,45 +113,66 @@
 }
 
 /*
- * Las imágenes institucionales se cargan directamente desde /public.
- * Importante: NO usar content:url() aquí. Esa regla sustituía la imagen
- * PNG original por un SVG que contenía un WebP comprimido y provocaba
- * exactamente los rectángulos pixelados que se observaban en producción.
+ * Imágenes institucionales: se mantiene el PNG original de alta resolución.
+ * Solo se modifica su presentación para acercarla al diseño de referencia.
+ * No se cambia ninguna lógica de la aplicación.
  */
 header > div > img:first-child {
-  width: 220px;
-  height: 56px;
-  object-fit: contain;
-  object-position: center;
+  width: 360px;
+  height: 112px;
+  object-fit: cover;
+  object-position: center 38%;
   image-rendering: auto;
   padding: 0;
   background: transparent;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
 }
 
 header > div > img:last-child {
-  object-fit: contain;
-  object-position: center;
+  width: 142px;
+  height: 142px;
+  object-fit: cover;
+  object-position: center 38%;
   image-rendering: auto;
+  border-radius: 9999px;
+  border: 2px solid oklch(0.78 0.13 85);
 }
 
 main > section:nth-child(2) > div:first-child img {
-  width: 150px;
-  height: 40px;
-  object-fit: contain;
-  object-position: center;
+  width: 250px;
+  height: 72px;
+  object-fit: cover;
+  object-position: center 38%;
   image-rendering: auto;
-  border-radius: 0.35rem;
+  border-radius: 0.6rem;
+}
+
+@media (max-width: 900px) {
+  header > div > img:first-child {
+    width: 270px;
+    height: 92px;
+  }
+  header > div > img:last-child {
+    width: 112px;
+    height: 112px;
+  }
+  main > section:nth-child(2) > div:first-child img {
+    width: 210px;
+    height: 64px;
+  }
 }
 
 @media (max-width: 639px) {
   header > div > img:first-child {
-    width: 150px;
-    height: 46px;
+    width: 205px;
+    height: 76px;
   }
-  header > div > img:last-child { display: none; }
+  header > div > img:last-child {
+    width: 88px;
+    height: 88px;
+  }
   main > section:nth-child(2) > div:first-child img {
-    width: 120px;
-    height: 36px;
+    width: 170px;
+    height: 54px;
   }
 }
