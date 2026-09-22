@@ -4,20 +4,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/*
- * Design system definition.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
- */
-
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -69,8 +55,6 @@
 
 :root {
   --radius: 0.75rem;
-
-  /* Azul marino institucional DSPM */
   --background: oklch(0.19 0.055 258);
   --foreground: oklch(0.97 0.008 250);
   --card: oklch(0.24 0.055 258);
@@ -107,21 +91,15 @@
   --sidebar-accent-foreground: oklch(0.95 0.01 250);
   --sidebar-border: oklch(0.36 0.05 258);
   --sidebar-ring: oklch(0.62 0.14 258);
-
   --gradient-marino: linear-gradient(160deg, oklch(0.26 0.06 258), oklch(0.15 0.05 258));
   --gradient-dorado: linear-gradient(135deg, oklch(0.84 0.13 88), oklch(0.7 0.13 70));
   --shadow-placa: 0 18px 45px -18px oklch(0.05 0.04 258 / 0.85);
 }
 
-.dark {
-  color-scheme: dark;
-}
+.dark { color-scheme: dark; }
 
 @layer base {
-  * {
-    border-color: var(--color-border);
-  }
-
+  * { border-color: var(--color-border); }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -134,9 +112,13 @@
   text-transform: uppercase;
 }
 
-/* Imagen institucional: conservar la proporción completa y evitar ampliaciones/recortes que produzcan borrosidad. */
+/*
+ * Las imágenes institucionales se cargan directamente desde /public.
+ * Importante: NO usar content:url() aquí. Esa regla sustituía la imagen
+ * PNG original por un SVG que contenía un WebP comprimido y provocaba
+ * exactamente los rectángulos pixelados que se observaban en producción.
+ */
 header > div > img:first-child {
-  content: url('/revisor-iph-brand.svg');
   width: 220px;
   height: 56px;
   object-fit: contain;
@@ -148,14 +130,12 @@ header > div > img:first-child {
 }
 
 header > div > img:last-child {
-  content: url('/revisor-iph-brand.svg');
   object-fit: contain;
   object-position: center;
   image-rendering: auto;
 }
 
 main > section:nth-child(2) > div:first-child img {
-  content: url('/revisor-iph-brand.svg');
   width: 150px;
   height: 40px;
   object-fit: contain;
@@ -169,11 +149,7 @@ main > section:nth-child(2) > div:first-child img {
     width: 150px;
     height: 46px;
   }
-
-  header > div > img:last-child {
-    display: none;
-  }
-
+  header > div > img:last-child { display: none; }
   main > section:nth-child(2) > div:first-child img {
     width: 120px;
     height: 36px;
