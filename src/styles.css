@@ -114,18 +114,20 @@
 
 /*
  * Imágenes institucionales: se mantiene el PNG original de alta resolución.
- * Solo se modifica su presentación para acercarla al diseño de referencia.
+ * La imagen superior izquierda es cuadrada; antes se mostraba con object-fit: cover,
+ * lo que recortaba partes del contenido. Ahora se muestra completa con contain.
  * No se cambia ninguna lógica de la aplicación.
  */
 header > div > img:first-child {
-  width: 360px;
-  height: 112px;
-  object-fit: cover;
-  object-position: center 38%;
+  width: 142px;
+  height: 142px;
+  object-fit: contain;
+  object-position: center;
   image-rendering: auto;
   padding: 0;
   background: transparent;
   border-radius: 0.75rem;
+  flex: 0 0 auto;
 }
 
 header > div > img:last-child {
@@ -149,8 +151,8 @@ main > section:nth-child(2) > div:first-child img {
 
 @media (max-width: 900px) {
   header > div > img:first-child {
-    width: 270px;
-    height: 92px;
+    width: 116px;
+    height: 116px;
   }
   header > div > img:last-child {
     width: 112px;
@@ -164,8 +166,8 @@ main > section:nth-child(2) > div:first-child img {
 
 @media (max-width: 639px) {
   header > div > img:first-child {
-    width: 205px;
-    height: 76px;
+    width: 92px;
+    height: 92px;
   }
   header > div > img:last-child {
     width: 88px;
