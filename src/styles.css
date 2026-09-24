@@ -140,11 +140,12 @@ header > div > img:last-child {
   border: 2px solid oklch(0.78 0.13 85);
 }
 
+/* Imagen junto a "Asesor IPH": más compacta y sin recorte. */
 main > section:nth-child(2) > div:first-child img {
-  width: 250px;
-  height: 72px;
-  object-fit: cover;
-  object-position: center 38%;
+  width: 190px;
+  height: 58px;
+  object-fit: contain;
+  object-position: center;
   image-rendering: auto;
   border-radius: 0.6rem;
 }
@@ -159,8 +160,8 @@ main > section:nth-child(2) > div:first-child img {
     height: 112px;
   }
   main > section:nth-child(2) > div:first-child img {
-    width: 210px;
-    height: 64px;
+    width: 165px;
+    height: 52px;
   }
 }
 
@@ -174,7 +175,7 @@ main > section:nth-child(2) > div:first-child img {
     height: 88px;
   }
   main > section:nth-child(2) > div:first-child img {
-    width: 170px;
-    height: 54px;
+    width: 145px;
+    height: 46px;
   }
 }
