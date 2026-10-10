@@ -12,6 +12,7 @@ import {
 import { obtenerEstadisticasUso, revisarNarrativa } from "@/lib/revision.functions";
 import logoDspm from "@/assets/logo-dspm-oficial.png.asset.json";
 import oficialAcuerdos from "@/assets/oficial-acuerdos-nn.jpg.asset.json";
+import IphPdfGenerator from "./IphPdfGenerator";
 const fondoChat = "/fondo-chat.jpg";
 
 type Paso = "cronologia" | "narrativa" | "revision" | "envio";
@@ -579,12 +580,19 @@ export default function RevisorIPH() {
               placeholder="Pregunte al asesor: ¿cómo redacto el aseguramiento?"
               className="w-full rounded-xl border border-input bg-secondary/40 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
             />
+            <IphPdfGenerator
+              oficial={oficial}
+              folio={folio}
+              falta={faltaODelito}
+              lugar={lugar}
+              horas={horas}
+              narrativa={narrativaFinal.trim() || narrativa.trim()}
+            />
             <button
               onClick={enviarNarrativaLista}
-              className="w-full rounded-xl px-4 py-3 font-semibold text-accent-foreground"
-              style={{ backgroundImage: "var(--gradient-dorado)" }}
+              className="w-full rounded-xl border border-border px-4 py-2 text-sm font-semibold"
             >
-              Copiar narrativa lista
+              Copiar / compartir narrativa
             </button>
             {avisoEnvio && <p className="text-xs text-muted-foreground">{avisoEnvio}</p>}
           </div>
