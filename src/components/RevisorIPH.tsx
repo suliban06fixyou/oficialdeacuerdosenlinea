@@ -27,7 +27,7 @@ const PASOS_MENU: { id: Paso; num: string; titulo: string; ayuda: string }[] = [
   { id: "cronologia", num: "1", titulo: "Cronología", ayuda: "Horas de la intervención" },
   { id: "narrativa", num: "2", titulo: "Narrativa", ayuda: "Redacción de los hechos" },
   { id: "revision", num: "3", titulo: "Revisión", ayuda: "Hallazgos y consejos" },
-  { id: "envio", num: "4", titulo: "Copiar", ayuda: "Copiar narrativa lista" },
+  { id: "envio", num: "4", titulo: "Reporte PDF", ayuda: "Generar reporte IPH en PDF" },
 ];
 
 const COLOR_SEVERIDAD: Record<string, string> = {
@@ -483,9 +483,9 @@ export default function RevisorIPH() {
           {paso === "envio" && (
             <div className="space-y-4">
               <div>
-                <h2 className="texto-institucional text-lg font-bold">Copiar narrativa lista</h2>
+                <h2 className="texto-institucional text-lg font-bold">Generar reporte IPH en PDF</h2>
                 <p className="text-sm text-muted-foreground">
-                  La narrativa revisada queda lista para su envío conforme a los protocolos institucionales.
+                  Complete los campos faltantes del formato y genere una versión imprimible en PDF. Verifique los datos antes de usar el reporte.
                 </p>
               </div>
               {criticos.length > 0 && (
@@ -496,7 +496,7 @@ export default function RevisorIPH() {
               )}
               <p className="rounded-xl border border-border bg-secondary/30 p-3 text-sm text-muted-foreground">
                 Edite la narrativa sugerida en el cuadro del chat del Asesor IPH y presione ahí
-                “Copiar narrativa lista”.
+                “Copiar / compartir narrativa”.
               </p>
             </div>
           )}
