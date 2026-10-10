@@ -77,6 +77,18 @@ const TITULOS: Record<number, string> = {
   4: "SECCIÓN 7. PRESENTACIÓN ANTE JUZGADO O AUTORIDAD COMPETENTE",
 };
 
+function extraerFecha(texto: string): string {
+  const match = texto.match(/\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{1,2}\s+de\s+[a-záéíóú]+\s+de\s+\d{4})\b/i);
+  return match?.[0] ?? "";
+}
+
+function inferirMedioConocimiento(texto: string): string {
+  if (/radio operador|llamada de emergencia|reporte por radio/i.test(texto)) return "Llamada de emergencia / radio operador";
+  if (/presencia directa|observé directamente|me percaté/i.test(texto)) return "Presencia directa";
+  if (/queja|a petición de parte|denunciante/i.test(texto)) return "Queja / petición de parte";
+  return "";
+}
+
 function valorInicial(props: Props): ReportData {
   return {
     oficial: props.oficial,
@@ -89,9 +101,13 @@ function valorInicial(props: Props): ReportData {
     horaDerechos: props.horas.derechos ?? "",
     horaTraslado: props.horas.traslado ?? "",
     narrativa: props.narrativa,
-    usoFuerza: "No",
-    huboDetenidos: "No",
-    huboQuejoso: "No",
+    // No inferir respuestas jurídicas o fácticas: si no están expresas, quedan vacías.
+    usoFuerza: "",
+    huboDetenidos: "",
+    huboQuejoso: "",
+    fechaConocimiento: extraerFecha(props.narrativa),
+    fechaArribo: extraerFecha(props.narrativa),
+    medioConocimiento: inferirMedioConocimiento(props.narrativa),
   };
 }
 
@@ -277,6 +293,7 @@ export default function IphPdfGenerator(props: Props) {
           #iph-print-root { display: block !important; position: absolute; left: 0; top: 0; width: 100%; color: #111; font-family: Arial, sans-serif; }
           .iph-print-page { display: block !important; position: relative; height: 255mm; overflow: hidden; page-break-after: always; break-after: page; font-size: 8pt; }
           .iph-print-page:last-child { page-break-after: auto; break-after: auto; }
+          .iph-print-page { box-sizing: border-box; padding-bottom: 10mm; }
           .iph-print-header { text-align: center; border-bottom: 1px solid #222; padding-bottom: 4mm; margin-bottom: 4mm; }
           .iph-print-header h1 { font-size: 13pt; margin: 2mm 0; }
           .iph-print-header h2 { font-size: 10pt; margin: 1mm 0; }
