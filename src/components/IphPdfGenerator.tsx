@@ -20,8 +20,6 @@ function normalizarTexto(value: string): string {
     .replace(/[–—−]/g, "-")
     .replace(/…/g, "...")
     .replace(/[•·]/g, "-")
-    .replace(/[\u{1F300}-\u{1FAFF}]/gu, "")
-    .replace(/[^\u0000-\u00FF]/g, "")
     .replace(/\r\n?/g, "\n");
 }
 
@@ -178,9 +176,20 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
     throw new Error("La fuente del formato oficial no devolvió un PDF válido.");
   }
 
+  const textos = [props.falta, props.lugar, props.narrativa].map(normalizarTexto);
+  if (textos.some((texto) => /[^\u0000-\u00FF]/u.test(texto))) {
+    throw new Error(
+      "El texto contiene algún símbolo o carácter que la fuente del formato oficial no puede representar. Sustituya ese símbolo por texto sencillo; la narrativa no se recortará ni se eliminarán caracteres automáticamente.",
+    );
+  }
+
   const pdf = await PDFDocument.load(templateBytes);
-  if (pdf.getPageCount() < 4) {
-    throw new Error("El formato oficial recibido no contiene todas las páginas esperadas.");
+  // Las coordenadas corresponden al PDF oficial de cuatro páginas publicado por el SESNSP.
+  // Si la fuente cambia de versión/paginación, se detiene la salida para no escribir en una página equivocada.
+  if (pdf.getPageCount() !== 4) {
+    throw new Error(
+      "La versión del formato IPH recibida tiene una paginación distinta a la validada. No se generó el PDF para evitar colocar datos en apartados incorrectos.",
+    );
   }
 
   const font = await pdf.embedFont(StandardFonts.Helvetica);
