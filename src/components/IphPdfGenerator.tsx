@@ -202,16 +202,17 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
 
   drawWrappedValue(page1, props.lugar, font, {
     x: 30,
-    y: 48,
+    y: 66,
     width: page1.getWidth() - 60,
-    maxLines: 4,
+    maxLines: 2,
     fontSize: 7.3,
     lineHeight: 9.1,
   });
 
-  drawTime(page1, props.horas.conocimiento, 414, 445, 380, font);
-  drawTime(page1, props.horas.llegada, 410, 444, 122, font);
-  drawTime(page3Detencion, props.horas.detencion, 395, 460, 54, font);
+  // Coordenadas aproximadas de las casillas del formato oficial (Letter, origen inferior izquierdo).
+  drawTime(page1, props.horas.conocimiento, 458, 500, 379, font);
+  drawTime(page1, props.horas.llegada, 458, 500, 84, font);
+  drawTime(page3Detencion, props.horas.detencion, 357, 395, 115, font);
 
   drawNarrativa(page2Narrativa, props.narrativa, font);
 
