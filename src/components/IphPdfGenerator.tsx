@@ -10,7 +10,7 @@ interface Props {
   narrativa: string;
 }
 
-const TEMPLATE_ENDPOINT = "/api/iph-template";
+const TEMPLATE_ENDPOINT = "/iph-infracciones-administrativas.pdf";
 
 function normalizarTexto(value: string): string {
   return value
@@ -160,7 +160,10 @@ function nombreArchivo(folio: string) {
 async function generarPdf(props: Props): Promise<Uint8Array> {
   const response = await fetch(TEMPLATE_ENDPOINT, { headers: { Accept: "application/pdf" } });
   if (!response.ok) {
-    let message = "No se pudo obtener el formato oficial IPH.";
+    let message =
+      response.status === 404
+        ? "Falta instalar en la aplicación el PDF original de infracciones administrativas de la Policía Municipal de Chihuahua. No se generó ningún archivo."
+        : "No se pudo leer el PDF original de infracciones administrativas de la Policía Municipal de Chihuahua.";
     try {
       const details = (await response.json()) as { error?: string };
       if (details.error) message = details.error;
@@ -184,19 +187,19 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
   }
 
   const pdf = await PDFDocument.load(templateBytes);
-  // Las coordenadas corresponden al PDF oficial de cuatro páginas publicado por el SESNSP.
-  // Si la fuente cambia de versión/paginación, se detiene la salida para no escribir en una página equivocada.
-  if (pdf.getPageCount() !== 4) {
+  // El DOCX compartido se renderiza en 5 páginas con el motor disponible; la página 2 queda en blanco.
+  // En cuanto se reciba la exportación PDF directa de Word, se validará y ajustará la paginación real.
+  if (pdf.getPageCount() !== 5) {
     throw new Error(
-      "La versión del formato IPH recibida tiene una paginación distinta a la validada. No se generó el PDF para evitar colocar datos en apartados incorrectos.",
+      "La paginación del formato municipal todavía no está validada. No se generó el archivo para evitar colocar datos en apartados incorrectos.",
     );
   }
 
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const pages = pdf.getPages();
   const page1 = pages[0];
-  const page2Narrativa = pages[1];
-  const page3Detencion = pages[2];
+  const page2Narrativa = pages[2];
+  const page3Detencion = pages[3];
 
   // Sólo se imprimen datos que ya existen en la app y que tienen un campo claro.
   // Nombre completo, fechas, casillas y datos personales no capturados permanecen vacíos.
