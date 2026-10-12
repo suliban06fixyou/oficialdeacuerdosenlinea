@@ -113,8 +113,8 @@ function drawNarrativa(page: PDFPage, narrativa: string, font: PDFFont) {
 
   const x = 29;
   const maxWidth = page.getWidth() - 58;
-  const topBaseline = 500;
-  const bottomBaseline = 57;
+  const topBaseline = 495;
+  const bottomBaseline = 62;
   let chosen:
     | { size: number; lineHeight: number; lines: string[] }
     | undefined;
@@ -211,7 +211,7 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
   // Nombre completo, fechas, casillas y datos personales no capturados permanecen vacíos.
   drawWrappedValue(page1, props.falta, font, {
     x: 30,
-    y: 320,
+    y: 331,
     width: page1.getWidth() - 60,
     maxLines: 2,
     fontSize: 7.2,
@@ -220,7 +220,7 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
 
   drawWrappedValue(page1, props.lugar, font, {
     x: 30,
-    y: 66,
+    y: 54,
     width: page1.getWidth() - 60,
     maxLines: 2,
     fontSize: 7.3,
@@ -229,8 +229,8 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
 
   // Coordenadas iniciales calibradas sobre el PDF municipal proporcionado por el usuario (Letter, origen inferior izquierdo).
   drawTime(page1, props.horas.conocimiento, 458, 500, 379, font);
-  drawTime(page1, props.horas.llegada, 458, 500, 120, font);
-  drawTime(page3Detencion, props.horas.detencion, 357, 395, 115, font);
+  drawTime(page1, props.horas.llegada, 458, 500, 135, font);
+  drawTime(page3Detencion, props.horas.detencion, 357, 395, 107, font);
 
   drawNarrativa(page2Narrativa, props.narrativa, font);
 
