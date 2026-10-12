@@ -187,19 +187,25 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
   }
 
   const pdf = await PDFDocument.load(templateBytes);
-  // El DOCX compartido se renderiza en 5 páginas con el motor disponible; la página 2 queda en blanco.
-  // En cuanto se reciba la exportación PDF directa de Word, se validará y ajustará la paginación real.
-  if (pdf.getPageCount() !== 5) {
+  // Se validó visualmente el PDF municipal que usa esta aplicación: cuatro páginas,
+  // con páginas 1 y 3 tamaño carta y páginas 2 y 4 tamaño A4.
+  if (
+    pdf.getPageCount() !== 4 ||
+    Math.round(pdf.getPages()[0].getWidth()) !== 612 ||
+    Math.round(pdf.getPages()[1].getHeight()) !== 842 ||
+    Math.round(pdf.getPages()[2].getWidth()) !== 612 ||
+    Math.round(pdf.getPages()[3].getHeight()) !== 842
+  ) {
     throw new Error(
-      "La paginación del formato municipal todavía no está validada. No se generó el archivo para evitar colocar datos en apartados incorrectos.",
+      "El archivo local no coincide con la versión del IPH municipal validada. No se generó el PDF para evitar colocar datos en apartados incorrectos.",
     );
   }
 
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const pages = pdf.getPages();
   const page1 = pages[0];
-  const page2Narrativa = pages[2];
-  const page3Detencion = pages[3];
+  const page2Narrativa = pages[1];
+  const page3Detencion = pages[2];
 
   // Sólo se imprimen datos que ya existen en la app y que tienen un campo claro.
   // Nombre completo, fechas, casillas y datos personales no capturados permanecen vacíos.
@@ -221,9 +227,9 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
     lineHeight: 9.1,
   });
 
-  // Coordenadas aproximadas de las casillas del formato oficial (Letter, origen inferior izquierdo).
+  // Coordenadas iniciales calibradas sobre el PDF municipal proporcionado por el usuario (Letter, origen inferior izquierdo).
   drawTime(page1, props.horas.conocimiento, 458, 500, 379, font);
-  drawTime(page1, props.horas.llegada, 458, 500, 84, font);
+  drawTime(page1, props.horas.llegada, 458, 500, 120, font);
   drawTime(page3Detencion, props.horas.detencion, 357, 395, 115, font);
 
   drawNarrativa(page2Narrativa, props.narrativa, font);
