@@ -229,7 +229,7 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
 
   // Coordenadas iniciales calibradas sobre el PDF municipal proporcionado por el usuario (Letter, origen inferior izquierdo).
   drawTime(page1, props.horas.conocimiento, 458, 500, 379, font);
-  drawTime(page1, props.horas.llegada, 458, 500, 135, font);
+  drawTime(page1, props.horas.llegada, 458, 500, 127, font);
   drawTime(page3Detencion, props.horas.detencion, 357, 395, 107, font);
 
   drawNarrativa(page2Narrativa, props.narrativa, font);
