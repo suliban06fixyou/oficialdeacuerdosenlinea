@@ -10,7 +10,7 @@ interface Props {
   narrativa: string;
 }
 
-const TEMPLATE_ENDPOINT = "/api/iph-template";
+const TEMPLATE_ENDPOINT = "/iph-infracciones-administrativas.pdf";
 
 function normalizarTexto(value: string): string {
   return value
@@ -20,8 +20,6 @@ function normalizarTexto(value: string): string {
     .replace(/[–—−]/g, "-")
     .replace(/…/g, "...")
     .replace(/[•·]/g, "-")
-    .replace(/[\u{1F300}-\u{1FAFF}]/gu, "")
-    .replace(/[^\u0000-\u00FF]/g, "")
     .replace(/\r\n?/g, "\n");
 }
 
@@ -115,15 +113,16 @@ function drawNarrativa(page: PDFPage, narrativa: string, font: PDFFont) {
 
   const x = 29;
   const maxWidth = page.getWidth() - 58;
-  const topBaseline = 500;
-  const bottomBaseline = 57;
+  // En la sección 4, los renglones impresos del formato municipal están separados aproximadamente 16.2 puntos.
+  // El texto se alinea con esos renglones y jamás se recorta silenciosamente.
+  const topBaseline = 490;
+  const bottomBaseline = 72;
+  const lineHeight = 16.2;
   let chosen:
     | { size: number; lineHeight: number; lines: string[] }
     | undefined;
 
-  // Fit all text in the original narrative box. Never silently truncate a report.
   for (let size = 8.1; size >= 6.1; size -= 0.4) {
-    const lineHeight = size + 2.1;
     const lines = wordWrap(narrativa, font, size, maxWidth);
     const capacity = Math.floor((topBaseline - bottomBaseline) / lineHeight) + 1;
     if (lines.length <= capacity) {
@@ -162,7 +161,10 @@ function nombreArchivo(folio: string) {
 async function generarPdf(props: Props): Promise<Uint8Array> {
   const response = await fetch(TEMPLATE_ENDPOINT, { headers: { Accept: "application/pdf" } });
   if (!response.ok) {
-    let message = "No se pudo obtener el formato oficial IPH.";
+    let message =
+      response.status === 404
+        ? "Falta instalar en la aplicación el PDF original de infracciones administrativas de la Policía Municipal de Chihuahua. No se generó ningún archivo."
+        : "No se pudo leer el PDF original de infracciones administrativas de la Policía Municipal de Chihuahua.";
     try {
       const details = (await response.json()) as { error?: string };
       if (details.error) message = details.error;
@@ -178,9 +180,26 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
     throw new Error("La fuente del formato oficial no devolvió un PDF válido.");
   }
 
+  const textos = [props.falta, props.lugar, props.narrativa].map(normalizarTexto);
+  if (textos.some((texto) => /[^\u0000-\u00FF]/u.test(texto))) {
+    throw new Error(
+      "El texto contiene algún símbolo o carácter que la fuente del formato oficial no puede representar. Sustituya ese símbolo por texto sencillo; la narrativa no se recortará ni se eliminarán caracteres automáticamente.",
+    );
+  }
+
   const pdf = await PDFDocument.load(templateBytes);
-  if (pdf.getPageCount() < 4) {
-    throw new Error("El formato oficial recibido no contiene todas las páginas esperadas.");
+  // Se validó visualmente el PDF municipal que usa esta aplicación: cuatro páginas,
+  // con páginas 1 y 3 tamaño carta y páginas 2 y 4 tamaño A4.
+  if (
+    pdf.getPageCount() !== 4 ||
+    Math.round(pdf.getPages()[0].getWidth()) !== 612 ||
+    Math.round(pdf.getPages()[1].getHeight()) !== 842 ||
+    Math.round(pdf.getPages()[2].getWidth()) !== 612 ||
+    Math.round(pdf.getPages()[3].getHeight()) !== 842
+  ) {
+    throw new Error(
+      "El archivo local no coincide con la versión del IPH municipal validada. No se generó el PDF para evitar colocar datos en apartados incorrectos.",
+    );
   }
 
   const font = await pdf.embedFont(StandardFonts.Helvetica);
@@ -193,7 +212,7 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
   // Nombre completo, fechas, casillas y datos personales no capturados permanecen vacíos.
   drawWrappedValue(page1, props.falta, font, {
     x: 30,
-    y: 320,
+    y: 331,
     width: page1.getWidth() - 60,
     maxLines: 2,
     fontSize: 7.2,
@@ -202,16 +221,18 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
 
   drawWrappedValue(page1, props.lugar, font, {
     x: 30,
-    y: 48,
+    y: 54,
     width: page1.getWidth() - 60,
-    maxLines: 4,
+    maxLines: 2,
     fontSize: 7.3,
     lineHeight: 9.1,
   });
 
-  drawTime(page1, props.horas.conocimiento, 414, 445, 380, font);
-  drawTime(page1, props.horas.llegada, 410, 444, 122, font);
-  drawTime(page3Detencion, props.horas.detencion, 395, 460, 54, font);
+  // Coordenadas calibradas sobre el PDF municipal proporcionado por el usuario (origen inferior izquierdo).
+  // Se rellenan únicamente las horas capturadas; las fechas y las demás casillas quedan sin tocar.
+  drawTime(page1, props.horas.conocimiento, 455, 482, 379, font);
+  drawTime(page1, props.horas.llegada, 423, 452, 127, font);
+  drawTime(page3Detencion, props.horas.detencion, 357, 395, 107, font);
 
   drawNarrativa(page2Narrativa, props.narrativa, font);
 
