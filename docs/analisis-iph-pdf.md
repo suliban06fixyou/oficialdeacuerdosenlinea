@@ -1,50 +1,55 @@
-# Análisis de correspondencia: IPH de infracciones administrativas
+# Generación de PDF del IPH municipal de Chihuahua
 
 Rama de trabajo: `feature/iph-pdf-generator`  
-Base: `migracion-ia-economica`  
-Alcance: análisis previo a la generación del PDF. No modificar ni desplegar producción sin autorización expresa.
+Base de la solicitud de cambios: `migracion-ia-economica`  
+Alcance: generación, vista previa y compartición del PDF usando exclusivamente el formato que proporcionó el usuario. No fusionar ni desplegar a producción sin autorización expresa.
 
-## Formato fuente
+## Plantilla autorizada
 
-El documento de referencia incluye siete secciones: (1) identificación del policía; (2) conocimiento de la probable infracción y quejoso; (3) lugar de los hechos; (4) narración; (5) uso de la fuerza; (6) detención(es); y (7) presentación ante el juzgado o autoridad competente.
+Archivo: `public/iph-infracciones-administrativas.pdf`
 
-## Campos que la aplicación ya captura
+La plantilla se copia sin remaquetar desde el PDF que el usuario cargó. La huella Git del blob es `84ad33a575514e4ccb2d5a1359e744f76dcafd11`, que coincide con el archivo adjunto. Contiene cuatro páginas, con tamaño carta en las páginas 1 y 3 y A4 en las páginas 2 y 4. El PDF no contiene campos de formulario rellenables; los datos capturados se dibujan encima del contenido existente.
+
+La aplicación no descarga plantillas de `gob.mx`, SESNSP ni otros sitios externos. El PDF utilizado se sirve desde los recursos estáticos locales del proyecto.
+
+## Datos que la aplicación ya captura
 
 En `src/components/RevisorIPH.tsx`:
-- Oficial primer respondiente (texto libre).
-- Folio llamada / flagrancia.
+- Nombre y número de placa del oficial en un solo campo de texto.
+- Folio de llamada / flagrancia.
 - Falta administrativa y/o delito.
-- Lugar del evento (texto libre).
+- Lugar del evento en texto libre.
 - Horas de conocimiento, llegada, detención, lectura de derechos y traslado a comandancia.
 - Narrativa original y narrativa revisada/sugerida.
 - Hallazgos de revisión cronológica, preguntas esenciales y estilo.
 
-## Matriz de brechas
+## Mapeo en la primera versión del generador
 
-| Sección del IPH | Cobertura observada en la app | Trabajo requerido para un PDF completo |
-|---|---|---|
-| 1. Identificación del policía | Nombre del oficial en un solo campo; folio disponible. | Separar apellidos/nombres y agregar grado/cargo, unidad, institución, adscripción, entidad y municipio. |
-| 2. Conocimiento y quejoso | Hora de conocimiento y descripción general de la falta. | Fecha y hora completas, medio de conocimiento, detalle del reporte y campos opcionales del quejoso. |
-| 3. Lugar | Campo de ubicación libre y hora de llegada. | Fecha/hora de arribo, tipo de lugar, descripción, domicilio desglosado y coordenadas opcionales. |
-| 4. Narración | Narrativa original y texto revisado. | Imprimir la narrativa final editable y conservar la secuencia cronológica; no inventar hechos para completar campos. |
-| 5. Uso de la fuerza | No se observan campos estructurados en el flujo actual. | Preguntar si hubo uso de fuerza; registrar resistencia/agresión, acciones, consecuencias, lesiones y asistencia médica cuando aplique. |
-| 6. Detención(es) | Hora de detención y traslado; sin datos estructurados de persona detenida. | Datos de cada persona, domicilio, fecha/hora y lugar de detención. Permitir ninguna o varias personas. |
-| 7. Entrega ante autoridad | No se observan campos estructurados en el flujo actual. | Juzgado/institución, fecha/hora de entrega, datos de quien entrega y recibe, firmas y espacio para sello. |
+| Campo en la aplicación | Tratamiento |
+|---|---|
+| Falta administrativa / delito | Se escribe en el espacio descriptivo del apartado 2.2. |
+| Lugar del evento | Se escribe en el apartado 3.2, “Describa brevemente”. |
+| Hora de conocimiento | Se escribe en las casillas de hora del apartado 2.1. |
+| Hora de llegada | Se escribe en las casillas de hora del apartado 3.1. |
+| Hora de detención | Se escribe en las casillas de hora del apartado 6.3. |
+| Narrativa final | Se escribe en el espacio rayado de la sección 4; los renglones se alinean con las líneas impresas. |
+| Folio de llamada / flagrancia | Se usa en el nombre del archivo descargado. No se inserta en el número de referencia oficial porque el campo del formulario sigue una estructura distinta y el folio libre no garantiza correspondencia. |
+| Oficial (nombre y placa en texto libre) | No se descompone en apellidos, nombres, grado o unidad; esos campos permanecen vacíos para no colocar datos en casillas incorrectas. |
 
-## Decisiones de implementación
+## Reglas de integridad
 
-1. Los campos no capturados deben mostrarse en blanco, como “No proporcionado” o mediante casillas Sí/No según el formato; nunca inferir nombres, domicilios, lesiones, uso de fuerza ni actuaciones.
-2. Las secciones condicionales deben conservar la lógica del documento: si no hubo quejoso, saltar sus datos; si no hubo uso de fuerza, no exigir esa sección; si no hubo detención, permitir continuar a la presentación/cierre sin fabricar datos.
-3. Permitir más de una persona detenida. La primera versión puede capturar una persona y dejar el diseño preparado para repetir el bloque, pero el formato fuente indica que la sección se repite si hay más de dos.
-4. La narrativa revisada es una propuesta de redacción y debe ser validada por el policía antes de imprimir.
-5. La salida debe diseñarse para impresión/PDF en tamaño carta y revisarse visualmente en cuatro páginas antes de considerarse lista.
-6. El botón del flujo de salida cambiará a “Generar reporte en PDF”; la acción anterior de copiar/compartir narrativa no debe romperse accidentalmente. Se puede mantener como acción secundaria si resulta necesario.
-7. No ejecutar `wrangler deploy`, no fusionar a `main` ni actualizar ramas de producción durante esta tarea.
+1. No cambiar, recrear, omitir ni reordenar partes de la plantilla original.
+2. No completar fechas, nombres desglosados, adscripción, domicilio detallado, quejoso, uso de fuerza, lesiones, personas detenidas o autoridad receptora si esos datos no están capturados de forma estructurada.
+3. Los campos no informados quedan en blanco; no se agrega “No” ni “No proporcionado” como hecho inferido.
+4. No recortar la narrativa silenciosamente. Si no cabe en los renglones disponibles, el generador muestra un error para que el usuario ajuste el texto antes de generar el PDF.
+5. El archivo debe ser un PDF real descargable/compartible, no una captura de pantalla ni una liga al documento fuente.
+6. Flujo en dispositivo móvil: generar PDF, mostrar vista previa, y permitir “Guardar PDF” o “Compartir PDF” mediante el menú nativo del dispositivo. Si el navegador no admite compartir archivos, descargar una copia para adjuntarla manualmente.
+7. No ejecutar `wrangler deploy`, no fusionar la solicitud de cambios a `main`, ni alterar producción durante esta tarea.
 
-## Pruebas mínimas
+## Verificaciones implementadas
 
-- Caso sin quejoso, sin uso de fuerza y sin persona detenida.
-- Caso con quejoso, persona detenida y entrega a autoridad.
-- Caso con uso de fuerza y asistencia médica.
-- Texto narrativo largo, acentos y caracteres españoles.
-- Verificar número de páginas, saltos, campos vacíos y que el contenido no se corte al imprimir.
+- Validación automatizada de que la plantilla local se puede leer como PDF.
+- Validación de cuatro páginas y de sus dimensiones mixtas esperadas.
+- Compilación y comprobación de tipos de TypeScript.
+- Prueba visual local de posición de texto ficticio (solo para calibración; no representa hechos reales).
+- La aplicación aún necesita una prueba de extremo a extremo en el sitio de previsualización para confirmar la vista previa y compartir desde el dispositivo.
