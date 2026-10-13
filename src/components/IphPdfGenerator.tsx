@@ -112,7 +112,7 @@ function drawNarrativa(page: PDFPage, narrativa: string, font: PDFFont) {
   if (!narrativa.trim()) return;
 
   const x = 29;
-  const maxWidth = page.getWidth() - 58;
+  const maxWidth = page.getWidth() - 70;
   // En la sección 4, los renglones impresos del formato municipal están separados aproximadamente 16.2 puntos.
   // El texto se alinea con esos renglones y jamás se recorta silenciosamente.
   const topBaseline = 490;
@@ -230,8 +230,8 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
 
   // Coordenadas calibradas sobre el PDF municipal proporcionado por el usuario (origen inferior izquierdo).
   // Se rellenan únicamente las horas capturadas; las fechas y las demás casillas quedan sin tocar.
-  drawTime(page1, props.horas.conocimiento, 455, 482, 379, font);
-  drawTime(page1, props.horas.llegada, 423, 452, 127, font);
+  drawTime(page1, props.horas.conocimiento, 457, 482, 379, font);
+  drawTime(page1, props.horas.llegada, 426, 455, 127, font);
   drawTime(page3Detencion, props.horas.detencion, 357, 395, 107, font);
 
   drawNarrativa(page2Narrativa, props.narrativa, font);
