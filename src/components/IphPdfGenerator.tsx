@@ -111,7 +111,7 @@ function drawWrappedValue(
 function drawNarrativa(page: PDFPage, narrativa: string, font: PDFFont) {
   if (!narrativa.trim()) return;
 
-  const x = 29;
+  const x = 32;
   const maxWidth = page.getWidth() - 70;
   // En la sección 4, los renglones impresos del formato municipal están separados aproximadamente 16.2 puntos.
   // El texto se alinea con esos renglones y jamás se recorta silenciosamente.
