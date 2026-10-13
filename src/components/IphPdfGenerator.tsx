@@ -10,7 +10,7 @@ interface Props {
   narrativa: string;
 }
 
-const TEMPLATE_ENDPOINT = "/iph-infracciones-administrativas.pdf";
+const TEMPLATE_ENDPOINT = "/api/iph-template";
 
 function normalizarTexto(value: string): string {
   return value
@@ -20,6 +20,8 @@ function normalizarTexto(value: string): string {
     .replace(/[–—−]/g, "-")
     .replace(/…/g, "...")
     .replace(/[•·]/g, "-")
+    .replace(/[\u{1F300}-\u{1FAFF}]/gu, "")
+    .replace(/[^\u0000-\u00FF]/g, "")
     .replace(/\r\n?/g, "\n");
 }
 
@@ -113,8 +115,8 @@ function drawNarrativa(page: PDFPage, narrativa: string, font: PDFFont) {
 
   const x = 29;
   const maxWidth = page.getWidth() - 58;
-  const topBaseline = 495;
-  const bottomBaseline = 62;
+  const topBaseline = 500;
+  const bottomBaseline = 57;
   let chosen:
     | { size: number; lineHeight: number; lines: string[] }
     | undefined;
@@ -160,10 +162,7 @@ function nombreArchivo(folio: string) {
 async function generarPdf(props: Props): Promise<Uint8Array> {
   const response = await fetch(TEMPLATE_ENDPOINT, { headers: { Accept: "application/pdf" } });
   if (!response.ok) {
-    let message =
-      response.status === 404
-        ? "Falta instalar en la aplicación el PDF original de infracciones administrativas de la Policía Municipal de Chihuahua. No se generó ningún archivo."
-        : "No se pudo leer el PDF original de infracciones administrativas de la Policía Municipal de Chihuahua.";
+    let message = "No se pudo obtener el formato oficial IPH.";
     try {
       const details = (await response.json()) as { error?: string };
       if (details.error) message = details.error;
@@ -179,26 +178,9 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
     throw new Error("La fuente del formato oficial no devolvió un PDF válido.");
   }
 
-  const textos = [props.falta, props.lugar, props.narrativa].map(normalizarTexto);
-  if (textos.some((texto) => /[^\u0000-\u00FF]/u.test(texto))) {
-    throw new Error(
-      "El texto contiene algún símbolo o carácter que la fuente del formato oficial no puede representar. Sustituya ese símbolo por texto sencillo; la narrativa no se recortará ni se eliminarán caracteres automáticamente.",
-    );
-  }
-
   const pdf = await PDFDocument.load(templateBytes);
-  // Se validó visualmente el PDF municipal que usa esta aplicación: cuatro páginas,
-  // con páginas 1 y 3 tamaño carta y páginas 2 y 4 tamaño A4.
-  if (
-    pdf.getPageCount() !== 4 ||
-    Math.round(pdf.getPages()[0].getWidth()) !== 612 ||
-    Math.round(pdf.getPages()[1].getHeight()) !== 842 ||
-    Math.round(pdf.getPages()[2].getWidth()) !== 612 ||
-    Math.round(pdf.getPages()[3].getHeight()) !== 842
-  ) {
-    throw new Error(
-      "El archivo local no coincide con la versión del IPH municipal validada. No se generó el PDF para evitar colocar datos en apartados incorrectos.",
-    );
+  if (pdf.getPageCount() < 4) {
+    throw new Error("El formato oficial recibido no contiene todas las páginas esperadas.");
   }
 
   const font = await pdf.embedFont(StandardFonts.Helvetica);
@@ -211,7 +193,7 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
   // Nombre completo, fechas, casillas y datos personales no capturados permanecen vacíos.
   drawWrappedValue(page1, props.falta, font, {
     x: 30,
-    y: 331,
+    y: 320,
     width: page1.getWidth() - 60,
     maxLines: 2,
     fontSize: 7.2,
@@ -220,17 +202,16 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
 
   drawWrappedValue(page1, props.lugar, font, {
     x: 30,
-    y: 54,
+    y: 48,
     width: page1.getWidth() - 60,
-    maxLines: 2,
+    maxLines: 4,
     fontSize: 7.3,
     lineHeight: 9.1,
   });
 
-  // Coordenadas iniciales calibradas sobre el PDF municipal proporcionado por el usuario (Letter, origen inferior izquierdo).
-  drawTime(page1, props.horas.conocimiento, 458, 500, 379, font);
-  drawTime(page1, props.horas.llegada, 458, 500, 127, font);
-  drawTime(page3Detencion, props.horas.detencion, 357, 395, 107, font);
+  drawTime(page1, props.horas.conocimiento, 414, 445, 380, font);
+  drawTime(page1, props.horas.llegada, 410, 444, 122, font);
+  drawTime(page3Detencion, props.horas.detencion, 395, 460, 54, font);
 
   drawNarrativa(page2Narrativa, props.narrativa, font);
 
