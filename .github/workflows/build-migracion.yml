@@ -23,5 +23,8 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Validate local municipal IPH PDF
+        run: bun run scripts/validate-iph-template.mjs
+
       - name: Build and type-check
         run: bun run build
