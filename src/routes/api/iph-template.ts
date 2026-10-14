@@ -1,62 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const IPH_TEMPLATE_URL =
-  "https://www.gob.mx/cms/uploads/attachment/file/394022/IPH_INFRACCIONES_ADMINISTRATIVAS.PDF";
-
+/**
+ * Compatibilidad para clientes que aún consulten esta ruta.
+ * La única plantilla permitida es el PDF local proporcionado por el usuario.
+ * No se consulta ni sustituye por documentos externos.
+ */
 export const Route = createFileRoute("/api/iph-template")({
   server: {
     handlers: {
-      GET: async () => {
-        try {
-          const upstream = await fetch(IPH_TEMPLATE_URL, {
-            headers: {
-              Accept: "application/pdf,*/*;q=0.8",
-              Referer: "https://www.gob.mx/",
-              "User-Agent":
-                "Mozilla/5.0 (compatible; IPH-Template-Preview/1.0; +https://www.gob.mx/)",
-            },
-          });
-
-          if (!upstream.ok) {
-            console.error(`No se pudo obtener la plantilla IPH oficial [${upstream.status}].`);
-            return Response.json(
-              {
-                ok: false,
-                error: "No se pudo obtener el formato oficial IPH. Intente nuevamente más tarde.",
-              },
-              { status: 502 },
-            );
-          }
-
-          const bytes = await upstream.arrayBuffer();
-          const signature = new TextDecoder().decode(bytes.slice(0, 5));
-
-          if (signature !== "%PDF-" || bytes.byteLength < 10_000) {
-            console.error("La fuente oficial no devolvió un PDF válido.");
-            return Response.json(
-              { ok: false, error: "La fuente del formato oficial devolvió un archivo no válido." },
-              { status: 502 },
-            );
-          }
-
-          return new Response(bytes, {
-            headers: {
-              "Content-Type": "application/pdf",
-              "Content-Disposition": 'inline; filename="IPH_INFRACCIONES_ADMINISTRATIVAS.pdf"',
-              "Cache-Control": "public, max-age=3600, s-maxage=86400",
-              "X-Content-Type-Options": "nosniff",
-            },
-          });
-        } catch (error) {
-          console.error("Error al recuperar la plantilla IPH oficial:", error);
-          return Response.json(
-            {
-              ok: false,
-              error: "No se pudo conectar con la fuente oficial del formato IPH.",
-            },
-            { status: 502 },
-          );
-        }
+      GET: async ({ request }) => {
+        const localTemplate = new URL("/iph-infracciones-administrativas.pdf", request.url);
+        return Response.redirect(localTemplate, 307);
       },
     },
   },
