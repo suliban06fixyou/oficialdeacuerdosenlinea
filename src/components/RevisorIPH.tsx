@@ -12,6 +12,7 @@ import {
 import { obtenerEstadisticasUso, revisarNarrativa } from "@/lib/revision.functions";
 import logoDspm from "@/assets/logo-dspm-oficial.png.asset.json";
 import oficialAcuerdos from "@/assets/oficial-acuerdos-nn.jpg.asset.json";
+import IphPdfGenerator from "./IphPdfGenerator";
 const fondoChat = "/fondo-chat.jpg";
 
 type Paso = "cronologia" | "narrativa" | "revision" | "envio";
@@ -26,7 +27,7 @@ const PASOS_MENU: { id: Paso; num: string; titulo: string; ayuda: string }[] = [
   { id: "cronologia", num: "1", titulo: "Cronología", ayuda: "Horas de la intervención" },
   { id: "narrativa", num: "2", titulo: "Narrativa", ayuda: "Redacción de los hechos" },
   { id: "revision", num: "3", titulo: "Revisión", ayuda: "Hallazgos y consejos" },
-  { id: "envio", num: "4", titulo: "Copiar", ayuda: "Copiar narrativa lista" },
+  { id: "envio", num: "4", titulo: "Reporte PDF", ayuda: "Generar reporte IPH en PDF" },
 ];
 
 const COLOR_SEVERIDAD: Record<string, string> = {
@@ -482,9 +483,9 @@ export default function RevisorIPH() {
           {paso === "envio" && (
             <div className="space-y-4">
               <div>
-                <h2 className="texto-institucional text-lg font-bold">Copiar narrativa lista</h2>
+                <h2 className="texto-institucional text-lg font-bold">Generar reporte IPH en PDF</h2>
                 <p className="text-sm text-muted-foreground">
-                  La narrativa revisada queda lista para su envío conforme a los protocolos institucionales.
+                  Complete los campos faltantes del formato y genere una versión imprimible en PDF. Verifique los datos antes de usar el reporte.
                 </p>
               </div>
               {criticos.length > 0 && (
@@ -495,7 +496,7 @@ export default function RevisorIPH() {
               )}
               <p className="rounded-xl border border-border bg-secondary/30 p-3 text-sm text-muted-foreground">
                 Edite la narrativa sugerida en el cuadro del chat del Asesor IPH y presione ahí
-                “Copiar narrativa lista”.
+                “Copiar / compartir narrativa”.
               </p>
             </div>
           )}
@@ -579,12 +580,19 @@ export default function RevisorIPH() {
               placeholder="Pregunte al asesor: ¿cómo redacto el aseguramiento?"
               className="w-full rounded-xl border border-input bg-secondary/40 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
             />
+            <IphPdfGenerator
+              oficial={oficial}
+              folio={folio}
+              falta={faltaODelito}
+              lugar={lugar}
+              horas={horas}
+              narrativa={narrativaFinal.trim() || narrativa.trim()}
+            />
             <button
               onClick={enviarNarrativaLista}
-              className="w-full rounded-xl px-4 py-3 font-semibold text-accent-foreground"
-              style={{ backgroundImage: "var(--gradient-dorado)" }}
+              className="w-full rounded-xl border border-border px-4 py-2 text-sm font-semibold"
             >
-              Copiar narrativa lista
+              Copiar / compartir narrativa
             </button>
             {avisoEnvio && <p className="text-xs text-muted-foreground">{avisoEnvio}</p>}
           </div>
