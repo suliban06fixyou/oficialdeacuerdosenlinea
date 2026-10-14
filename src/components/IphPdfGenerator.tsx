@@ -158,6 +158,37 @@ function nombreArchivo(folio: string) {
   return seguro ? `IPH-infracciones-${seguro}.pdf` : "IPH-infracciones-administrativas.pdf";
 }
 
+interface UsoFuerzaExtraido {
+  resistencia: string;
+  descripcion: string;
+}
+
+/**
+ * Extrae únicamente enunciados que ya están en la narrativa y que mencionan
+ * explícitamente resistencia, agresión o uso de fuerza. No infiere lesiones,
+ * atención médica, tipo de fuerza ni necesidad de fuerza a partir de una detención.
+ */
+function extraerUsoFuerza(narrativa: string): UsoFuerzaExtraido {
+  const texto = normalizarTexto(narrativa).trim();
+  if (!texto) return { resistencia: "", descripcion: "" };
+
+  const oraciones = texto
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const resistenciaRx = /resist(?:ió|io|encia|ente|irse|ieron)|forceje(?:ó|o|aron|ando|o)|agresi(?:ón|on|vo|va)|se opuso|oposición|intentó huir|intent[oó] darse a la fuga|se negó a (?:ser )?(?:detenido|asegurado)|se abalanzó|golpe(?:ó|o|ando|aron)|pate(?:ó|o|ando|aron)/i;
+  const fuerzaRx = /uso de la fuerza|fuerza física|fuerza policial|técnica(?:s)? de (?:control|sometimiento|inmovilización)|somet(?:ió|io|imiento)|inmoviliz(?:ó|o|ación)|control(?:ó|o) físicamente|espos(?:ó|o|amiento)|candados de mano|redu(?:jo|cción) física|neutraliz(?:ó|o)/i;
+
+  const resistencia = oraciones.filter((s) => resistenciaRx.test(s)).join(" ");
+  const descripcion = oraciones.filter((s) => fuerzaRx.test(s) || resistenciaRx.test(s)).join(" ");
+
+  return {
+    resistencia: resistencia ? normalizarTexto(resistencia) : "",
+    descripcion: descripcion ? normalizarTexto(descripcion) : "",
+  };
+}
+
 async function generarPdf(props: Props): Promise<Uint8Array> {
   const response = await fetch(TEMPLATE_ENDPOINT, { headers: { Accept: "application/pdf" } });
   if (!response.ok) {
@@ -235,6 +266,33 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
   drawTime(page3Detencion, props.horas.detencion, 357, 395, 107, font);
 
   drawNarrativa(page2Narrativa, props.narrativa, font);
+
+  // Sección 5 del PDF original: solo se completa si la narrativa describe
+  // explícitamente resistencia/agresión o uso de fuerza. Los campos de lesiones,
+  // atención médica y circunstancias permanecen intactos si no están confirmados.
+  const usoFuerza = extraerUsoFuerza(props.narrativa);
+  if (usoFuerza.resistencia || usoFuerza.descripcion) {
+    // Apartado 5.1: descripción breve de la resistencia o agresión encontrada.
+    drawWrappedValue(page3Detencion, usoFuerza.resistencia, font, {
+      x: 32,
+      y: 678,
+      width: page3Detencion.getWidth() - 64,
+      maxLines: 3,
+      fontSize: 7.1,
+      lineHeight: 8.2,
+    });
+
+    // Campo narrativo de uso de la fuerza: se usan solo frases literales de la
+    // narrativa fuente, sin crear justificaciones ni agregar hechos no capturados.
+    drawWrappedValue(page3Detencion, usoFuerza.descripcion, font, {
+      x: 32,
+      y: 565,
+      width: page3Detencion.getWidth() - 64,
+      maxLines: 7,
+      fontSize: 7.1,
+      lineHeight: 8.2,
+    });
+  }
 
   return pdf.save();
 }
@@ -328,7 +386,7 @@ export default function IphPdfGenerator(props: Props) {
       </button>
 
       <p className="text-xs leading-relaxed text-muted-foreground">
-        Se utiliza la plantilla oficial del IPH. Se integran únicamente el lugar, la probable infracción, las horas disponibles y la narrativa; los campos sin datos comprobables quedan en blanco.
+        Se utiliza la plantilla oficial del IPH. Se integran los datos capturados y, cuando la narrativa lo describe expresamente, los pasajes relacionados con resistencia o uso de la fuerza. Los campos no acreditados quedan en blanco.
       </p>
 
       {error && (
