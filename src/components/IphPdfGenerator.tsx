@@ -164,28 +164,37 @@ interface UsoFuerzaExtraido {
 }
 
 /**
- * Extrae únicamente enunciados que ya están en la narrativa y que mencionan
- * explícitamente resistencia, agresión o uso de fuerza. No infiere lesiones,
- * atención médica, tipo de fuerza ni necesidad de fuerza a partir de una detención.
+ * Identifica solo hechos descritos expresamente en la narrativa.
+ * No convierte automáticamente insultos en resistencia, ni una detención
+ * en uso de fuerza física. Los campos sin respaldo narrativo quedan vacíos.
  */
 function extraerUsoFuerza(narrativa: string): UsoFuerzaExtraido {
   const texto = normalizarTexto(narrativa).trim();
   if (!texto) return { resistencia: "", descripcion: "" };
 
   const oraciones = texto
-    .split(/(?<=[.!?])\s+|\n+/)
+    .split(/(?<=[.!?])\\s+|\\n+/)
     .map((s) => s.trim())
     .filter(Boolean);
 
-  const resistenciaRx = /resist(?:ió|io|encia|ente|irse|ieron)|forceje(?:ó|o|aron|ando|o)|agresi(?:ón|on|vo|va)|se opuso|oposición|intentó huir|intent[oó] darse a la fuga|se negó a (?:ser )?(?:detenido|asegurado)|se abalanzó|golpe(?:ó|o|ando|aron)|pate(?:ó|o|ando|aron)/i;
-  const fuerzaRx = /uso de la fuerza|fuerza física|fuerza policial|técnica(?:s)? de (?:control|sometimiento|inmovilización)|somet(?:ió|io|imiento)|inmoviliz(?:ó|o|ación)|control(?:ó|o) físicamente|espos(?:ó|o|amiento)|candados de mano|redu(?:jo|cción) física|neutraliz(?:ó|o)/i;
+  const resistenciaRx =
+    /se negó a (?:obedecer|acatar|seguir|cumplir)|se negó a (?:ser )?(?:detenido|asegurado)|no acató|no obedeció|desobedeció|ignoró (?:las )?(?:indicaciones|instrucciones|órdenes|comandos)|hizo caso omiso|se resistió|resistencia (?:activa|pasiva|verbal)|forceje(?:ó|o|aron|ando)|intentó huir|intentó darse a la fuga|trató de escapar|intentó escapar|se dio a la fuga|emprendió la huida|se abalanzó|agredió|golpe(?:ó|o|ando|aron)|pate(?:ó|o|ando|aron)/i;
+  const insultosRx = /insult(?:ó|o|os|ando)|ofend(?:ió|io|ió|ió|ió|ió|e|ió|ieron)|profirió (?:insultos|ofensas)|amenaz(?:ó|o|as|ando)/i;
+  const presenciaRx = /presencia policial|presencia de (?:los )?(?:elementos|agentes|policías|policias)|arrib(?:ó|o|aron) (?:al lugar )?(?:el suscrito|los elementos|los agentes|la unidad|la policía|la policia)|se hizo presente/i;
+  const verbalizacionRx = /verbaliz(?:ó|o|ación|aron)|comando(?:s)? verbales|instrucciones verbales|indicaciones verbales|órdenes verbales|orden(?:ó|o|aron) (?:que )?(?:se detuviera|se calmara|soltara|se colocara|descendiera|mostrara)|le indiqué|le indique|se le indicó|se le indico|se le ordenó|se le ordeno|se le solicitó|se le solicito|se le pidió|se le pidio/i;
+  const fuerzaFisicaRx = /uso de la fuerza física|uso de fuerza física|técnica(?:s)? de (?:control|sometimiento|inmovilización)|somet(?:ió|io|imiento)|inmoviliz(?:ó|o|ación)|control(?:ó|o) físicamente|espos(?:ó|o|amiento)|candados de mano|redu(?:jo|cción) física|neutraliz(?:ó|o)|sujet(?:ó|o) físicamente|derrib(?:ó|o)|aplic(?:ó|o) fuerza física/i;
 
-  const resistencia = oraciones.filter((s) => resistenciaRx.test(s)).join(" ");
-  const descripcion = oraciones.filter((s) => fuerzaRx.test(s) || resistenciaRx.test(s)).join(" ");
+  const resistencia = oraciones.filter((s) => resistenciaRx.test(s) || insultosRx.test(s)).join(" ");
+  const detalles = oraciones.filter((s) =>
+    resistenciaRx.test(s) || insultosRx.test(s) || presenciaRx.test(s) ||
+    verbalizacionRx.test(s) || fuerzaFisicaRx.test(s)
+  ).join(" ");
 
+  // Si la narrativa menciona presencia o verbalización, esas frases se conservan
+  // en la descripción; nunca se agregan como hechos si no están documentadas.
   return {
     resistencia: resistencia ? normalizarTexto(resistencia) : "",
-    descripcion: descripcion ? normalizarTexto(descripcion) : "",
+    descripcion: detalles ? normalizarTexto(detalles) : "",
   };
 }
 
@@ -386,7 +395,7 @@ export default function IphPdfGenerator(props: Props) {
       </button>
 
       <p className="text-xs leading-relaxed text-muted-foreground">
-        Se utiliza la plantilla oficial del IPH. Se integran los datos capturados y, cuando la narrativa lo describe expresamente, los pasajes relacionados con resistencia o uso de la fuerza. Los campos no acreditados quedan en blanco.
+        Se utiliza la plantilla oficial del IPH. Se integran los datos capturados y los pasajes que la narrativa describa expresamente sobre resistencia, presencia policial, verbalización o fuerza física. No se infieren hechos: los campos sin información suficiente quedan en blanco.
       </p>
 
       {error && (
