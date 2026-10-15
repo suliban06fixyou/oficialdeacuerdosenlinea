@@ -204,12 +204,12 @@ interface UsoFuerzaExtraido {
  * sin tratarlos automáticamente como fuerza física. Una detención por sí sola
  * no demuestra uso de fuerza; los campos sin respaldo narrativo quedan vacíos.
  */
-function extraerUsoFuerza(narrativa: string): UsoFuerzaExtraido {
+export function extraerUsoFuerza(narrativa: string): UsoFuerzaExtraido {
   const texto = normalizarTexto(narrativa).trim();
   if (!texto) return { resistencia: "", descripcion: "" };
 
   const oraciones = texto
-    .split(/(?<=[.!?])\\s+|\\n+/)
+    .split(/(?<=[.!?])\s+|\n+/)
     .map((s) => s.trim())
     .filter(Boolean);
 
