@@ -335,10 +335,11 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     fontSize: 7.1,
     lineHeight: 8,
   });
+  // Número de unidad: línea específica anterior a las casillas de institución/adscripción.
   drawWrappedValue(page1, props.unidad, font, {
-    x: 387,
-    y: 548,
-    width: 164,
+    x: 312,
+    y: 560,
+    width: page1.getWidth() - 345,
     maxLines: 1,
     fontSize: 7.1,
     lineHeight: 8,
@@ -353,13 +354,15 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     lineHeight: 8.5,
   });
 
-  drawWrappedValue(page1, props.lugar, font, {
-    x: 30,
-    y: 54,
-    width: page1.getWidth() - 60,
-    maxLines: 2,
-    fontSize: 7.3,
-    lineHeight: 9.1,
+  // La ubicación corresponde al apartado geográfico 3.3 de la página 2.
+  // No se coloca en "Describa brevemente" del apartado 3.2, que pide características del lugar.
+  drawWrappedValue(page2Narrativa, props.lugar, font, {
+    x: 198,
+    y: 757,
+    width: page2Narrativa.getWidth() - 235,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
   });
 
   // Coordenadas calibradas sobre el PDF municipal proporcionado por el usuario (origen inferior izquierdo).
