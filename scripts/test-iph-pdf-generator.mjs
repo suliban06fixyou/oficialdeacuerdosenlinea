@@ -30,7 +30,15 @@ try {
     unidad: "UM-TEST",
     folio: "TEST-IPH-2026-001",
     falta: "Ejemplo de falta administrativa para validar el formato",
-    lugar: "Calle de Prueba y Avenida Demostración, colonia Centro",
+    ubicacion: {
+      calle: "Calle de Prueba",
+      numeroExterior: "120",
+      coloniaLocalidad: "Centro",
+      entreCalle: "Avenida Demostración",
+      yCalle: "Calle de Ejemplo",
+      entidadFederativa: "Chihuahua",
+      municipio: "Chihuahua",
+    },
     horas: {
       conocimiento: "21:00",
       llegada: "21:10",
