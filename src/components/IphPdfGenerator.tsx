@@ -314,9 +314,9 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
     lineHeight: 8,
   });
   drawWrappedValue(page1, props.grado, font, {
-    x: 135,
+    x: 154,
     y: 573,
-    width: page1.getWidth() - 165,
+    width: page1.getWidth() - 184,
     maxLines: 1,
     fontSize: 7.1,
     lineHeight: 8,
@@ -355,7 +355,7 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
   drawTime(page3Detencion, props.horas.detencion, 357, 395, 107, font);
 
   drawDate(page1, props.fechas.conocimiento, 456, 416, 11.4, 6.8, font);
-  drawDate(page1, props.fechas.llegada, 109, 128, 6.7, 5.5, font);
+  drawDate(page1, props.fechas.llegada, 132, 128, 11.5, 6.8, font);
   drawDate(page3Detencion, props.fechas.detencion, 121, 102, 11.5, 6.8, font);
 
   drawNarrativa(page2Narrativa, props.narrativa, font);
