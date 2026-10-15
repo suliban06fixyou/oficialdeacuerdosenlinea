@@ -2,11 +2,24 @@ import { useEffect, useMemo, useState } from "react";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 
 interface Props {
-  oficial: string;
+  primerApellido: string;
+  segundoApellido: string;
+  nombres: string;
+  grado: string;
+  unidad: string;
   folio: string;
   falta: string;
-  lugar: string;
+  ubicacion: {
+    calle: string;
+    numeroExterior: string;
+    coloniaLocalidad: string;
+    entreCalle: string;
+    yCalle: string;
+    entidadFederativa: string;
+    municipio: string;
+  };
   horas: Record<string, string>;
+  fechas: { conocimiento: string; llegada: string; detencion: string };
   narrativa: string;
 }
 
@@ -68,6 +81,33 @@ function wordWrap(text: string, font: PDFFont, size: number, width: number): str
   return output;
 }
 
+function drawBoxedText(
+  page: PDFPage,
+  value: string,
+  x: number,
+  y: number,
+  spacing: number,
+  maxChars: number,
+  fontSize: number,
+  font: PDFFont,
+) {
+  const chars = normalizarTexto(value).replace(/\s/g, "");
+  if (!chars) return;
+  if ([...chars].length > maxChars) {
+    throw new Error("El número exterior no cabe en las casillas del formato oficial. Revise la longitud del dato.");
+  }
+  [...chars].forEach((char, index) => {
+    const width = font.widthOfTextAtSize(char, fontSize);
+    page.drawText(char, {
+      x: x + index * spacing + (spacing - width) / 2,
+      y,
+      size: fontSize,
+      font,
+      color: rgb(0.05, 0.05, 0.05),
+    });
+  });
+}
+
 function drawTime(
   page: PDFPage,
   value: string | undefined,
@@ -83,6 +123,36 @@ function drawTime(
   page.drawText(time.minutes, { ...options, x: xMinutes });
 }
 
+function fechaComoDigitos(value?: string): string | null {
+  const match = value?.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return match ? `${match[3]}${match[2]}${match[1]}` : null;
+}
+
+/** Coloca DDMMAAAA dentro de las ocho casillas impresas del formato oficial. */
+function drawDate(
+  page: PDFPage,
+  value: string | undefined,
+  x: number,
+  y: number,
+  spacing: number,
+  fontSize: number,
+  font: PDFFont,
+) {
+  const digits = fechaComoDigitos(value);
+  if (!digits) return;
+  const ink = rgb(0.05, 0.05, 0.05);
+  [...digits].forEach((digit, index) => {
+    const width = font.widthOfTextAtSize(digit, fontSize);
+    page.drawText(digit, {
+      x: x + index * spacing + (spacing - width) / 2,
+      y,
+      size: fontSize,
+      font,
+      color: ink,
+    });
+  });
+}
+
 function drawWrappedValue(
   page: PDFPage,
   value: string,
@@ -93,7 +163,7 @@ function drawWrappedValue(
   const lines = wordWrap(value, font, options.fontSize, options.width);
   if (lines.length > options.maxLines) {
     throw new Error(
-      "Uno de los datos no cabe en el espacio disponible del formato IPH. Revise la longitud del lugar o de la probable infracción antes de generar el PDF.",
+      "Uno de los datos no cabe en el espacio disponible de la plantilla oficial del IPH. Revise o acorte el texto; no se recortó ni se omitió silenciosamente.",
     );
   }
   lines.forEach((line, index) => {
@@ -158,7 +228,61 @@ function nombreArchivo(folio: string) {
   return seguro ? `IPH-infracciones-${seguro}.pdf` : "IPH-infracciones-administrativas.pdf";
 }
 
-async function generarPdf(props: Props): Promise<Uint8Array> {
+interface UsoFuerzaExtraido {
+  resistencia: string;
+  descripcion: string;
+}
+
+/**
+ * Identifica hechos descritos expresamente en la narrativa.
+ * Registra insultos u ofensas cuando están narrados como conducta verbal,
+ * sin tratarlos automáticamente como fuerza física. Una detención por sí sola
+ * no demuestra uso de fuerza; los campos sin respaldo narrativo quedan vacíos.
+ */
+export function extraerUsoFuerza(narrativa: string): UsoFuerzaExtraido {
+  const texto = normalizarTexto(narrativa).trim();
+  if (!texto) return { resistencia: "", descripcion: "" };
+
+  const oraciones = texto
+    .split(/(?<=[.!?])\s+|[;\n]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const resistenciaRx =
+    /se negó a (?:obedecer|acatar|seguir|cumplir)|se negó a (?:ser )?(?:detenido|asegurado)|no acató|no obedeció|desobedeció|ignoró (?:las )?(?:indicaciones|instrucciones|órdenes|comandos)|hizo caso omiso|se resistió|resistencia (?:activa|pasiva|verbal)|forceje(?:ó|o|aron|ando)|intentó huir|intentó darse a la fuga|trató de escapar|intentó escapar|se dio a la fuga|emprendió la huida|se abalanzó|agredió|golpe(?:ó|o|ando|aron)|pate(?:ó|o|ando|aron)/i;
+  const insultosRx = /insult(?:ó|o|os|ando)|ofend(?:ió|io|ió|ió|ió|ió|e|ió|ieron)|profirió (?:insultos|ofensas)|amenaz(?:ó|o|as|ando)/i;
+  const presenciaRx = /presencia policial|presencia de (?:los )?(?:elementos|agentes|policías|policias)|arrib(?:ó|o|aron) (?:al lugar )?(?:el suscrito|los elementos|los agentes|la unidad|la policía|la policia)|se hizo presente/i;
+  const verbalizacionRx = /verbaliz(?:ó|o|ación|aron)|comando(?:s)? verbales|instrucciones verbales|indicaciones verbales|órdenes verbales|orden(?:ó|o|aron) (?:que )?(?:se detuviera|se calmara|soltara|se colocara|descendiera|mostrara)|le indiqué|le indique|se le indicó|se le indico|se le ordenó|se le ordeno|se le solicitó|se le solicito|se le pidió|se le pidio/i;
+  const fuerzaFisicaRx = /uso de la fuerza física|uso de fuerza física|técnica(?:s)? de (?:control|neutralización|inmovilización)|inmoviliz(?:ó|o|ación)|control(?:ó|o) físicamente|espos(?:ó|o|amiento)|candados de mano|redu(?:jo|cción) física|neutraliz(?:ó|o|ar|ación)|sujet(?:ó|o) físicamente|derrib(?:ó|o)|aplic(?:ó|o) fuerza física/i;
+
+  const unirClausulas = (frases: string[]) => {
+    const limpias = frases
+      .map((s) => s.trim().replace(/[.!?;,…\s]+$/g, ""))
+      .filter(Boolean);
+    return limpias.length ? `${limpias.join(". ")}.` : "";
+  };
+
+  const resistencia = unirClausulas(
+    oraciones.filter((s) => resistenciaRx.test(s) || insultosRx.test(s)),
+  );
+  // El segundo campo describe acciones de la policía documentadas expresamente:
+  // presencia, indicaciones verbales o una forma de fuerza. La resistencia por sí sola
+  // queda en el primer campo y no implica que se haya empleado fuerza.
+  const detalles = unirClausulas(
+    oraciones.filter((s) =>
+      presenciaRx.test(s) || verbalizacionRx.test(s) || fuerzaFisicaRx.test(s)
+    ),
+  );
+
+  // Si la narrativa menciona presencia o verbalización, esas frases se conservan
+  // en la descripción; nunca se agregan como hechos si no están documentadas.
+  return {
+    resistencia: resistencia ? normalizarTexto(resistencia) : "",
+    descripcion: detalles ? normalizarTexto(detalles) : "",
+  };
+}
+
+export async function generarPdf(props: Props): Promise<Uint8Array> {
   const response = await fetch(TEMPLATE_ENDPOINT, { headers: { Accept: "application/pdf" } });
   if (!response.ok) {
     let message =
@@ -180,7 +304,10 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
     throw new Error("La fuente del formato oficial no devolvió un PDF válido.");
   }
 
-  const textos = [props.falta, props.lugar, props.narrativa].map(normalizarTexto);
+  const textos = [
+    props.primerApellido, props.segundoApellido, props.nombres, props.grado, props.unidad,
+    props.falta, props.narrativa, ...Object.values(props.ubicacion),
+  ].map(normalizarTexto);
   if (textos.some((texto) => /[^\u0000-\u00FF]/u.test(texto))) {
     throw new Error(
       "El texto contiene algún símbolo o carácter que la fuente del formato oficial no puede representar. Sustituya ese símbolo por texto sencillo; la narrativa no se recortará ni se eliminarán caracteres automáticamente.",
@@ -208,8 +335,51 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
   const page2Narrativa = pages[1];
   const page3Detencion = pages[2];
 
-  // Sólo se imprimen datos que ya existen en la app y que tienen un campo claro.
-  // Nombre completo, fechas, casillas y datos personales no capturados permanecen vacíos.
+  // Se mapean los campos que tienen correspondencia directa en la plantilla oficial.
+  // Los datos no capturados y el folio (que no tiene un campo inequívoco en este formato)
+  // no se escriben en casillas ajenas.
+  drawWrappedValue(page1, props.primerApellido, font, {
+    x: 37,
+    y: 604,
+    width: 160,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
+  });
+  drawWrappedValue(page1, props.segundoApellido, font, {
+    x: 213,
+    y: 604,
+    width: 154,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
+  });
+  drawWrappedValue(page1, props.nombres, font, {
+    x: 388,
+    y: 604,
+    width: 160,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
+  });
+  drawWrappedValue(page1, props.grado, font, {
+    x: 154,
+    y: 573,
+    width: page1.getWidth() - 184,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
+  });
+  // Número de unidad: línea específica anterior a las casillas de institución/adscripción.
+  drawWrappedValue(page1, props.unidad, font, {
+    x: 312,
+    y: 560,
+    width: page1.getWidth() - 345,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
+  });
+
   drawWrappedValue(page1, props.falta, font, {
     x: 30,
     y: 331,
@@ -219,13 +389,58 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
     lineHeight: 8.5,
   });
 
-  drawWrappedValue(page1, props.lugar, font, {
-    x: 30,
-    y: 54,
-    width: page1.getWidth() - 60,
-    maxLines: 2,
-    fontSize: 7.3,
-    lineHeight: 9.1,
+  // La ubicación se captura por partes y se coloca únicamente en los campos
+  // correspondientes del apartado geográfico 3.3. El apartado 3.2 queda en blanco
+  // porque la aplicación no pregunta si el sitio era hogar, vía pública o transporte.
+  const ubicacion = props.ubicacion;
+  drawWrappedValue(page2Narrativa, ubicacion.calle, font, {
+    x: 210,
+    y: 757,
+    width: page2Narrativa.getWidth() - 247,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
+  });
+  drawWrappedValue(page2Narrativa, ubicacion.coloniaLocalidad, font, {
+    x: 210,
+    y: 742,
+    width: page2Narrativa.getWidth() - 247,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
+  });
+  drawBoxedText(page2Narrativa, ubicacion.numeroExterior, 96, 723, 10.5, 5, 7, font);
+  drawWrappedValue(page2Narrativa, ubicacion.entreCalle, font, {
+    x: 298,
+    y: 726,
+    width: page2Narrativa.getWidth() - 315,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
+  });
+  drawWrappedValue(page2Narrativa, ubicacion.yCalle, font, {
+    x: 298,
+    y: 707,
+    width: page2Narrativa.getWidth() - 315,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
+  });
+  drawWrappedValue(page2Narrativa, ubicacion.entidadFederativa, font, {
+    x: 210,
+    y: 680,
+    width: page2Narrativa.getWidth() - 247,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
+  });
+  drawWrappedValue(page2Narrativa, ubicacion.municipio, font, {
+    x: 210,
+    y: 663,
+    width: page2Narrativa.getWidth() - 247,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
   });
 
   // Coordenadas calibradas sobre el PDF municipal proporcionado por el usuario (origen inferior izquierdo).
@@ -234,7 +449,38 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
   drawTime(page1, props.horas.llegada, 426, 455, 127, font);
   drawTime(page3Detencion, props.horas.detencion, 357, 395, 107, font);
 
+  drawDate(page1, props.fechas.conocimiento, 456, 416, 11.4, 6.8, font);
+  drawDate(page1, props.fechas.llegada, 132, 128, 11.5, 6.8, font);
+  drawDate(page3Detencion, props.fechas.detencion, 121, 102, 11.5, 6.8, font);
+
   drawNarrativa(page2Narrativa, props.narrativa, font);
+
+  // Sección 5 del PDF original: solo se completa si la narrativa describe
+  // explícitamente resistencia/agresión o uso de fuerza. Los campos de lesiones,
+  // atención médica y circunstancias permanecen intactos si no están confirmados.
+  const usoFuerza = extraerUsoFuerza(props.narrativa);
+  if (usoFuerza.resistencia || usoFuerza.descripcion) {
+    // Apartado 5.1: descripción breve de la resistencia o agresión encontrada.
+    drawWrappedValue(page3Detencion, usoFuerza.resistencia, font, {
+      x: 32,
+      y: 703,
+      width: page3Detencion.getWidth() - 64,
+      maxLines: 3,
+      fontSize: 7.1,
+      lineHeight: 8.2,
+    });
+
+    // Campo narrativo de uso de la fuerza: se usan solo frases literales de la
+    // narrativa fuente, sin crear justificaciones ni agregar hechos no capturados.
+    drawWrappedValue(page3Detencion, usoFuerza.descripcion, font, {
+      x: 32,
+      y: 637,
+      width: page3Detencion.getWidth() - 64,
+      maxLines: 7,
+      fontSize: 7.1,
+      lineHeight: 8.2,
+    });
+  }
 
   return pdf.save();
 }
@@ -328,7 +574,7 @@ export default function IphPdfGenerator(props: Props) {
       </button>
 
       <p className="text-xs leading-relaxed text-muted-foreground">
-        Se utiliza la plantilla oficial del IPH. Se integran únicamente el lugar, la probable infracción, las horas disponibles y la narrativa; los campos sin datos comprobables quedan en blanco.
+        Se utiliza la plantilla oficial del IPH. Se integran los datos capturados y los pasajes que la narrativa describa expresamente sobre resistencia, presencia policial, verbalización o fuerza física. No se infieren hechos: los campos sin información suficiente quedan en blanco. El folio capturado se usa para nombrar el archivo; no se imprime en el formato porque la plantilla suministrada no tiene una casilla independiente para el folio de llamada y no se alterará el número de referencia preimpreso.
       </p>
 
       {error && (

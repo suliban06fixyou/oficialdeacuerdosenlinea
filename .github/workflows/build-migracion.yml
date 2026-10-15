@@ -26,5 +26,19 @@ jobs:
       - name: Validate local municipal IPH PDF
         run: bun run scripts/validate-iph-template.mjs
 
+      - name: Test resistance and force extraction
+        run: bun run scripts/test-iph-force-extraction.mjs
+
+      - name: Generate fictional IPH PDF preview
+        run: bun run scripts/test-iph-pdf-generator.mjs
+
+      - name: Upload generated PDF preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: iph-pdf-preview
+          path: /tmp/iph-pdf-preview.pdf
+          if-no-files-found: error
+          retention-days: 3
+
       - name: Build and type-check
         run: bun run build

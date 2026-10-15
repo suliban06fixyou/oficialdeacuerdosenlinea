@@ -154,7 +154,7 @@ export const PREGUNTAS_ESENCIALES = [
     id: "como",
     titulo: "¿Cómo ocurrió?",
     ayuda: "Dinámica de los sucesos y uso de la fuerza si aplica.",
-    claves: ["al momento", "posteriormente", "acto seguido", "uso de la fuerza", "sometimiento", "forcejeo"],
+    claves: ["al momento", "posteriormente", "acto seguido", "uso de la fuerza", "neutralizar", "forcejeo"],
   },
   {
     id: "cuando-donde",
