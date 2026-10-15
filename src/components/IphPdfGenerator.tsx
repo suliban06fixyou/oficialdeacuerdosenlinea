@@ -382,7 +382,7 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
     // narrativa fuente, sin crear justificaciones ni agregar hechos no capturados.
     drawWrappedValue(page3Detencion, usoFuerza.descripcion, font, {
       x: 32,
-      y: 660,
+      y: 637,
       width: page3Detencion.getWidth() - 64,
       maxLines: 7,
       fontSize: 7.1,
