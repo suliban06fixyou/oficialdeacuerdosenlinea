@@ -111,8 +111,13 @@ function esHora24Valida(valor: string): boolean {
 export default function RevisorIPH() {
   const [paso, setPaso] = useState<Paso>("cronologia");
   const [horas, setHoras] = useState<Horas>(HORAS_VACIAS);
+  const [fechas, setFechas] = useState({ conocimiento: "", llegada: "", detencion: "" });
   const [narrativa, setNarrativa] = useState("");
-  const [oficial, setOficial] = useState("");
+  const [primerApellido, setPrimerApellido] = useState("");
+  const [segundoApellido, setSegundoApellido] = useState("");
+  const [nombres, setNombres] = useState("");
+  const [grado, setGrado] = useState("");
+  const [unidad, setUnidad] = useState("");
   const [folio, setFolio] = useState("");
   const [faltaODelito, setFaltaODelito] = useState("");
   const [lugar, setLugar] = useState("");
@@ -141,7 +146,10 @@ export default function RevisorIPH() {
   const criticos = hallazgos.filter((h) => h.severidad === "critico");
   const resumen = useMemo(() => {
     const items: { etiqueta: string; valor: string }[] = [];
-    if (oficial.trim()) items.push({ etiqueta: "Oficial", valor: oficial.trim() });
+    const nombrePolicia = [primerApellido.trim(), segundoApellido.trim(), nombres.trim()].filter(Boolean).join(" ");
+    if (nombrePolicia) items.push({ etiqueta: "Policía responsable", valor: nombrePolicia });
+    if (grado.trim()) items.push({ etiqueta: "Grado/cargo", valor: grado.trim() });
+    if (unidad.trim()) items.push({ etiqueta: "Unidad", valor: unidad.trim() });
     if (folio.trim()) items.push({ etiqueta: "Folio", valor: folio.trim() });
     if (faltaODelito.trim())
       items.push({ etiqueta: "Falta adm. y/o delito", valor: faltaODelito.trim() });
@@ -151,7 +159,7 @@ export default function RevisorIPH() {
       if (v) items.push({ etiqueta: p.label, valor: v });
     });
     return items;
-  }, [oficial, folio, faltaODelito, lugar, horas]);
+  }, [primerApellido, segundoApellido, nombres, grado, unidad, folio, faltaODelito, lugar, horas]);
   const ultimaRevisionIA = [...mensajes].reverse().find((m) => m.autor === "asesor" && m.id.startsWith("ia-"));
 
   useEffect(() => {
@@ -317,16 +325,31 @@ export default function RevisorIPH() {
                 </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <label className="text-sm">
-                  <span className="mb-1 block text-muted-foreground">Oficial primer respondiente</span>
-                  <input
-                    value={oficial}
-                    onChange={(e) => setOficial(e.target.value)}
-                    maxLength={120}
-                    placeholder="Nombre y número de placa"
-                    className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </label>
+                <div className="col-span-full rounded-xl border border-border bg-secondary/20 p-3">
+                  <h3 className="mb-3 text-sm font-semibold">Identificación del policía responsable</h3>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <label className="text-sm">
+                      <span className="mb-1 block text-muted-foreground">Primer apellido</span>
+                      <input value={primerApellido} onChange={(e) => setPrimerApellido(e.target.value)} maxLength={60} placeholder="Primer apellido" className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                    </label>
+                    <label className="text-sm">
+                      <span className="mb-1 block text-muted-foreground">Segundo apellido</span>
+                      <input value={segundoApellido} onChange={(e) => setSegundoApellido(e.target.value)} maxLength={60} placeholder="Segundo apellido" className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                    </label>
+                    <label className="text-sm">
+                      <span className="mb-1 block text-muted-foreground">Nombre(s)</span>
+                      <input value={nombres} onChange={(e) => setNombres(e.target.value)} maxLength={80} placeholder="Nombre(s)" className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                    </label>
+                    <label className="text-sm">
+                      <span className="mb-1 block text-muted-foreground">Grado o cargo policial</span>
+                      <input value={grado} onChange={(e) => setGrado(e.target.value)} maxLength={80} placeholder="Grado o cargo" className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                    </label>
+                    <label className="text-sm">
+                      <span className="mb-1 block text-muted-foreground">Número de unidad (si corresponde)</span>
+                      <input value={unidad} onChange={(e) => setUnidad(e.target.value)} maxLength={40} placeholder="Número de unidad" className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                    </label>
+                  </div>
+                </div>
                 <label className="text-sm">
                   <span className="mb-1 block text-muted-foreground">Folio llamada / Flagrancia (observacion directa)</span>
                   <input
@@ -385,6 +408,24 @@ export default function RevisorIPH() {
                     />
                   </label>
                 ))}
+                <div className="col-span-full rounded-xl border border-border bg-secondary/20 p-3">
+                  <h3 className="mb-1 text-sm font-semibold">Fechas de los eventos</h3>
+                  <p className="mb-3 text-xs text-muted-foreground">Capture cada fecha cuando la conozca. Si no está confirmada, déjela vacía; no se copiará automáticamente de otra fecha.</p>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <label className="text-sm">
+                      <span className="mb-1 block text-muted-foreground">Fecha de conocimiento</span>
+                      <input type="date" value={fechas.conocimiento} onChange={(e) => setFechas({ ...fechas, conocimiento: e.target.value })} className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                    </label>
+                    <label className="text-sm">
+                      <span className="mb-1 block text-muted-foreground">Fecha de arribo</span>
+                      <input type="date" value={fechas.llegada} onChange={(e) => setFechas({ ...fechas, llegada: e.target.value })} className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                    </label>
+                    <label className="text-sm">
+                      <span className="mb-1 block text-muted-foreground">Fecha de detención</span>
+                      <input type="date" value={fechas.detencion} onChange={(e) => setFechas({ ...fechas, detencion: e.target.value })} className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                    </label>
+                  </div>
+                </div>
               </div>
               <button
                 onClick={() => setPaso("narrativa")}
@@ -581,11 +622,16 @@ export default function RevisorIPH() {
               className="w-full rounded-xl border border-input bg-secondary/40 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
             />
             <IphPdfGenerator
-              oficial={oficial}
+              primerApellido={primerApellido}
+              segundoApellido={segundoApellido}
+              nombres={nombres}
+              grado={grado}
+              unidad={unidad}
               folio={folio}
               falta={faltaODelito}
               lugar={lugar}
               horas={horas}
+              fechas={fechas}
               narrativa={narrativaFinal.trim() || narrativa.trim()}
             />
             <button
