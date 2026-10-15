@@ -15,7 +15,7 @@ const verbalization = extraerUsoFuerza(
 );
 assert.match(verbalization.resistencia, /se negó a obedecer/i);
 assert.match(verbalization.resistencia, /trató de escapar/i);
-assert.equal(verbalization.descripcion, "Se le indicó que se detuviera");
+assert.equal(verbalization.descripcion, "Se le indicó que se detuviera.");
 
 // The second field may include an explicitly described act to neutralize the threat.
 const neutralization = extraerUsoFuerza(
