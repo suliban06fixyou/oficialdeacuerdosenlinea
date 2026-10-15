@@ -221,9 +221,11 @@ function extraerUsoFuerza(narrativa: string): UsoFuerzaExtraido {
   const fuerzaFisicaRx = /uso de la fuerza física|uso de fuerza física|técnica(?:s)? de (?:control|neutralización|inmovilización)|inmoviliz(?:ó|o|ación)|control(?:ó|o) físicamente|espos(?:ó|o|amiento)|candados de mano|redu(?:jo|cción) física|neutraliz(?:ó|o|ar|ación)|sujet(?:ó|o) físicamente|derrib(?:ó|o)|aplic(?:ó|o) fuerza física/i;
 
   const resistencia = oraciones.filter((s) => resistenciaRx.test(s) || insultosRx.test(s)).join(" ");
+  // El segundo campo describe acciones de la policía documentadas expresamente:
+  // presencia, indicaciones verbales o una forma de fuerza. La resistencia por sí sola
+  // queda en el primer campo y no implica que se haya empleado fuerza.
   const detalles = oraciones.filter((s) =>
-    resistenciaRx.test(s) || insultosRx.test(s) || presenciaRx.test(s) ||
-    verbalizacionRx.test(s) || fuerzaFisicaRx.test(s)
+    presenciaRx.test(s) || verbalizacionRx.test(s) || fuerzaFisicaRx.test(s)
   ).join(" ");
 
   // Si la narrativa menciona presencia o verbalización, esas frases se conservan
