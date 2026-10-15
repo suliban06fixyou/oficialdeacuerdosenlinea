@@ -394,50 +394,50 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   // porque la aplicación no pregunta si el sitio era hogar, vía pública o transporte.
   const ubicacion = props.ubicacion;
   drawWrappedValue(page2Narrativa, ubicacion.calle, font, {
-    x: 198,
+    x: 210,
     y: 757,
-    width: page2Narrativa.getWidth() - 235,
+    width: page2Narrativa.getWidth() - 247,
     maxLines: 1,
     fontSize: 7.1,
     lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, ubicacion.coloniaLocalidad, font, {
-    x: 198,
+    x: 210,
     y: 742,
-    width: page2Narrativa.getWidth() - 235,
+    width: page2Narrativa.getWidth() - 247,
     maxLines: 1,
     fontSize: 7.1,
     lineHeight: 8,
   });
-  drawBoxedText(page2Narrativa, ubicacion.numeroExterior, 96, 719, 10.5, 5, 7, font);
+  drawBoxedText(page2Narrativa, ubicacion.numeroExterior, 96, 723, 10.5, 5, 7, font);
   drawWrappedValue(page2Narrativa, ubicacion.entreCalle, font, {
-    x: 278,
+    x: 298,
     y: 726,
-    width: page2Narrativa.getWidth() - 295,
+    width: page2Narrativa.getWidth() - 315,
     maxLines: 1,
     fontSize: 7.1,
     lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, ubicacion.yCalle, font, {
-    x: 278,
+    x: 298,
     y: 707,
-    width: page2Narrativa.getWidth() - 295,
+    width: page2Narrativa.getWidth() - 315,
     maxLines: 1,
     fontSize: 7.1,
     lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, ubicacion.entidadFederativa, font, {
-    x: 198,
+    x: 210,
     y: 680,
-    width: page2Narrativa.getWidth() - 235,
+    width: page2Narrativa.getWidth() - 247,
     maxLines: 1,
     fontSize: 7.1,
     lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, ubicacion.municipio, font, {
-    x: 198,
+    x: 210,
     y: 663,
-    width: page2Narrativa.getWidth() - 235,
+    width: page2Narrativa.getWidth() - 247,
     maxLines: 1,
     fontSize: 7.1,
     lineHeight: 8,
