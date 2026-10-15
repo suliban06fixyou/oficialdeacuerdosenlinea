@@ -284,7 +284,7 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
     // Apartado 5.1: descripción breve de la resistencia o agresión encontrada.
     drawWrappedValue(page3Detencion, usoFuerza.resistencia, font, {
       x: 32,
-      y: 678,
+      y: 703,
       width: page3Detencion.getWidth() - 64,
       maxLines: 3,
       fontSize: 7.1,
@@ -295,7 +295,7 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
     // narrativa fuente, sin crear justificaciones ni agregar hechos no capturados.
     drawWrappedValue(page3Detencion, usoFuerza.descripcion, font, {
       x: 32,
-      y: 565,
+      y: 660,
       width: page3Detencion.getWidth() - 64,
       maxLines: 7,
       fontSize: 7.1,
