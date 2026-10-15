@@ -120,7 +120,22 @@ export default function RevisorIPH() {
   const [unidad, setUnidad] = useState("");
   const [folio, setFolio] = useState("");
   const [faltaODelito, setFaltaODelito] = useState("");
-  const [lugar, setLugar] = useState("");
+  const [calle, setCalle] = useState("");
+  const [numeroExterior, setNumeroExterior] = useState("");
+  const [coloniaLocalidad, setColoniaLocalidad] = useState("");
+  const [entreCalle, setEntreCalle] = useState("");
+  const [yCalle, setYCalle] = useState("");
+  const [entidadFederativa, setEntidadFederativa] = useState("");
+  const [municipio, setMunicipio] = useState("");
+  const lugar = useMemo(() => [
+    calle.trim() ? `Calle: ${calle.trim()}` : "",
+    numeroExterior.trim() ? `Número exterior: ${numeroExterior.trim()}` : "",
+    coloniaLocalidad.trim() ? `Colonia/localidad: ${coloniaLocalidad.trim()}` : "",
+    entreCalle.trim() ? `Entre calle: ${entreCalle.trim()}` : "",
+    yCalle.trim() ? `Y calle: ${yCalle.trim()}` : "",
+    entidadFederativa.trim() ? `Entidad federativa: ${entidadFederativa.trim()}` : "",
+    municipio.trim() ? `Municipio: ${municipio.trim()}` : "",
+  ].filter(Boolean).join(", "), [calle, numeroExterior, coloniaLocalidad, entreCalle, yCalle, entidadFederativa, municipio]);
   const [pregunta, setPregunta] = useState("");
   const [cargando, setCargando] = useState(false);
   const [narrativaFinal, setNarrativaFinal] = useState("");
@@ -370,16 +385,40 @@ export default function RevisorIPH() {
                     className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
                   />
                 </label>
-                <label className="text-sm">
-                  <span className="mb-1 block text-muted-foreground">Lugar del evento</span>
-                  <input
-                    value={lugar}
-                    onChange={(e) => setLugar(e.target.value)}
-                    maxLength={300}
-                    placeholder="Calle, número, cruce, colonia y sector"
-                    className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </label>
+                <div className="col-span-full rounded-xl border border-border bg-secondary/20 p-3">
+                  <h3 className="mb-1 text-sm font-semibold">Ubicación geográfica del evento</h3>
+                  <p className="mb-3 text-xs text-muted-foreground">Capture cada dato en su campo. Lo que no conozca puede dejarlo vacío; el PDF conservará esas casillas sin llenar.</p>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <label className="text-sm">
+                      <span className="mb-1 block text-muted-foreground">Calle / vialidad</span>
+                      <input value={calle} onChange={(e) => setCalle(e.target.value)} maxLength={120} placeholder="Nombre de la calle o avenida" className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                    </label>
+                    <label className="text-sm">
+                      <span className="mb-1 block text-muted-foreground">Número exterior</span>
+                      <input value={numeroExterior} onChange={(e) => setNumeroExterior(e.target.value)} maxLength={5} placeholder="Ej. 120 o 12-A" className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                    </label>
+                    <label className="text-sm">
+                      <span className="mb-1 block text-muted-foreground">Colonia / localidad</span>
+                      <input value={coloniaLocalidad} onChange={(e) => setColoniaLocalidad(e.target.value)} maxLength={120} placeholder="Colonia o localidad" className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                    </label>
+                    <label className="text-sm">
+                      <span className="mb-1 block text-muted-foreground">Entre calle</span>
+                      <input value={entreCalle} onChange={(e) => setEntreCalle(e.target.value)} maxLength={120} placeholder="Primera calle de referencia" className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                    </label>
+                    <label className="text-sm">
+                      <span className="mb-1 block text-muted-foreground">Y calle</span>
+                      <input value={yCalle} onChange={(e) => setYCalle(e.target.value)} maxLength={120} placeholder="Segunda calle de referencia" className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                    </label>
+                    <label className="text-sm">
+                      <span className="mb-1 block text-muted-foreground">Entidad federativa</span>
+                      <input value={entidadFederativa} onChange={(e) => setEntidadFederativa(e.target.value)} maxLength={60} placeholder="Estado" className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                    </label>
+                    <label className="text-sm">
+                      <span className="mb-1 block text-muted-foreground">Municipio</span>
+                      <input value={municipio} onChange={(e) => setMunicipio(e.target.value)} maxLength={80} placeholder="Municipio" className="w-full rounded-lg border border-input bg-secondary/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                    </label>
+                  </div>
+                </div>
                 {PASOS_CRONOLOGICOS.map((p, i) => (
                   <label key={p.key} className="text-sm">
                     <span className="mb-1 block text-muted-foreground">
@@ -629,7 +668,7 @@ export default function RevisorIPH() {
               unidad={unidad}
               folio={folio}
               falta={faltaODelito}
-              lugar={lugar}
+              ubicacion={{ calle, numeroExterior, coloniaLocalidad, entreCalle, yCalle, entidadFederativa, municipio }}
               horas={horas}
               fechas={fechas}
               narrativa={narrativaFinal.trim() || narrativa.trim()}
