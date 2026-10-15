@@ -182,7 +182,7 @@ function extraerUsoFuerza(narrativa: string): UsoFuerzaExtraido {
   const insultosRx = /insult(?:ó|o|os|ando)|ofend(?:ió|io|ió|ió|ió|ió|e|ió|ieron)|profirió (?:insultos|ofensas)|amenaz(?:ó|o|as|ando)/i;
   const presenciaRx = /presencia policial|presencia de (?:los )?(?:elementos|agentes|policías|policias)|arrib(?:ó|o|aron) (?:al lugar )?(?:el suscrito|los elementos|los agentes|la unidad|la policía|la policia)|se hizo presente/i;
   const verbalizacionRx = /verbaliz(?:ó|o|ación|aron)|comando(?:s)? verbales|instrucciones verbales|indicaciones verbales|órdenes verbales|orden(?:ó|o|aron) (?:que )?(?:se detuviera|se calmara|soltara|se colocara|descendiera|mostrara)|le indiqué|le indique|se le indicó|se le indico|se le ordenó|se le ordeno|se le solicitó|se le solicito|se le pidió|se le pidio/i;
-  const fuerzaFisicaRx = /uso de la fuerza física|uso de fuerza física|técnica(?:s)? de (?:control|sometimiento|inmovilización)|somet(?:ió|io|imiento)|inmoviliz(?:ó|o|ación)|control(?:ó|o) físicamente|espos(?:ó|o|amiento)|candados de mano|redu(?:jo|cción) física|neutraliz(?:ó|o)|sujet(?:ó|o) físicamente|derrib(?:ó|o)|aplic(?:ó|o) fuerza física/i;
+  const fuerzaFisicaRx = /uso de la fuerza física|uso de fuerza física|técnica(?:s)? de (?:control|neutralización|inmovilización)|inmoviliz(?:ó|o|ación)|control(?:ó|o) físicamente|espos(?:ó|o|amiento)|candados de mano|redu(?:jo|cción) física|neutraliz(?:ó|o|ar|ación)|sujet(?:ó|o) físicamente|derrib(?:ó|o)|aplic(?:ó|o) fuerza física/i;
 
   const resistencia = oraciones.filter((s) => resistenciaRx.test(s) || insultosRx.test(s)).join(" ");
   const detalles = oraciones.filter((s) =>
