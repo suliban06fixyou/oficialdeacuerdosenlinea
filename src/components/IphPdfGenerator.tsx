@@ -2,11 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 
 interface Props {
-  oficial: string;
+  primerApellido: string;
+  segundoApellido: string;
+  nombres: string;
+  grado: string;
+  unidad: string;
   folio: string;
   falta: string;
   lugar: string;
   horas: Record<string, string>;
+  fechas: { conocimiento: string; llegada: string; detencion: string };
   narrativa: string;
 }
 
@@ -83,6 +88,36 @@ function drawTime(
   page.drawText(time.minutes, { ...options, x: xMinutes });
 }
 
+function fechaComoDigitos(value?: string): string | null {
+  const match = value?.trim().match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);
+  return match ? `${match[3]}${match[2]}${match[1]}` : null;
+}
+
+/** Coloca DDMMAAAA dentro de las ocho casillas impresas del formato oficial. */
+function drawDate(
+  page: PDFPage,
+  value: string | undefined,
+  x: number,
+  y: number,
+  spacing: number,
+  fontSize: number,
+  font: PDFFont,
+) {
+  const digits = fechaComoDigitos(value);
+  if (!digits) return;
+  const ink = rgb(0.05, 0.05, 0.05);
+  [...digits].forEach((digit, index) => {
+    const width = font.widthOfTextAtSize(digit, fontSize);
+    page.drawText(digit, {
+      x: x + index * spacing + (spacing - width) / 2,
+      y,
+      size: fontSize,
+      font,
+      color: ink,
+    });
+  });
+}
+
 function drawWrappedValue(
   page: PDFPage,
   value: string,
@@ -93,7 +128,7 @@ function drawWrappedValue(
   const lines = wordWrap(value, font, options.fontSize, options.width);
   if (lines.length > options.maxLines) {
     throw new Error(
-      "Uno de los datos no cabe en el espacio disponible del formato IPH. Revise la longitud del lugar o de la probable infracción antes de generar el PDF.",
+      "Uno de los datos no cabe en el espacio disponible de la plantilla oficial del IPH. Revise o acorte el texto; no se recortó ni se omitió silenciosamente.",
     );
   }
   lines.forEach((line, index) => {
@@ -220,7 +255,10 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
     throw new Error("La fuente del formato oficial no devolvió un PDF válido.");
   }
 
-  const textos = [props.falta, props.lugar, props.narrativa].map(normalizarTexto);
+  const textos = [
+    props.primerApellido, props.segundoApellido, props.nombres, props.grado, props.unidad,
+    props.falta, props.lugar, props.narrativa,
+  ].map(normalizarTexto);
   if (textos.some((texto) => /[^\u0000-\u00FF]/u.test(texto))) {
     throw new Error(
       "El texto contiene algún símbolo o carácter que la fuente del formato oficial no puede representar. Sustituya ese símbolo por texto sencillo; la narrativa no se recortará ni se eliminarán caracteres automáticamente.",
@@ -248,8 +286,50 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
   const page2Narrativa = pages[1];
   const page3Detencion = pages[2];
 
-  // Sólo se imprimen datos que ya existen en la app y que tienen un campo claro.
-  // Nombre completo, fechas, casillas y datos personales no capturados permanecen vacíos.
+  // Se mapean los campos que tienen correspondencia directa en la plantilla oficial.
+  // Los datos no capturados y el folio (que no tiene un campo inequívoco en este formato)
+  // no se escriben en casillas ajenas.
+  drawWrappedValue(page1, props.primerApellido, font, {
+    x: 37,
+    y: 604,
+    width: 160,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
+  });
+  drawWrappedValue(page1, props.segundoApellido, font, {
+    x: 213,
+    y: 604,
+    width: 154,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
+  });
+  drawWrappedValue(page1, props.nombres, font, {
+    x: 388,
+    y: 604,
+    width: 160,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
+  });
+  drawWrappedValue(page1, props.grado, font, {
+    x: 135,
+    y: 573,
+    width: page1.getWidth() - 165,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
+  });
+  drawWrappedValue(page1, props.unidad, font, {
+    x: 387,
+    y: 548,
+    width: 164,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
+  });
+
   drawWrappedValue(page1, props.falta, font, {
     x: 30,
     y: 331,
@@ -273,6 +353,10 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
   drawTime(page1, props.horas.conocimiento, 457, 482, 379, font);
   drawTime(page1, props.horas.llegada, 426, 455, 127, font);
   drawTime(page3Detencion, props.horas.detencion, 357, 395, 107, font);
+
+  drawDate(page1, props.fechas.conocimiento, 456, 416, 11.4, 6.8, font);
+  drawDate(page1, props.fechas.llegada, 109, 128, 6.7, 5.5, font);
+  drawDate(page3Detencion, props.fechas.detencion, 121, 102, 11.5, 6.8, font);
 
   drawNarrativa(page2Narrativa, props.narrativa, font);
 
