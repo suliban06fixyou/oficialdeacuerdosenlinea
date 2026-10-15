@@ -220,13 +220,24 @@ export function extraerUsoFuerza(narrativa: string): UsoFuerzaExtraido {
   const verbalizacionRx = /verbaliz(?:ó|o|ación|aron)|comando(?:s)? verbales|instrucciones verbales|indicaciones verbales|órdenes verbales|orden(?:ó|o|aron) (?:que )?(?:se detuviera|se calmara|soltara|se colocara|descendiera|mostrara)|le indiqué|le indique|se le indicó|se le indico|se le ordenó|se le ordeno|se le solicitó|se le solicito|se le pidió|se le pidio/i;
   const fuerzaFisicaRx = /uso de la fuerza física|uso de fuerza física|técnica(?:s)? de (?:control|neutralización|inmovilización)|inmoviliz(?:ó|o|ación)|control(?:ó|o) físicamente|espos(?:ó|o|amiento)|candados de mano|redu(?:jo|cción) física|neutraliz(?:ó|o|ar|ación)|sujet(?:ó|o) físicamente|derrib(?:ó|o)|aplic(?:ó|o) fuerza física/i;
 
-  const resistencia = oraciones.filter((s) => resistenciaRx.test(s) || insultosRx.test(s)).join(" ");
+  const unirClausulas = (frases: string[]) => {
+    const limpias = frases
+      .map((s) => s.trim().replace(/[.!?;,…,\\s]+$/g, ""))
+      .filter(Boolean);
+    return limpias.length ? `${limpias.join(". ")}.` : "";
+  };
+
+  const resistencia = unirClausulas(
+    oraciones.filter((s) => resistenciaRx.test(s) || insultosRx.test(s)),
+  );
   // El segundo campo describe acciones de la policía documentadas expresamente:
   // presencia, indicaciones verbales o una forma de fuerza. La resistencia por sí sola
   // queda en el primer campo y no implica que se haya empleado fuerza.
-  const detalles = oraciones.filter((s) =>
-    presenciaRx.test(s) || verbalizacionRx.test(s) || fuerzaFisicaRx.test(s)
-  ).join(" ");
+  const detalles = unirClausulas(
+    oraciones.filter((s) =>
+      presenciaRx.test(s) || verbalizacionRx.test(s) || fuerzaFisicaRx.test(s)
+    ),
+  );
 
   // Si la narrativa menciona presencia o verbalización, esas frases se conservan
   // en la descripción; nunca se agregan como hechos si no están documentadas.
