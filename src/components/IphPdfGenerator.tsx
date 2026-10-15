@@ -209,7 +209,7 @@ export function extraerUsoFuerza(narrativa: string): UsoFuerzaExtraido {
   if (!texto) return { resistencia: "", descripcion: "" };
 
   const oraciones = texto
-    .split(/(?<=[.!?])\s+|\n+/)
+    .split(/(?<=[.!?])\s+|[;\n]+/)
     .map((s) => s.trim())
     .filter(Boolean);
 
