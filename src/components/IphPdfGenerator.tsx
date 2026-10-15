@@ -236,7 +236,7 @@ export function extraerUsoFuerza(narrativa: string): UsoFuerzaExtraido {
   };
 }
 
-async function generarPdf(props: Props): Promise<Uint8Array> {
+export async function generarPdf(props: Props): Promise<Uint8Array> {
   const response = await fetch(TEMPLATE_ENDPOINT, { headers: { Accept: "application/pdf" } });
   if (!response.ok) {
     let message =
