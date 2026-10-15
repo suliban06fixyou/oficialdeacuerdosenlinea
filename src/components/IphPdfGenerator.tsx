@@ -306,7 +306,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
 
   const textos = [
     props.primerApellido, props.segundoApellido, props.nombres, props.grado, props.unidad,
-    props.falta, props.lugar, props.narrativa,
+    props.falta, props.narrativa, ...Object.values(props.ubicacion),
   ].map(normalizarTexto);
   if (textos.some((texto) => /[^\u0000-\u00FF]/u.test(texto))) {
     throw new Error(
