@@ -9,7 +9,15 @@ interface Props {
   unidad: string;
   folio: string;
   falta: string;
-  lugar: string;
+  ubicacion: {
+    calle: string;
+    numeroExterior: string;
+    coloniaLocalidad: string;
+    entreCalle: string;
+    yCalle: string;
+    entidadFederativa: string;
+    municipio: string;
+  };
   horas: Record<string, string>;
   fechas: { conocimiento: string; llegada: string; detencion: string };
   narrativa: string;
@@ -71,6 +79,33 @@ function wordWrap(text: string, font: PDFFont, size: number, width: number): str
     if (line) output.push(line);
   }
   return output;
+}
+
+function drawBoxedText(
+  page: PDFPage,
+  value: string,
+  x: number,
+  y: number,
+  spacing: number,
+  maxChars: number,
+  fontSize: number,
+  font: PDFFont,
+) {
+  const chars = normalizarTexto(value).replace(/\s/g, "");
+  if (!chars) return;
+  if ([...chars].length > maxChars) {
+    throw new Error("El número exterior no cabe en las casillas del formato oficial. Revise la longitud del dato.");
+  }
+  [...chars].forEach((char, index) => {
+    const width = font.widthOfTextAtSize(char, fontSize);
+    page.drawText(char, {
+      x: x + index * spacing + (spacing - width) / 2,
+      y,
+      size: fontSize,
+      font,
+      color: rgb(0.05, 0.05, 0.05),
+    });
+  });
 }
 
 function drawTime(
@@ -354,11 +389,54 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     lineHeight: 8.5,
   });
 
-  // La ubicación corresponde al apartado geográfico 3.3 de la página 2.
-  // No se coloca en "Describa brevemente" del apartado 3.2, que pide características del lugar.
-  drawWrappedValue(page2Narrativa, props.lugar, font, {
+  // La ubicación se captura por partes y se coloca únicamente en los campos
+  // correspondientes del apartado geográfico 3.3. El apartado 3.2 queda en blanco
+  // porque la aplicación no pregunta si el sitio era hogar, vía pública o transporte.
+  const ubicacion = props.ubicacion;
+  drawWrappedValue(page2Narrativa, ubicacion.calle, font, {
     x: 198,
     y: 757,
+    width: page2Narrativa.getWidth() - 235,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
+  });
+  drawWrappedValue(page2Narrativa, ubicacion.coloniaLocalidad, font, {
+    x: 198,
+    y: 742,
+    width: page2Narrativa.getWidth() - 235,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
+  });
+  drawBoxedText(page2Narrativa, ubicacion.numeroExterior, 96, 719, 10.5, 5, 7, font);
+  drawWrappedValue(page2Narrativa, ubicacion.entreCalle, font, {
+    x: 278,
+    y: 726,
+    width: page2Narrativa.getWidth() - 295,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
+  });
+  drawWrappedValue(page2Narrativa, ubicacion.yCalle, font, {
+    x: 278,
+    y: 707,
+    width: page2Narrativa.getWidth() - 295,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
+  });
+  drawWrappedValue(page2Narrativa, ubicacion.entidadFederativa, font, {
+    x: 198,
+    y: 680,
+    width: page2Narrativa.getWidth() - 235,
+    maxLines: 1,
+    fontSize: 7.1,
+    lineHeight: 8,
+  });
+  drawWrappedValue(page2Narrativa, ubicacion.municipio, font, {
+    x: 198,
+    y: 663,
     width: page2Narrativa.getWidth() - 235,
     maxLines: 1,
     fontSize: 7.1,
