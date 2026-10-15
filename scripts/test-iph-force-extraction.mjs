@@ -11,7 +11,7 @@ assert.equal(resistanceOnly.descripcion, "");
 
 // An explicitly documented verbal instruction belongs in the police-action field.
 const verbalization = extraerUsoFuerza(
-  "Se le indicó que se detuviera. La persona se negó a obedecer y trató de escapar.",
+  "Se le indicó que se detuviera; la persona se negó a obedecer y trató de escapar.",
 );
 assert.match(verbalization.resistencia, /se negó a obedecer/i);
 assert.match(verbalization.resistencia, /trató de escapar/i);
