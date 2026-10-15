@@ -480,7 +480,7 @@ export default function IphPdfGenerator(props: Props) {
       </button>
 
       <p className="text-xs leading-relaxed text-muted-foreground">
-        Se utiliza la plantilla oficial del IPH. Se integran los datos capturados y los pasajes que la narrativa describa expresamente sobre resistencia, presencia policial, verbalización o fuerza física. No se infieren hechos: los campos sin información suficiente quedan en blanco.
+        Se utiliza la plantilla oficial del IPH. Se integran los datos capturados y los pasajes que la narrativa describa expresamente sobre resistencia, presencia policial, verbalización o fuerza física. No se infieren hechos: los campos sin información suficiente quedan en blanco. El folio capturado se usa para nombrar el archivo; no se imprime en el formato porque la plantilla suministrada no tiene una casilla independiente para el folio de llamada y no se alterará el número de referencia preimpreso.
       </p>
 
       {error && (
