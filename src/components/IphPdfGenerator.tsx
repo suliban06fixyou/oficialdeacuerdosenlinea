@@ -222,7 +222,7 @@ export function extraerUsoFuerza(narrativa: string): UsoFuerzaExtraido {
 
   const unirClausulas = (frases: string[]) => {
     const limpias = frases
-      .map((s) => s.trim().replace(/[.!?;,…,\\s]+$/g, ""))
+      .map((s) => s.trim().replace(/[.!?;,…\s]+$/g, ""))
       .filter(Boolean);
     return limpias.length ? `${limpias.join(". ")}.` : "";
   };
