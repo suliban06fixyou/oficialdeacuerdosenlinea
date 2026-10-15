@@ -199,9 +199,10 @@ interface UsoFuerzaExtraido {
 }
 
 /**
- * Identifica solo hechos descritos expresamente en la narrativa.
- * No convierte automáticamente insultos en resistencia, ni una detención
- * en uso de fuerza física. Los campos sin respaldo narrativo quedan vacíos.
+ * Identifica hechos descritos expresamente en la narrativa.
+ * Registra insultos u ofensas cuando están narrados como conducta verbal,
+ * sin tratarlos automáticamente como fuerza física. Una detención por sí sola
+ * no demuestra uso de fuerza; los campos sin respaldo narrativo quedan vacíos.
  */
 function extraerUsoFuerza(narrativa: string): UsoFuerzaExtraido {
   const texto = normalizarTexto(narrativa).trim();
