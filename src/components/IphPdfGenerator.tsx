@@ -208,7 +208,7 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
   const datos = extraerDatosUsoFuerza(narrativa);
   // Apartado 5.1: cada texto se limita al recuadro impreso del formato oficial.
   dibujarTextoAjustado(page, datos.resistencia, font, {
-    x: 32, topY: 683, bottomY: 676, width: page.getWidth() - 66, maxSize: 7.2, minSize: 5.8,
+    x: 32, topY: 710, bottomY: 680, width: page.getWidth() - 66, maxSize: 7.2, minSize: 5.8,
   });
   dibujarTextoAjustado(page, datos.descripcion, font, {
     x: 32, topY: 650, bottomY: 570, width: page.getWidth() - 66, maxSize: 7.2, minSize: 5.8,
@@ -218,7 +218,7 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
   // y también describe uso de la fuerza. No se infieren lesiones ni atención médica.
   if (datos.detencion && datos.descripcion) {
     page.drawText("X", {
-      x: 176,
+      x: 247,
       y: 555,
       size: 7.2,
       font,
