@@ -4,8 +4,10 @@ on:
   push:
     branches:
       - feature/iph-pdf-generator
+      - feature/iph-pdf-generator-corrections
   pull_request:
     branches:
+      - feature/iph-pdf-generator
       - migracion-ia-economica
 
 jobs:

@@ -149,6 +149,84 @@ function drawNarrativa(page: PDFPage, narrativa: string, font: PDFFont) {
   });
 }
 
+
+/**
+ * Extrae únicamente frases expresamente presentes en la narrativa.
+ * No determina lesiones, atención médica ni otros hechos que no estén escritos.
+ */
+function extraerDatosUsoFuerza(narrativa: string): { resistencia: string; descripcion: string; detencion: boolean } {
+  const frases = normalizarTexto(narrativa)
+    .replace(/\s+/g, " ")
+    .split(/(?<=[.!?])\s+/)
+    .map((frase) => frase.trim())
+    .filter(Boolean);
+
+  const resistencia = frases
+    .filter((frase) => /resisten|se neg[oó] a obedecer|agresi[oó]n|se opuso|forceje|intent[oó] evadir/i.test(frase))
+    .join(" ");
+
+  const descripcion = frases
+    .filter((frase) => /uso de la fuerza|utilizando la fuerza|fuerza estrictamente necesaria|candados de mano|esposas|control(?:ar)? f[ií]sic|t[eé]cnica de control/i.test(frase))
+    .join(" ");
+
+  return {
+    resistencia,
+    descripcion,
+    detencion: /\bdetenci[oó]n\b|\bdetenido\b|\bdetenida\b/i.test(narrativa),
+  };
+}
+
+function dibujarTextoAjustado(
+  page: PDFPage,
+  value: string,
+  font: PDFFont,
+  area: { x: number; topY: number; width: number; bottomY: number; maxSize: number; minSize: number },
+) {
+  if (!value.trim()) return;
+  const availableHeight = area.topY - area.bottomY;
+  for (let size = area.maxSize; size >= area.minSize; size -= 0.25) {
+    const lineHeight = size * 1.35;
+    const lines = wordWrap(value, font, size, area.width);
+    if (lines.length * lineHeight <= availableHeight) {
+      lines.forEach((line, index) => {
+        if (!line) return;
+        page.drawText(line, {
+          x: area.x,
+          y: area.topY - size - index * lineHeight,
+          size,
+          font,
+          color: rgb(0.05, 0.05, 0.05),
+        });
+      });
+      return;
+    }
+  }
+  throw new Error("La información del apartado de uso de la fuerza no cabe completa en el espacio disponible. Revise la narrativa; no se omitió texto deliberadamente.");
+}
+
+function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
+  const datos = extraerDatosUsoFuerza(narrativa);
+  // Apartado 5.1: cada texto se limita al recuadro impreso del formato oficial.
+  dibujarTextoAjustado(page, datos.resistencia, font, {
+    x: 32, topY: 710, bottomY: 680, width: page.getWidth() - 66, maxSize: 7.2, minSize: 5.8,
+  });
+  dibujarTextoAjustado(page, datos.descripcion, font, {
+    x: 32, topY: 650, bottomY: 570, width: page.getWidth() - 66, maxSize: 7.2, minSize: 5.8,
+  });
+
+  // Marcar "Detención(es)" sólo cuando la narrativa menciona expresamente una detención
+  // y también describe uso de la fuerza. No se infieren lesiones ni atención médica.
+  if (datos.detencion && datos.descripcion) {
+    page.drawText("X", {
+      x: 247,
+      y: 555,
+      size: 7.2,
+      font,
+      color: rgb(0.05, 0.05, 0.05),
+    });
+  }
+}
+
 function nombreArchivo(folio: string) {
   const seguro = normalizarTexto(folio)
     .trim()
@@ -235,6 +313,9 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
   drawTime(page3Detencion, props.horas.detencion, 357, 395, 107, font);
 
   drawNarrativa(page2Narrativa, props.narrativa, font);
+
+  // Apartado 5.1: extraer sólo frases explícitas sobre resistencia y uso de la fuerza.
+  dibujarUsoFuerza(page3Detencion, props.narrativa, font);
 
   return pdf.save();
 }
