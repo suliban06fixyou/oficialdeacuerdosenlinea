@@ -161,19 +161,30 @@ function extraerDatosUsoFuerza(narrativa: string): { resistencia: string; descri
     .map((frase) => frase.trim())
     .filter(Boolean);
 
+  const detencion = /\bdetenci[oó]n\b|\bdetenido\b|\bdetenida\b|\bse procedi[oó] a detener\b/i.test(narrativa);
+
+  // Rescata únicamente hechos relacionados con resistencia o conducta de la persona
+  // que estén expresamente narrados; una agresión verbal no se convierte por sí sola
+  // en resistencia física ni justifica inferir un nivel de fuerza.
   const resistencia = frases
-    .filter((frase) => /resisten|se neg[oó] a obedecer|agresi[oó]n|se opuso|forceje|intent[oó] evadir/i.test(frase))
+    .filter((frase) => /resisten|se neg[oó] a obedecer|agresi[oó]n|conductas? verbales? agresivas?|palabras ofensivas|se opuso|forceje|intent[oó] evadir/i.test(frase))
     .join(" ");
 
-  const descripcion = frases
-    .filter((frase) => /uso de la fuerza|utilizando la fuerza|fuerza estrictamente necesaria|candados de mano|esposas|control(?:ar)? f[ií]sic|t[eé]cnica de control/i.test(frase))
+  // Se conserva lo que la narrativa diga expresamente sobre técnicas/medios empleados.
+  const descripcionExpresa = frases
+    .filter((frase) => /comandos? verbales?|instrucciones? verbales?|uso de la fuerza|utilizando la fuerza|fuerza estrictamente necesaria|candados? de mano|esposas|control(?:ar)? f[ií]sic|t[eé]cnica de control/i.test(frase))
     .join(" ");
 
-  return {
-    resistencia,
-    descripcion,
-    detencion: /\bdetenci[oó]n\b|\bdetenido\b|\bdetenida\b/i.test(narrativa),
-  };
+  // Regla general solicitada para este generador: si la narrativa refiere una detención,
+  // consignar comandos verbales y candados de mano como medios generales de intervención.
+  // No se infieren lesiones, atención médica, resistencia física ni niveles de fuerza.
+  const descripcion = detencion
+    ? descripcionExpresa
+      ? descripcionExpresa
+      : "Se utilizaron comandos verbales y candados de mano (esposas) durante la detención."
+    : descripcionExpresa;
+
+  return { resistencia, descripcion, detencion };
 }
 
 function dibujarTextoAjustado(
@@ -214,9 +225,10 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
     x: 32, topY: 650, bottomY: 570, width: page.getWidth() - 66, maxSize: 7.2, minSize: 5.8,
   });
 
-  // Marcar "Detención(es)" sólo cuando la narrativa menciona expresamente una detención
-  // y también describe uso de la fuerza. No se infieren lesiones ni atención médica.
-  if (datos.detencion && datos.descripcion) {
+  // Marcar "Detención(es)" cuando la narrativa menciona expresamente una detención.
+  // La descripción general consigna comandos verbales y candados de mano conforme a la regla acordada;
+  // no se marcan lesiones ni atención médica sin datos expresos.
+  if (datos.detencion) {
     page.drawText("X", {
       x: 247,
       y: 555,
