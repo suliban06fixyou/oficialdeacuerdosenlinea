@@ -28,5 +28,8 @@ jobs:
       - name: Validate local municipal IPH PDF
         run: bun run scripts/validate-iph-template.mjs
 
+      - name: Test IPH data extraction
+        run: bun test scripts/iph-generator.test.ts
+
       - name: Build and type-check
         run: bun run build
