@@ -382,15 +382,40 @@ export default function IphPdfGenerator(props: Props) {
     }
   }
 
-  function descargar() {
-    if (!pdfUrl) return;
+  function abrirPdf() {
+    if (!pdfBlob) {
+      setError("Primero genere el PDF para poder abrirlo.");
+      return;
+    }
+
+    // Abrir directamente desde un gesto del usuario suele ser más compatible
+    // con los visores móviles que depender únicamente del iframe incrustado.
+    const url = pdfUrl || URL.createObjectURL(pdfBlob);
     const anchor = document.createElement("a");
-    anchor.href = pdfUrl;
-    anchor.download = filename;
+    anchor.href = url;
+    anchor.target = "_blank";
+    anchor.rel = "noopener";
+    anchor.style.display = "none";
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
-    setAviso("PDF listo para guardarse en el dispositivo.");
+    setAviso("Se solicitó abrir el PDF en una pestaña o visor nuevo. Si el navegador lo bloquea, use Guardar PDF.");
+  }
+
+  function descargar() {
+    if (!pdfBlob) return;
+    // Crear una URL desde el Blob vigente evita depender de una URL temporal
+    // que el navegador haya dejado de resolver al mostrar la vista previa.
+    const url = URL.createObjectURL(pdfBlob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    setAviso("Se solicitó guardar el PDF en el dispositivo.");
   }
 
   async function compartir() {
@@ -470,7 +495,14 @@ export default function IphPdfGenerator(props: Props) {
             />
           </div>
 
-          <footer className="grid grid-cols-2 gap-3 border-t bg-background p-3 sm:p-4">
+          <footer className="grid grid-cols-1 gap-3 border-t bg-background p-3 sm:grid-cols-3 sm:p-4">
+            <button
+              type="button"
+              onClick={abrirPdf}
+              className="rounded-xl border px-4 py-3 text-sm font-semibold"
+            >
+              Abrir PDF
+            </button>
             <button
               type="button"
               onClick={descargar}
