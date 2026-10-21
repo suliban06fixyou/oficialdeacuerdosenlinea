@@ -154,7 +154,7 @@ function drawNarrativa(page: PDFPage, narrativa: string, font: PDFFont) {
  * Extrae únicamente frases expresamente presentes en la narrativa.
  * No determina lesiones, atención médica ni otros hechos que no estén escritos.
  */
-function extraerDatosUsoFuerza(narrativa: string): { resistencia: string; descripcion: string; detencion: boolean } {
+export function extraerDatosUsoFuerza(narrativa: string): { resistencia: string; descripcion: string; detencion: boolean } {
   const frases = normalizarTexto(narrativa)
     .replace(/\s+/g, " ")
     .split(/(?<=[.!?])\s+/)
