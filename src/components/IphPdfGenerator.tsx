@@ -259,7 +259,7 @@ function nombreArchivo(folio: string) {
   return seguro ? `IPH-infracciones-${seguro}.pdf` : "IPH-infracciones-administrativas.pdf";
 }
 
-async function generarPdf(props: Props): Promise<Uint8Array> {
+export async function generarPdf(props: Props): Promise<Uint8Array> {
   const response = await fetch(TEMPLATE_ENDPOINT, { headers: { Accept: "application/pdf" } });
   if (!response.ok) {
     let message =
