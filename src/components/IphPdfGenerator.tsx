@@ -175,13 +175,24 @@ function extraerDatosUsoFuerza(narrativa: string): { resistencia: string; descri
     .filter((frase) => /comandos? verbales?|instrucciones? verbales?|uso de la fuerza|utilizando la fuerza|fuerza estrictamente necesaria|candados? de mano|esposas|control(?:ar)? f[ií]sic|t[eé]cnica de control/i.test(frase))
     .join(" ");
 
-  // Regla general solicitada para este generador: si la narrativa refiere una detención,
-  // consignar comandos verbales y candados de mano como medios generales de intervención.
+  // Regla general solicitada: cuando la narrativa refiere una detención, consignar
+  // comandos verbales y candados de mano. Si la narrativa ya menciona uno de ellos,
+  // completar sólo el elemento general que falte y conservar los detalles expresos.
   // No se infieren lesiones, atención médica, resistencia física ni niveles de fuerza.
+  const mediosGenerales = "Se utilizaron comandos verbales y candados de mano (esposas) durante la detención.";
   const descripcion = detencion
-    ? descripcionExpresa
-      ? descripcionExpresa
-      : "Se utilizaron comandos verbales y candados de mano (esposas) durante la detención."
+    ? [
+        /comandos? verbales?|instrucciones? verbales?/i.test(descripcionExpresa)
+          ? ""
+          : "Se utilizaron comandos verbales.",
+        /candados? de mano|esposas/i.test(descripcionExpresa)
+          ? ""
+          : "Se utilizaron candados de mano (esposas).",
+        descripcionExpresa,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .trim() || mediosGenerales
     : descripcionExpresa;
 
   return { resistencia, descripcion, detencion };
