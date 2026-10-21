@@ -31,5 +31,16 @@ jobs:
       - name: Test IPH data extraction
         run: bun test scripts/iph-generator.test.ts
 
+      - name: Test PDF generation with official template
+        run: bun run scripts/test-iph-pdf-generator.mjs
+
+      - name: Upload generated test PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: iph-pdf-preview-test
+          path: test-output/iph-pdf-preview.pdf
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Build and type-check
         run: bun run build
