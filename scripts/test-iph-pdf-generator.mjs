@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { PDFDocument } from "pdf-lib";
 import { generarPdf } from "../src/components/IphPdfGenerator.tsx";
 
@@ -53,6 +53,9 @@ try {
     assert.ok(Math.abs(page.getWidth() - expected[index][0]) < 1, `Ancho inesperado en página ${index + 1}`);
     assert.ok(Math.abs(page.getHeight() - expected[index][1]) < 1, `Alto inesperado en página ${index + 1}`);
   });
+
+  await mkdir("test-output", { recursive: true });
+  await writeFile("test-output/iph-pdf-preview.pdf", bytes);
 
   // Confirmar que la extracción usada por el generador respeta la regla acordada
   // sin deducir resistencia física, lesiones o atención médica.
