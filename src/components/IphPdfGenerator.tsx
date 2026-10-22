@@ -250,6 +250,34 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
   }
 }
 
+/**
+ * Recupera datos sólo cuando la narrativa los identifica de forma explícita.
+ * Evita inferir domicilios, infracciones u horarios a partir de frases ambiguas.
+ */
+export function extraerCamposNarrativa(narrativa: string): {
+  falta: string;
+  lugar: string;
+  horas: Record<string, string>;
+} {
+  const texto = normalizarTexto(narrativa);
+  const obtener = (etiquetas: string): string => {
+    const re = new RegExp("(?:^|[\\n;|])\\s*(?:" + etiquetas + ")\\s*[:=—-]\\s*([^\\n;|]+)", "i");
+    return texto.match(re)?.[1]?.trim() ?? "";
+  };
+  const horas: Record<string, string> = {};
+  const conocimiento = obtener("hora(?: de)? conocimiento|conocimiento");
+  const llegada = obtener("hora(?: de)? llegada|llegada al lugar");
+  const detencion = obtener("hora(?: de)? detenci[oó]n|detenci[oó]n");
+  if (splitTime(conocimiento)) horas.conocimiento = conocimiento;
+  if (splitTime(llegada)) horas.llegada = llegada;
+  if (splitTime(detencion)) horas.detencion = detencion;
+  return {
+    falta: obtener("probable infracci[oó]n|falta administrativa|infracci[oó]n"),
+    lugar: obtener("lugar de los hechos|ubicaci[oó]n|domicilio de los hechos"),
+    horas,
+  };
+}
+
 function nombreArchivo(folio: string) {
   const seguro = normalizarTexto(folio)
     .trim()
@@ -281,7 +309,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     throw new Error("La fuente del formato oficial no devolvió un PDF válido.");
   }
 
-  const textos = [props.falta, props.lugar, props.narrativa].map(normalizarTexto);
+  const extraidos = extraerCamposNarrativa(props.narrativa);\n  const falta = props.falta.trim() || extraidos.falta;\n  const lugar = props.lugar.trim() || extraidos.lugar;\n  const horas = { ...extraidos.horas, ...Object.fromEntries(Object.entries(props.horas).filter(([, value]) => Boolean(value?.trim()))) };\n  const textos = [falta, lugar, props.narrativa].map(normalizarTexto);
   if (textos.some((texto) => /[^\u0000-\u00FF]/u.test(texto))) {
     throw new Error(
       "El texto contiene algún símbolo o carácter que la fuente del formato oficial no puede representar. Sustituya ese símbolo por texto sencillo; la narrativa no se recortará ni se eliminarán caracteres automáticamente.",
@@ -311,7 +339,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
 
   // Sólo se imprimen datos que ya existen en la app y que tienen un campo claro.
   // Nombre completo, fechas, casillas y datos personales no capturados permanecen vacíos.
-  drawWrappedValue(page1, props.falta, font, {
+  drawWrappedValue(page1, falta, font, {
     x: 30,
     y: 331,
     width: page1.getWidth() - 60,
@@ -320,7 +348,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     lineHeight: 8.5,
   });
 
-  drawWrappedValue(page1, props.lugar, font, {
+  drawWrappedValue(page1, lugar, font, {
     x: 30,
     y: 54,
     width: page1.getWidth() - 60,
@@ -331,9 +359,9 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
 
   // Coordenadas calibradas sobre el PDF municipal proporcionado por el usuario (origen inferior izquierdo).
   // Se rellenan únicamente las horas capturadas; las fechas y las demás casillas quedan sin tocar.
-  drawTime(page1, props.horas.conocimiento, 457, 482, 379, font);
-  drawTime(page1, props.horas.llegada, 426, 455, 127, font);
-  drawTime(page3Detencion, props.horas.detencion, 357, 395, 107, font);
+  drawTime(page1, horas.conocimiento, 457, 482, 379, font);
+  drawTime(page1, horas.llegada, 426, 455, 127, font);
+  drawTime(page3Detencion, horas.detencion, 357, 395, 107, font);
 
   drawNarrativa(page2Narrativa, props.narrativa, font);
 
