@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { extraerDatosUsoFuerza } from "../src/components/IphPdfGenerator";
+import { extraerCamposNarrativa, extraerDatosUsoFuerza } from "../src/components/IphPdfGenerator";
 
 describe("extracción del apartado de uso de la fuerza", () => {
   test("una detención sin detalles conserva los dos medios generales acordados", () => {
@@ -48,6 +48,27 @@ describe("extracción del apartado de uso de la fuerza", () => {
       resistencia: "",
       descripcion: "",
       detencion: false,
+    });
+  });
+});
+
+describe("extracción de campos etiquetados de la narrativa", () => {
+  test("rescata falta, lugar y horas cuando aparecen con etiqueta explícita", () => {
+    const result = extraerCamposNarrativa(
+      "Probable infracción: alterar el orden público\\nLugar de los hechos: Calle Reforma 123\\nHora de conocimiento: 10:15\\nHora de llegada: 10:22\\nHora de detención: 10:30",
+    );
+    expect(result.falta).toBe("alterar el orden público");
+    expect(result.lugar).toBe("Calle Reforma 123");
+    expect(result.horas.conocimiento).toBe("10:15");
+    expect(result.horas.llegada).toBe("10:22");
+    expect(result.horas.detencion).toBe("10:30");
+  });
+
+  test("no infiere datos a partir de narrativa sin etiquetas", () => {
+    expect(extraerCamposNarrativa("A las 10:15 acudimos a la calle Reforma y detuvimos a una persona.")).toEqual({
+      falta: "",
+      lugar: "",
+      horas: {},
     });
   });
 });
