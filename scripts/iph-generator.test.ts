@@ -55,7 +55,7 @@ describe("extracción del apartado de uso de la fuerza", () => {
 describe("extracción de campos etiquetados de la narrativa", () => {
   test("rescata falta, lugar y horas cuando aparecen con etiqueta explícita", () => {
     const result = extraerCamposNarrativa(
-      "Probable infracción: alterar el orden público\\nLugar de los hechos: Calle Reforma 123\\nHora de conocimiento: 10:15\\nHora de llegada: 10:22\\nHora de detención: 10:30",
+      "Probable infracción: alterar el orden público\nLugar de los hechos: Calle Reforma 123\nHora de conocimiento: 10:15\nHora de llegada: 10:22\nHora de detención: 10:30",
     );
     expect(result.falta).toBe("alterar el orden público");
     expect(result.lugar).toBe("Calle Reforma 123");
