@@ -309,7 +309,11 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     throw new Error("La fuente del formato oficial no devolvió un PDF válido.");
   }
 
-  const extraidos = extraerCamposNarrativa(props.narrativa);\n  const falta = props.falta.trim() || extraidos.falta;\n  const lugar = props.lugar.trim() || extraidos.lugar;\n  const horas = { ...extraidos.horas, ...Object.fromEntries(Object.entries(props.horas).filter(([, value]) => Boolean(value?.trim()))) };\n  const textos = [falta, lugar, props.narrativa].map(normalizarTexto);
+  const extraidos = extraerCamposNarrativa(props.narrativa);
+  const falta = props.falta.trim() || extraidos.falta;
+  const lugar = props.lugar.trim() || extraidos.lugar;
+  const horas = { ...extraidos.horas, ...Object.fromEntries(Object.entries(props.horas).filter(([, value]) => Boolean(value?.trim()))) };
+  const textos = [falta, lugar, props.narrativa].map(normalizarTexto);
   if (textos.some((texto) => /[^\u0000-\u00FF]/u.test(texto))) {
     throw new Error(
       "El texto contiene algún símbolo o carácter que la fuente del formato oficial no puede representar. Sustituya ese símbolo por texto sencillo; la narrativa no se recortará ni se eliminarán caracteres automáticamente.",
