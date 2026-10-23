@@ -149,6 +149,135 @@ function drawNarrativa(page: PDFPage, narrativa: string, font: PDFFont) {
   });
 }
 
+
+/**
+ * Extrae únicamente frases expresamente presentes en la narrativa.
+ * No determina lesiones, atención médica ni otros hechos que no estén escritos.
+ */
+export function extraerDatosUsoFuerza(narrativa: string): { resistencia: string; descripcion: string; detencion: boolean } {
+  const frases = normalizarTexto(narrativa)
+    .replace(/\s+/g, " ")
+    .split(/(?<=[.!?])\s+/)
+    .map((frase) => frase.trim())
+    .filter(Boolean);
+
+  const detencion = /\bdetenci[oó]n\b|\bdetenido\b|\bdetenida\b|\bse procedi[oó] a detener\b/i.test(narrativa);
+
+  // Rescata únicamente hechos relacionados con resistencia o conducta de la persona
+  // que estén expresamente narrados; una agresión verbal no se convierte por sí sola
+  // en resistencia física ni justifica inferir un nivel de fuerza.
+  const resistencia = frases
+    .filter((frase) => /resisten|se neg[oó] a obedecer|agresi[oó]n|conductas? verbales? agresivas?|palabras ofensivas|se opuso|forceje|intent[oó] evadir/i.test(frase))
+    .join(" ");
+
+  // Se conserva lo que la narrativa diga expresamente sobre técnicas/medios empleados.
+  const descripcionExpresa = frases
+    .filter((frase) => /comandos? verbales?|instrucciones? verbales?|uso de la fuerza|utilizando la fuerza|fuerza estrictamente necesaria|candados? de mano|esposas|control(?:ar)? f[ií]sic|t[eé]cnica de control/i.test(frase))
+    .join(" ");
+
+  // Regla general solicitada: cuando la narrativa refiere una detención, consignar
+  // comandos verbales y candados de mano. Si la narrativa ya menciona uno de ellos,
+  // completar sólo el elemento general que falte y conservar los detalles expresos.
+  // No se infieren lesiones, atención médica, resistencia física ni niveles de fuerza.
+  const mediosGenerales = "Se utilizaron comandos verbales y candados de mano (esposas) durante la detención.";
+  const descripcion = detencion
+    ? [
+        /comandos? verbales?|instrucciones? verbales?/i.test(descripcionExpresa)
+          ? ""
+          : "Se utilizaron comandos verbales.",
+        /candados? de mano|esposas/i.test(descripcionExpresa)
+          ? ""
+          : "Se utilizaron candados de mano (esposas).",
+        descripcionExpresa,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .trim() || mediosGenerales
+    : descripcionExpresa;
+
+  return { resistencia, descripcion, detencion };
+}
+
+function dibujarTextoAjustado(
+  page: PDFPage,
+  value: string,
+  font: PDFFont,
+  area: { x: number; topY: number; width: number; bottomY: number; maxSize: number; minSize: number },
+) {
+  if (!value.trim()) return;
+  const availableHeight = area.topY - area.bottomY;
+  for (let size = area.maxSize; size >= area.minSize; size -= 0.25) {
+    const lineHeight = size * 1.35;
+    const lines = wordWrap(value, font, size, area.width);
+    if (lines.length * lineHeight <= availableHeight) {
+      lines.forEach((line, index) => {
+        if (!line) return;
+        page.drawText(line, {
+          x: area.x,
+          y: area.topY - size - index * lineHeight,
+          size,
+          font,
+          color: rgb(0.05, 0.05, 0.05),
+        });
+      });
+      return;
+    }
+  }
+  throw new Error("La información del apartado de uso de la fuerza no cabe completa en el espacio disponible. Revise la narrativa; no se omitió texto deliberadamente.");
+}
+
+function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
+  const datos = extraerDatosUsoFuerza(narrativa);
+  // Apartado 5.1: cada texto se limita al recuadro impreso del formato oficial.
+  dibujarTextoAjustado(page, datos.resistencia, font, {
+    x: 32, topY: 710, bottomY: 680, width: page.getWidth() - 66, maxSize: 7.2, minSize: 5.8,
+  });
+  dibujarTextoAjustado(page, datos.descripcion, font, {
+    x: 32, topY: 650, bottomY: 570, width: page.getWidth() - 66, maxSize: 7.2, minSize: 5.8,
+  });
+
+  // Marcar "Detención(es)" cuando la narrativa menciona expresamente una detención.
+  // La descripción general consigna comandos verbales y candados de mano conforme a la regla acordada;
+  // no se marcan lesiones ni atención médica sin datos expresos.
+  if (datos.detencion) {
+    page.drawText("X", {
+      x: 247,
+      y: 555,
+      size: 7.2,
+      font,
+      color: rgb(0.05, 0.05, 0.05),
+    });
+  }
+}
+
+/**
+ * Recupera datos sólo cuando la narrativa los identifica de forma explícita.
+ * Evita inferir domicilios, infracciones u horarios a partir de frases ambiguas.
+ */
+export function extraerCamposNarrativa(narrativa: string): {
+  falta: string;
+  lugar: string;
+  horas: Record<string, string>;
+} {
+  const texto = normalizarTexto(narrativa);
+  const obtener = (etiquetas: string): string => {
+    const re = new RegExp("(?:^|[\\n;|])\\s*(?:" + etiquetas + ")\\s*[:=—-]\\s*([^\\n;|]+)", "i");
+    return texto.match(re)?.[1]?.trim() ?? "";
+  };
+  const horas: Record<string, string> = {};
+  const conocimiento = obtener("hora(?: de)? conocimiento|conocimiento");
+  const llegada = obtener("hora(?: de)? llegada|llegada al lugar");
+  const detencion = obtener("hora(?: de)? detenci[oó]n|detenci[oó]n");
+  if (splitTime(conocimiento)) horas.conocimiento = conocimiento;
+  if (splitTime(llegada)) horas.llegada = llegada;
+  if (splitTime(detencion)) horas.detencion = detencion;
+  return {
+    falta: obtener("probable infracci[oó]n|falta administrativa|infracci[oó]n"),
+    lugar: obtener("lugar de los hechos|ubicaci[oó]n|domicilio de los hechos"),
+    horas,
+  };
+}
+
 function nombreArchivo(folio: string) {
   const seguro = normalizarTexto(folio)
     .trim()
@@ -158,7 +287,7 @@ function nombreArchivo(folio: string) {
   return seguro ? `IPH-infracciones-${seguro}.pdf` : "IPH-infracciones-administrativas.pdf";
 }
 
-async function generarPdf(props: Props): Promise<Uint8Array> {
+export async function generarPdf(props: Props): Promise<Uint8Array> {
   const response = await fetch(TEMPLATE_ENDPOINT, { headers: { Accept: "application/pdf" } });
   if (!response.ok) {
     let message =
@@ -180,7 +309,11 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
     throw new Error("La fuente del formato oficial no devolvió un PDF válido.");
   }
 
-  const textos = [props.falta, props.lugar, props.narrativa].map(normalizarTexto);
+  const extraidos = extraerCamposNarrativa(props.narrativa);
+  const falta = props.falta.trim() || extraidos.falta;
+  const lugar = props.lugar.trim() || extraidos.lugar;
+  const horas = { ...extraidos.horas, ...Object.fromEntries(Object.entries(props.horas).filter(([, value]) => Boolean(value?.trim()))) };
+  const textos = [falta, lugar, props.narrativa].map(normalizarTexto);
   if (textos.some((texto) => /[^\u0000-\u00FF]/u.test(texto))) {
     throw new Error(
       "El texto contiene algún símbolo o carácter que la fuente del formato oficial no puede representar. Sustituya ese símbolo por texto sencillo; la narrativa no se recortará ni se eliminarán caracteres automáticamente.",
@@ -210,7 +343,7 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
 
   // Sólo se imprimen datos que ya existen en la app y que tienen un campo claro.
   // Nombre completo, fechas, casillas y datos personales no capturados permanecen vacíos.
-  drawWrappedValue(page1, props.falta, font, {
+  drawWrappedValue(page1, falta, font, {
     x: 30,
     y: 331,
     width: page1.getWidth() - 60,
@@ -219,7 +352,7 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
     lineHeight: 8.5,
   });
 
-  drawWrappedValue(page1, props.lugar, font, {
+  drawWrappedValue(page1, lugar, font, {
     x: 30,
     y: 54,
     width: page1.getWidth() - 60,
@@ -230,11 +363,14 @@ async function generarPdf(props: Props): Promise<Uint8Array> {
 
   // Coordenadas calibradas sobre el PDF municipal proporcionado por el usuario (origen inferior izquierdo).
   // Se rellenan únicamente las horas capturadas; las fechas y las demás casillas quedan sin tocar.
-  drawTime(page1, props.horas.conocimiento, 457, 482, 379, font);
-  drawTime(page1, props.horas.llegada, 426, 455, 127, font);
-  drawTime(page3Detencion, props.horas.detencion, 357, 395, 107, font);
+  drawTime(page1, horas.conocimiento, 457, 482, 379, font);
+  drawTime(page1, horas.llegada, 426, 455, 127, font);
+  drawTime(page3Detencion, horas.detencion, 357, 395, 107, font);
 
   drawNarrativa(page2Narrativa, props.narrativa, font);
+
+  // Apartado 5.1: extraer sólo frases explícitas sobre resistencia y uso de la fuerza.
+  dibujarUsoFuerza(page3Detencion, props.narrativa, font);
 
   return pdf.save();
 }
@@ -278,15 +414,40 @@ export default function IphPdfGenerator(props: Props) {
     }
   }
 
-  function descargar() {
-    if (!pdfUrl) return;
+  function abrirPdf() {
+    if (!pdfBlob) {
+      setError("Primero genere el PDF para poder abrirlo.");
+      return;
+    }
+
+    // Abrir directamente desde un gesto del usuario suele ser más compatible
+    // con los visores móviles que depender únicamente del iframe incrustado.
+    const url = pdfUrl || URL.createObjectURL(pdfBlob);
     const anchor = document.createElement("a");
-    anchor.href = pdfUrl;
-    anchor.download = filename;
+    anchor.href = url;
+    anchor.target = "_blank";
+    anchor.rel = "noopener";
+    anchor.style.display = "none";
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
-    setAviso("PDF listo para guardarse en el dispositivo.");
+    setAviso("Se solicitó abrir el PDF en una pestaña o visor nuevo. Si el navegador lo bloquea, use Guardar PDF.");
+  }
+
+  function descargar() {
+    if (!pdfBlob) return;
+    // Crear una URL desde el Blob vigente evita depender de una URL temporal
+    // que el navegador haya dejado de resolver al mostrar la vista previa.
+    const url = URL.createObjectURL(pdfBlob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    setAviso("Se solicitó guardar el PDF en el dispositivo.");
   }
 
   async function compartir() {
@@ -366,7 +527,14 @@ export default function IphPdfGenerator(props: Props) {
             />
           </div>
 
-          <footer className="grid grid-cols-2 gap-3 border-t bg-background p-3 sm:p-4">
+          <footer className="grid grid-cols-1 gap-3 border-t bg-background p-3 sm:grid-cols-3 sm:p-4">
+            <button
+              type="button"
+              onClick={abrirPdf}
+              className="rounded-xl border px-4 py-3 text-sm font-semibold"
+            >
+              Abrir PDF
+            </button>
             <button
               type="button"
               onClick={descargar}

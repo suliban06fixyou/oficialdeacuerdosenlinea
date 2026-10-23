@@ -4,8 +4,10 @@ on:
   push:
     branches:
       - feature/iph-pdf-generator
+      - feature/iph-pdf-generator-corrections
   pull_request:
     branches:
+      - feature/iph-pdf-generator
       - migracion-ia-economica
 
 jobs:
@@ -25,6 +27,20 @@ jobs:
 
       - name: Validate local municipal IPH PDF
         run: bun run scripts/validate-iph-template.mjs
+
+      - name: Test IPH data extraction
+        run: bun test scripts/iph-generator.test.ts
+
+      - name: Test PDF generation with official template
+        run: bun run scripts/test-iph-pdf-generator.mjs
+
+      - name: Upload generated test PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: iph-pdf-preview-test
+          path: test-output/iph-pdf-preview.pdf
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Build and type-check
         run: bun run build
