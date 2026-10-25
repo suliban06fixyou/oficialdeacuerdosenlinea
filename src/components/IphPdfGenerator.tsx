@@ -83,6 +83,41 @@ function drawTime(
   page.drawText(time.minutes, { ...options, x: xMinutes });
 }
 
+function splitDate(value?: string): string | null {
+  if (!value) return null;
+  const match = value.match(/(?:^|\\D)(\\d{1,2})[\\/-](\\d{1,2})[\\/-](\\d{4})(?:\\D|$)/);
+  if (!match) return null;
+  const day = match[1].padStart(2, "0");
+  const month = match[2].padStart(2, "0");
+  const year = match[3];
+  const d = Number(day), m = Number(month), y = Number(year);
+  const parsed = new Date(y, m - 1, d);
+  if (parsed.getFullYear() !== y || parsed.getMonth() !== m - 1 || parsed.getDate() !== d) return null;
+  return day + month + year;
+}
+
+function drawDate(
+  page: PDFPage,
+  value: string | undefined,
+  x: number,
+  y: number,
+  spacing: number,
+  font: PDFFont,
+) {
+  const digits = splitDate(value);
+  if (!digits) return;
+  [...digits].forEach((digit, index) => {
+    page.drawText(digit, {
+      x: x + index * spacing, y, size: 6.8, font,
+      color: rgb(0.05, 0.05, 0.05),
+    });
+  });
+}
+
+function marcar(page: PDFPage, x: number, y: number, font: PDFFont) {
+  page.drawText("X", { x, y, size: 7.2, font, color: rgb(0.05, 0.05, 0.05) });
+}
+
 function drawWrappedValue(
   page: PDFPage,
   value: string,
