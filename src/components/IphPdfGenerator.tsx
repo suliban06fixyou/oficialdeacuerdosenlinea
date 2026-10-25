@@ -501,9 +501,32 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     x: 405, y: 601, width: 75, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
 
+  // SECCIÓN 2.1: marcar la vía de conocimiento sólo cuando la narrativa la identifica.
+  if (extraidos.tipoConocimiento === "llamada") marcar(page1, 87, 419, font);
+  if (extraidos.tipoConocimiento === "presencia") marcar(page1, 87, 405, font);
+  if (extraidos.tipoConocimiento === "queja") marcar(page1, 87, 391, font);
+  if (extraidos.tipoConocimiento === "otro") marcar(page1, 87, 377, font);
+  drawDate(page1, extraidos.fechaConocimiento, 457, 420, 11.8, font);
   drawTime(page1, horas.conocimiento, 457, 482, 379, font);
-  drawTime(page1, horas.llegada, 426, 455, 127, font);
-  drawTime(page3Detencion, horas.detencion, 357, 395, 107, font);
+
+  // SECCIÓN 3.1: las horas de arribo van en las casillas de la izquierda,
+  // no en las coordenadas de la hora de conocimiento de la sección 2.
+  drawDate(page1, extraidos.fechaArribo, 133, 134, 8.0, font);
+  drawTime(page1, horas.llegada, 163, 186, 134, font);
+  drawDate(page3Detencion, extraidos.fechaDetencion, 145, 104, 8.5, font);
+  drawTime(page3Detencion, horas.detencion, 357, 395, 104, font);
+
+  // SECCIÓN 3.2: marcar únicamente el tipo de lugar expresamente identificable.
+  if (extraidos.tipoLugar === "hogar") marcar(page1, 157, 83, font);
+  if (extraidos.tipoLugar === "viaPublica") marcar(page1, 242, 83, font);
+  if (extraidos.tipoLugar === "transporte") marcar(page1, 328, 83, font);
+  if (extraidos.tipoLugar === "taxi") marcar(page1, 472, 83, font);
+  if (extraidos.tipoLugar === "metro") marcar(page1, 509, 83, font);
+  if (extraidos.tipoLugar === "otro") marcar(page1, 536, 83, font);
+  if (extraidos.tipoLugar === "transporte" && /cam[ií]on|microb[uú]s|combi/i.test(props.narrativa)) {
+    marcar(page1, 408, 83, font);
+  }
+
   drawNarrativa(page2Narrativa, props.narrativa, font);
 
   // Apartado 5.1: extraer sólo frases explícitas sobre resistencia y uso de la fuerza.
