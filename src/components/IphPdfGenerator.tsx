@@ -329,8 +329,31 @@ export function extraerCamposNarrativa(narrativa: string): {
   const entidad = /\bChihuahua\b/i.test(plano) ? "Chihuahua" : "";
   const latitud = grupo(/latitud\s*[:=]?\s*(-?\d{1,2}\.\d+)/i);
   const longitud = grupo(/longitud\s*[:=]?\s*(-?\d{1,3}\.\d+)/i);
-  const lugar = lugarEtiquetado || [calle, colonia && `colonia ${colonia}`, municipio].filter(Boolean).join(", ");
-  return { falta, lugar, conocimientoReporte: reporte, calle, cruce, colonia, municipio, entidad, latitud, longitud, horas };
+  const numeroExterior = obtener("n[uú]mero exterior|no\\.? exterior") || grupo(/(?:n[uú]mero|no\\.?)\\s+ext\\.?\\s*[:#-]?\\s*(\\d+[a-zA-Z]?)/i);
+  const numeroInterior = obtener("n[uú]mero interior|no\\.? interior") || grupo(/(?:n[uú]mero|no\\.?)\\s+int\\.?\\s*[:#-]?\\s*([a-zA-Z0-9-]+)/i);
+  const codigoPostal = obtener("c[oó]digo postal|C\\.?P\\.?") || grupo(/(?:c[oó]digo postal|C\\.?P\\.?)[\\s:#-]*(\\d{5})/i);
+  const entreCalle = obtener("entre calle|entre calles") || grupo(/entre calles?\\s+([^,.;]+?)(?=\\s+y calle|,|[.;]|$)/i);
+  const yCalle = obtener("y calle") || grupo(/\\by calle\\s+([^,.;]+)/i);
+  const fechaGeneral = grupo(/(?:fecha(?: de los hechos)?|el d[ií]a|d[ií]a)\\s*[:,-]?\\s*(\\d{1,2}[/-]\\d{1,2}[/-]\\d{4})/i);
+  const fechaConocimiento = obtener("fecha de conocimiento|fecha del reporte") || fechaGeneral;
+  const fechaArribo = obtener("fecha de arribo|fecha de llegada") || fechaGeneral;
+  const fechaDetencion = obtener("fecha de detenci[oó]n") || fechaGeneral;
+  const tipoConocimiento: "llamada" | "presencia" | "queja" | "otro" | "" =
+    /(?:llamada|reporte por (?:radio|tableta|tel[eé]fono)|cabina|911)/i.test(plano) ? "llamada" :
+    /(?:presencia directa|observaci[oó]n directa|observ[eé] directamente|se percat[oó] directamente)/i.test(plano) ? "presencia" :
+    /(?:queja|denuncia de una persona|se acerc[oó] un ciudadano)/i.test(plano) ? "queja" : "";
+  const tipoLugar: "hogar" | "viaPublica" | "transporte" | "taxi" | "metro" | "otro" | "" =
+    /\b(?:v[ií]a p[uú]blica|calle p[uú]blica)\b/i.test(plano) ? "viaPublica" :
+    /\btaxi\b/i.test(plano) ? "taxi" :
+    /\bmetro\b/i.test(plano) ? "metro" :
+    /\b(?:transporte p[uú]blico|cami[oó]n|microb[uú]s|combi)\b/i.test(plano) ? "transporte" :
+    /\b(?:domicilio particular|casa habitaci[oó]n|hogar)\b/i.test(plano) ? "hogar" : "";
+  const lugar = lugarEtiquetado || [calle, numeroExterior, colonia && \`colonia \${colonia}\`, municipio].filter(Boolean).join(", ");
+  return {
+    falta, lugar, conocimientoReporte: reporte, calle, cruce, colonia, municipio, entidad,
+    latitud, longitud, numeroExterior, numeroInterior, codigoPostal, entreCalle, yCalle,
+    fechaConocimiento, fechaArribo, fechaDetencion, tipoConocimiento, tipoLugar, horas,
+  };
 }
 
 function nombreArchivo(folio: string) {
