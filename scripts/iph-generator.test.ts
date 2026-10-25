@@ -93,6 +93,46 @@ describe("extracción de campos etiquetados de la narrativa", () => {
     expect(result.longitud).toBe("");
   });
 
+  test("extrae los campos disponibles para secciones 3.3, 6 y 7 sin inventar datos", () => {
+    const result = extraerCamposNarrativa([
+      "Probable infracción: alterar el orden público",
+      "Lugar de los hechos: Calle Reforma 123, Colonia Centro, Chihuahua",
+      "Fecha de conocimiento: 25/10/2026",
+      "Fecha de arribo: 25/10/2026",
+      "Fecha de detención: 25/10/2026",
+      "Nombre de la persona detenida: Juan Carlos Pérez López",
+      "Sexo: Hombre",
+      "Fecha de nacimiento: 03/04/1990",
+      "Nacionalidad: Mexicana",
+      "CURP: PELJ900403HCHXXX00",
+      "Domicilio de la persona detenida: Calle Reforma 123, Colonia Centro, Chihuahua",
+      "Lugar de la detención: Calle Juárez 45, Colonia Centro, Chihuahua",
+      "Juzgado: Juzgado Cívico Norte",
+      "Fecha de entrega: 25/10/2026",
+      "Hora de entrega: 11:15",
+      "Policía que entrega: Saúl René Mendoza Mendoza",
+      "Autoridad que recibe: Juez Cívico",
+    ].join("\n"));
+    expect(result.calle).toContain("Calle Reforma 123");
+    expect(result.numeroExterior).toBe("123");
+    expect(result.colonia).toBe("Centro");
+    expect(result.fechaConocimiento).toBe("25/10/2026");
+    expect(result.fechaArribo).toBe("25/10/2026");
+    expect(result.fechaDetencion).toBe("25/10/2026");
+    expect(result.nombreDetenido).toBe("Juan Carlos Pérez López");
+    expect(result.sexoDetenido).toBe("Hombre");
+    expect(result.fechaNacimientoDetenido).toBe("03/04/1990");
+    expect(result.nacionalidadDetenido).toBe("Mexicana");
+    expect(result.curpDetenido).toBe("PELJ900403HCHXXX00");
+    expect(result.domicilioDetenido).toContain("Calle Reforma 123");
+    expect(result.lugarDetencion).toContain("Calle Juárez 45");
+    expect(result.autoridadEntrega).toBe("Juzgado Cívico Norte");
+    expect(result.fechaEntrega).toBe("25/10/2026");
+    expect(result.horaEntrega).toBe("11:15");
+    expect(result.policiaEntrega).toBe("Saúl René Mendoza Mendoza");
+    expect(result.autoridadRecibe).toBe("Juez Cívico");
+  });
+
   test("recupera el nombre del policía responsable sin requerir etiquetas en la narrativa", () => {
     // El nombre se captura en la pantalla; el generador debe imprimirlo en la sección 1.1.
     expect("Saúl René Mendoza Mendoza".trim()).toBeTruthy();
