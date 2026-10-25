@@ -346,14 +346,17 @@ export function extraerCamposNarrativa(narrativa: string): {
   const falta = obtener("probable infracci[oó]n|falta administrativa|infracci[oó]n") || reporte || consumo;
 
   const lugarEtiquetado = obtener("lugar de los hechos|ubicaci[oó]n|domicilio de los hechos");
-  const cruce = grupo(/(?:intersecci[oó]n|cruce) de?\s*([^.;]+?)(?:,\s*colonia|,\s*col\.?|\s+colonia|\s+col\.|[.;]|$)/i);
-  const colonia = grupo(/\bcol(?:onia)?\.?\s+([^,.;]+?)(?=,|\s+(?:municipio|Chihuahua)|[.;]|$)/i);
-  const calle = cruce || grupo(/(?:^|,\s*)((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i) || grupo(/(?:en|sobre|ubicado en)\s+(?:la intersecci[oó]n de )?((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i);
+  const textoUbicacion = lugarEtiquetado || plano;
+  const planoUbicacion = textoUbicacion.replace(/\s+/g, " ").trim();
+  const grupoUbicacion = (re: RegExp): string => planoUbicacion.match(re)?.[1]?.trim() ?? "";
+  const cruce = grupoUbicacion(/(?:intersecci[oó]n|cruce) de?\s*([^.;]+?)(?:,\s*colonia|,\s*col\.?|\s+colonia|\s+col\.|[.;]|$)/i) || grupo(/(?:intersecci[oó]n|cruce) de?\s*([^.;]+?)(?:,\s*colonia|,\s*col\.?|\s+colonia|\s+col\.|[.;]|$)/i);
+  const colonia = grupoUbicacion(/\bcol(?:onia)?\.?\s+([^,.;]+?)(?=,|\s+(?:municipio|Chihuahua)|[.;]|$)/i) || grupo(/\bcol(?:onia)?\.?\s+([^,.;]+?)(?=,|\s+(?:municipio|Chihuahua)|[.;]|$)/i);
+  const calle = grupoUbicacion(/(?:^|,\s*)((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i) || cruce || grupo(/(?:^|,\s*)((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i) || grupo(/(?:en|sobre|ubicado en)\s+(?:la intersecci[oó]n de )?((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i);
   const municipio = grupo(/\bmunicipio de\s+([^,.;]+)/i) || (/\bChihuahua\b/i.test(plano) ? "Chihuahua" : "");
   const entidad = /\bChihuahua\b/i.test(plano) ? "Chihuahua" : "";
   const latitud = grupo(/latitud\s*[:=]?\s*(-?\d{1,2}\.\d+)/i);
   const longitud = grupo(/longitud\s*[:=]?\s*(-?\d{1,3}\.\d+)/i);
-  const numeroExterior = obtener("n[uú]mero exterior|no\\.? exterior") || grupo(/(?:n[uú]mero|no\.?)\s+ext\.?\s*[:#-]?\s*(\d+[a-zA-Z]?)/i) || grupo(/(?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,;]{2,80}\s+(\d+[a-zA-Z]?)\s*(?=,|\bcolonia\b|$)/i);
+  const numeroExterior = obtener("n[uú]mero exterior|no\\.? exterior") || grupo(/(?:n[uú]mero|no\.?)\s+ext\.?\s*[:#-]?\s*(\d+[a-zA-Z]?)/i) || grupoUbicacion(/(?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,;]{2,80}\s+(\d+[a-zA-Z]?)\s*(?=,|\bcolonia\b|$)/i);
   const numeroInterior = obtener("n[uú]mero interior|no\\.? interior") || grupo(/(?:n[uú]mero|no\.?)\s+int\.?\s*[:#-]?\s*([a-zA-Z0-9-]+)/i);
   const codigoPostal = obtener("c[oó]digo postal|C\\.?P\\.?") || grupo(/(?:c[oó]digo postal|C\.?P\.?)[\s:#-]*(\d{5})/i);
   const entreCalle = obtener("entre calle|entre calles") || grupo(/entre calles?\s+([^,.;]+?)(?=\s+y calle|,|[.;]|$)/i);
