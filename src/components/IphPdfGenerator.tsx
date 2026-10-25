@@ -268,32 +268,32 @@ export function extraerCamposNarrativa(narrativa: string): {
   horas: Record<string, string>;
 } {
   const texto = normalizarTexto(narrativa);
-  const plano = texto.replace(/\\s+/g, " ").trim();
+  const plano = texto.replace(/\s+/g, " ").trim();
   const obtener = (etiquetas: string): string => {
     const re = new RegExp("(?:^|[\\n;|])\\s*(?:" + etiquetas + ")\\s*[:=—-]\\s*([^\\n;|]+)", "i");
     return texto.match(re)?.[1]?.trim() ?? "";
   };
   const grupo = (re: RegExp): string => plano.match(re)?.[1]?.trim() ?? "";
   const horas: Record<string, string> = {};
-  const conocimiento = obtener("hora(?: de)? conocimiento|conocimiento") || grupo(/(?:a las|siendo las)\\s+([0-2]?\\d:[0-5]\\d)\\s+horas?[^.]{0,100}(?:reporte|llamada|tableta|radio)/i);
-  const llegada = obtener("hora(?: de)? llegada|llegada al lugar") || grupo(/(?:arrib[eé]|lleg[uó]|arribo)\\s+(?:al lugar )?(?:a las )([0-2]?\\d:[0-5]\\d)\\s+horas?/i);
-  const detencion = obtener("hora(?: de)? detenci[oó]n|detenci[oó]n") || grupo(/(?:siendo las|a las)\\s+([0-2]?\\d:[0-5]\\d)\\s+horas?[^.]{0,120}(?:detenci[oó]n|detuvo|detener)/i);
+  const conocimiento = obtener("hora(?: de)? conocimiento|conocimiento") || grupo(/(?:a las|siendo las)\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,100}(?:reporte|llamada|tableta|radio)/i);
+  const llegada = obtener("hora(?: de)? llegada|llegada al lugar") || grupo(/(?:arrib[eé]|lleg[uó]|arribo)\s+(?:al lugar )?(?:a las )([0-2]?\d:[0-5]\d)\s+horas?/i);
+  const detencion = obtener("hora(?: de)? detenci[oó]n|detenci[oó]n") || grupo(/(?:siendo las|a las)\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,120}(?:detenci[oó]n|detuvo|detener)/i);
   if (splitTime(conocimiento)) horas.conocimiento = conocimiento;
   if (splitTime(llegada)) horas.llegada = llegada;
   if (splitTime(detencion)) horas.detencion = detencion;
 
-  const reporte = grupo(/(?:se recibi[oó]|recibimos|recib[ií])[^.]{0,180}?(?:reporte|llamada|aviso)\\s+(?:por|de)\\s+([^.;]+)/i);
+  const reporte = grupo(/(?:se recibi[oó]|recibimos|recib[ií])[^.]{0,180}?(?:reporte|llamada|aviso)\s+(?:por|de)\s+([^.;]+)/i);
   const consumo = grupo(/(?:observ[eé]|observamos|se detect[oó])[^.]{0,100}?(persona[^.]{0,160}?(?:consumiendo|ingiriendo)[^.]+)/i);
   const falta = obtener("probable infracci[oó]n|falta administrativa|infracci[oó]n") || reporte || consumo;
 
   const lugarEtiquetado = obtener("lugar de los hechos|ubicaci[oó]n|domicilio de los hechos");
-  const cruce = grupo(/(?:intersecci[oó]n|cruce) de?\\s*([^.;]+?)(?:,\\s*colonia|,\\s*col\\.?|\\s+colonia|\\s+col\\.|[.;]|$)/i);
-  const colonia = grupo(/\\bcol(?:onia)?\\.?\\s+([^,.;]+?)(?=,|\\s+(?:municipio|Chihuahua)|[.;]|$)/i);
-  const calle = cruce || grupo(/(?:en|sobre|ubicado en)\\s+(?:la intersecci[oó]n de )?((?:calle|avenida|av\\.?|boulevard|blvd\\.?|carretera)\\s+[^,.;]{3,100})/i);
-  const municipio = grupo(/\\bmunicipio de\\s+([^,.;]+)/i) || (/\\bChihuahua\\b/i.test(plano) ? "Chihuahua" : "");
-  const entidad = /\\bChihuahua\\b/i.test(plano) ? "Chihuahua" : "";
-  const latitud = grupo(/latitud\\s*[:=]?\\s*(-?\\d{1,2}\\.\\d+)/i);
-  const longitud = grupo(/longitud\\s*[:=]?\\s*(-?\\d{1,3}\\.\\d+)/i);
+  const cruce = grupo(/(?:intersecci[oó]n|cruce) de?\s*([^.;]+?)(?:,\s*colonia|,\s*col\.?|\s+colonia|\s+col\.|[.;]|$)/i);
+  const colonia = grupo(/\bcol(?:onia)?\.?\s+([^,.;]+?)(?=,|\s+(?:municipio|Chihuahua)|[.;]|$)/i);
+  const calle = cruce || grupo(/(?:en|sobre|ubicado en)\s+(?:la intersecci[oó]n de )?((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i);
+  const municipio = grupo(/\bmunicipio de\s+([^,.;]+)/i) || (/\bChihuahua\b/i.test(plano) ? "Chihuahua" : "");
+  const entidad = /\bChihuahua\b/i.test(plano) ? "Chihuahua" : "";
+  const latitud = grupo(/latitud\s*[:=]?\s*(-?\d{1,2}\.\d+)/i);
+  const longitud = grupo(/longitud\s*[:=]?\s*(-?\d{1,3}\.\d+)/i);
   const lugar = lugarEtiquetado || [calle, colonia && `colonia ${colonia}`, municipio].filter(Boolean).join(", ");
   return { falta, lugar, conocimientoReporte: reporte, calle, cruce, colonia, municipio, entidad, latitud, longitud, horas };
 }
