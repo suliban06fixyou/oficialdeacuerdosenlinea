@@ -85,6 +85,14 @@ describe("extracción de campos etiquetados de la narrativa", () => {
     expect(result.horas.detencion).toBe("10:03");
   });
 
+  test("estructura el lugar capturado para el apartado 3.3 sin inventar coordenadas", () => {
+    const result = extraerCamposNarrativa("Calle de Prueba 123, Chihuahua, Chihuahua");
+    expect(result.calle).toContain("Calle de Prueba 123");
+    expect(result.municipio).toBe("Chihuahua");
+    expect(result.latitud).toBe("");
+    expect(result.longitud).toBe("");
+  });
+
   test("recupera el nombre del policía responsable sin requerir etiquetas en la narrativa", () => {
     // El nombre se captura en la pantalla; el generador debe imprimirlo en la sección 1.1.
     expect("Saúl René Mendoza Mendoza".trim()).toBeTruthy();
