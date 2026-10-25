@@ -361,20 +361,16 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   const page2Narrativa = pages[1];
   const page3Detencion = pages[2];
 
-  // SECCIÓN 1.1: el dato capturado como nombre/placa se imprime sin descartarlo.
+  // SECCIÓN 1.1: se conserva el nombre completo tal como fue capturado.
+  // No se adivina qué palabras son apellidos y cuáles nombres.
   const oficial = normalizarTexto(props.oficial).trim();
   if (oficial) {
-    const partes = oficial.split(/\\s+/);
-    if (partes.length >= 3) {
-      page1.drawText(partes[0], { x: 76, y: 594, size: 7.1, font, color: rgb(0.05, 0.05, 0.05) });
-      page1.drawText(partes[1], { x: 246, y: 594, size: 7.1, font, color: rgb(0.05, 0.05, 0.05) });
-      drawWrappedValue(page1, partes.slice(2).join(" "), font, { x: 389, y: 594, width: 155, maxLines: 1, fontSize: 7.1, lineHeight: 8 });
-    } else {
-      drawWrappedValue(page1, oficial, font, { x: 389, y: 594, width: 155, maxLines: 1, fontSize: 7.1, lineHeight: 8 });
-    }
-    // La aplicación corresponde al formato de infracciones administrativas municipal.
-    page1.drawText("X", { x: 506, y: 535, size: 7.2, font, color: rgb(0.05, 0.05, 0.05) });
+    drawWrappedValue(page1, oficial, font, {
+      x: 389, y: 594, width: 155, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    });
   }
+  // El formulario y la aplicación son específicos de Policía Municipal de Chihuahua.
+  page1.drawText("X", { x: 506, y: 535, size: 7.2, font, color: rgb(0.05, 0.05, 0.05) });
 
   // SECCIÓN 2.2: descripción breve del reporte o hecho extraído de la narrativa.
   drawWrappedValue(page1, falta, font, {
