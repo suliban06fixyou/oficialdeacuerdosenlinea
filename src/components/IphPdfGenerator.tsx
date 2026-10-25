@@ -257,25 +257,45 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
 export function extraerCamposNarrativa(narrativa: string): {
   falta: string;
   lugar: string;
+  conocimientoReporte: string;
+  calle: string;
+  cruce: string;
+  colonia: string;
+  municipio: string;
+  entidad: string;
+  latitud: string;
+  longitud: string;
   horas: Record<string, string>;
 } {
   const texto = normalizarTexto(narrativa);
+  const plano = texto.replace(/\\s+/g, " ").trim();
   const obtener = (etiquetas: string): string => {
     const re = new RegExp("(?:^|[\\n;|])\\s*(?:" + etiquetas + ")\\s*[:=—-]\\s*([^\\n;|]+)", "i");
     return texto.match(re)?.[1]?.trim() ?? "";
   };
+  const grupo = (re: RegExp): string => plano.match(re)?.[1]?.trim() ?? "";
   const horas: Record<string, string> = {};
-  const conocimiento = obtener("hora(?: de)? conocimiento|conocimiento");
-  const llegada = obtener("hora(?: de)? llegada|llegada al lugar");
-  const detencion = obtener("hora(?: de)? detenci[oó]n|detenci[oó]n");
+  const conocimiento = obtener("hora(?: de)? conocimiento|conocimiento") || grupo(/(?:a las|siendo las)\\s+([0-2]?\\d:[0-5]\\d)\\s+horas?[^.]{0,100}(?:reporte|llamada|tableta|radio)/i);
+  const llegada = obtener("hora(?: de)? llegada|llegada al lugar") || grupo(/(?:arrib[eé]|lleg[uó]|arribo)\\s+(?:al lugar )?(?:a las )([0-2]?\\d:[0-5]\\d)\\s+horas?/i);
+  const detencion = obtener("hora(?: de)? detenci[oó]n|detenci[oó]n") || grupo(/(?:detenci[oó]n|detuvo|detener)[^.]{0,100}?(?:siendo las|a las)\\s+([0-2]?\\d:[0-5]\\d)\\s+horas?/i);
   if (splitTime(conocimiento)) horas.conocimiento = conocimiento;
   if (splitTime(llegada)) horas.llegada = llegada;
   if (splitTime(detencion)) horas.detencion = detencion;
-  return {
-    falta: obtener("probable infracci[oó]n|falta administrativa|infracci[oó]n"),
-    lugar: obtener("lugar de los hechos|ubicaci[oó]n|domicilio de los hechos"),
-    horas,
-  };
+
+  const reporte = grupo(/(?:se recibi[oó]|recibimos|recib[ií])[^.]{0,180}?(?:reporte|llamada|aviso)\\s+(?:por|de)\\s+([^.;]+)/i);
+  const consumo = grupo(/(?:observ[eé]|observamos|se detect[oó])[^.]{0,100}?(persona[^.]{0,160}?(?:consumiendo|ingiriendo)[^.]+)/i);
+  const falta = obtener("probable infracci[oó]n|falta administrativa|infracci[oó]n") || reporte || consumo;
+
+  const lugarEtiquetado = obtener("lugar de los hechos|ubicaci[oó]n|domicilio de los hechos");
+  const cruce = grupo(/(?:intersecci[oó]n|cruce) de?\\s*([^.;]+?)(?:,\\s*colonia|,\\s*col\\.?|\\s+colonia|\\s+col\\.|[.;]|$)/i);
+  const colonia = grupo(/\\bcol(?:onia)?\\.?\\s+([^,.;]+?)(?=,|\\s+(?:municipio|Chihuahua)|[.;]|$)/i);
+  const calle = cruce || grupo(/(?:en|sobre|ubicado en)\\s+(?:la intersecci[oó]n de )?((?:calle|avenida|av\\.?|boulevard|blvd\\.?|carretera)\\s+[^,.;]{3,100})/i);
+  const municipio = grupo(/\\bmunicipio de\\s+([^,.;]+)/i) || (/\\bChihuahua\\b/i.test(plano) ? "Chihuahua" : "");
+  const entidad = /\\bChihuahua\\b/i.test(plano) ? "Chihuahua" : "";
+  const latitud = grupo(/latitud\\s*[:=]?\\s*(-?\\d{1,2}\\.\\d+)/i);
+  const longitud = grupo(/longitud\\s*[:=]?\\s*(-?\\d{1,3}\\.\\d+)/i);
+  const lugar = lugarEtiquetado || [calle, colonia && `colonia ${colonia}`, municipio].filter(Boolean).join(", ");
+  return { falta, lugar, conocimientoReporte: reporte, calle, cruce, colonia, municipio, entidad, latitud, longitud, horas };
 }
 
 function nombreArchivo(folio: string) {
@@ -313,7 +333,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   const falta = props.falta.trim() || extraidos.falta;
   const lugar = props.lugar.trim() || extraidos.lugar;
   const horas = { ...extraidos.horas, ...Object.fromEntries(Object.entries(props.horas).filter(([, value]) => Boolean(value?.trim()))) };
-  const textos = [falta, lugar, props.narrativa].map(normalizarTexto);
+  const textos = [props.oficial, falta, lugar, props.narrativa].map(normalizarTexto);
   if (textos.some((texto) => /[^\u0000-\u00FF]/u.test(texto))) {
     throw new Error(
       "El texto contiene algún símbolo o carácter que la fuente del formato oficial no puede representar. Sustituya ese símbolo por texto sencillo; la narrativa no se recortará ni se eliminarán caracteres automáticamente.",
@@ -341,32 +361,54 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   const page2Narrativa = pages[1];
   const page3Detencion = pages[2];
 
-  // Sólo se imprimen datos que ya existen en la app y que tienen un campo claro.
-  // Nombre completo, fechas, casillas y datos personales no capturados permanecen vacíos.
+  // SECCIÓN 1.1: el dato capturado como nombre/placa se imprime sin descartarlo.
+  const oficial = normalizarTexto(props.oficial).trim();
+  if (oficial) {
+    const partes = oficial.split(/\\s+/);
+    if (partes.length >= 3) {
+      page1.drawText(partes[0], { x: 76, y: 594, size: 7.1, font, color: rgb(0.05, 0.05, 0.05) });
+      page1.drawText(partes[1], { x: 246, y: 594, size: 7.1, font, color: rgb(0.05, 0.05, 0.05) });
+      drawWrappedValue(page1, partes.slice(2).join(" "), font, { x: 389, y: 594, width: 155, maxLines: 1, fontSize: 7.1, lineHeight: 8 });
+    } else {
+      drawWrappedValue(page1, oficial, font, { x: 389, y: 594, width: 155, maxLines: 1, fontSize: 7.1, lineHeight: 8 });
+    }
+    // La aplicación corresponde al formato de infracciones administrativas municipal.
+    page1.drawText("X", { x: 506, y: 535, size: 7.2, font, color: rgb(0.05, 0.05, 0.05) });
+  }
+
+  // SECCIÓN 2.2: descripción breve del reporte o hecho extraído de la narrativa.
   drawWrappedValue(page1, falta, font, {
-    x: 30,
-    y: 331,
-    width: page1.getWidth() - 60,
-    maxLines: 2,
-    fontSize: 7.2,
-    lineHeight: 8.5,
+    x: 31, y: 330, width: page1.getWidth() - 62, maxLines: 2, fontSize: 7.0, lineHeight: 8.2,
   });
 
+  // SECCIÓN 3.2: ubicación en el recuadro descriptivo del lugar.
   drawWrappedValue(page1, lugar, font, {
-    x: 30,
-    y: 54,
-    width: page1.getWidth() - 60,
-    maxLines: 2,
-    fontSize: 7.3,
-    lineHeight: 9.1,
+    x: 31, y: 54, width: page1.getWidth() - 62, maxLines: 2, fontSize: 7.0, lineHeight: 8.2,
   });
 
-  // Coordenadas calibradas sobre el PDF municipal proporcionado por el usuario (origen inferior izquierdo).
-  // Se rellenan únicamente las horas capturadas; las fechas y las demás casillas quedan sin tocar.
+  // SECCIÓN 3.3: dirección estructurada. No se inventan coordenadas geográficas.
+  drawWrappedValue(page2Narrativa, extraidos.calle || extraidos.cruce, font, {
+    x: 145, y: 760, width: 405, maxLines: 1, fontSize: 7.0, lineHeight: 8,
+  });
+  drawWrappedValue(page2Narrativa, extraidos.colonia, font, {
+    x: 148, y: 741, width: 390, maxLines: 1, fontSize: 7.0, lineHeight: 8,
+  });
+  drawWrappedValue(page2Narrativa, extraidos.entidad, font, {
+    x: 198, y: 682, width: 160, maxLines: 1, fontSize: 7.0, lineHeight: 8,
+  });
+  drawWrappedValue(page2Narrativa, extraidos.municipio, font, {
+    x: 198, y: 664, width: 160, maxLines: 1, fontSize: 7.0, lineHeight: 8,
+  });
+  drawWrappedValue(page2Narrativa, extraidos.latitud, font, {
+    x: 205, y: 601, width: 75, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+  drawWrappedValue(page2Narrativa, extraidos.longitud, font, {
+    x: 405, y: 601, width: 75, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+
   drawTime(page1, horas.conocimiento, 457, 482, 379, font);
   drawTime(page1, horas.llegada, 426, 455, 127, font);
   drawTime(page3Detencion, horas.detencion, 357, 395, 107, font);
-
   drawNarrativa(page2Narrativa, props.narrativa, font);
 
   // Apartado 5.1: extraer sólo frases explícitas sobre resistencia y uso de la fuerza.
