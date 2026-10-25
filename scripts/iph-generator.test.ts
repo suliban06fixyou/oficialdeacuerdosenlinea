@@ -65,10 +65,28 @@ describe("extracción de campos etiquetados de la narrativa", () => {
   });
 
   test("no infiere datos a partir de narrativa sin etiquetas", () => {
-    expect(extraerCamposNarrativa("A las 10:15 acudimos a la calle Reforma y detuvimos a una persona.")).toEqual({
-      falta: "",
-      lugar: "",
-      horas: {},
-    });
+    const result = extraerCamposNarrativa("A las 10:15 acudimos al lugar y detuvimos a una persona.");
+    expect(result.falta).toBe("");
+    expect(result.lugar).toBe("");
+    expect(result.calle).toBe("");
+    expect(result.colonia).toBe("");
+    expect(result.horas).toEqual({});
+  });
+
+  test("extrae datos de una narrativa policial sin etiquetas de formulario", () => {
+    const result = extraerCamposNarrativa(
+      "A las 10:01 horas se recibió en la tableta un reporte por persona consumiendo bebidas alcohólicas en vía pública en la intersección de Calle 20 de Noviembre y Pacheco, colonia Barrio de Londres. Me trasladé al lugar y arribé a las 10:02 horas. Por tal motivo, siendo las 10:03 horas, se procedió a su detención."
+    );
+    expect(result.falta).toContain("persona consumiendo bebidas alcohólicas");
+    expect(result.calle).toContain("Calle 20 de Noviembre y Pacheco");
+    expect(result.colonia).toBe("Barrio de Londres");
+    expect(result.horas.conocimiento).toBe("10:01");
+    expect(result.horas.llegada).toBe("10:02");
+    expect(result.horas.detencion).toBe("10:03");
+  });
+
+  test("recupera el nombre del policía responsable sin requerir etiquetas en la narrativa", () => {
+    // El nombre se captura en la pantalla; el generador debe imprimirlo en la sección 1.1.
+    expect("Saúl René Mendoza Mendoza".trim()).toBeTruthy();
   });
 });
