@@ -470,8 +470,8 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     x: 31, y: 54, width: page1.getWidth() - 62, maxLines: 2, fontSize: 7.0, lineHeight: 8.2,
   });
 
-  // SECCIÓN 3.3: combina lo extraído de la narrativa con el lugar capturado en pantalla.
-  // Las coordenadas sólo se imprimen si se proporcionaron expresamente.
+  // SECCIÓN 3.3: las etiquetas impresas quedan a la izquierda; los valores
+  // se escriben sobre las líneas de captura, no encima de las etiquetas.
   const extraidosLugar = extraerCamposNarrativa(props.lugar);
   const geo = {
     calle: extraidos.calle || extraidosLugar.calle,
@@ -481,24 +481,44 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     entidad: extraidos.entidad || extraidosLugar.entidad,
     latitud: extraidos.latitud || extraidosLugar.latitud,
     longitud: extraidos.longitud || extraidosLugar.longitud,
+    numeroExterior: extraidos.numeroExterior || extraidosLugar.numeroExterior,
+    numeroInterior: extraidos.numeroInterior || extraidosLugar.numeroInterior,
+    codigoPostal: extraidos.codigoPostal || extraidosLugar.codigoPostal,
+    entreCalle: extraidos.entreCalle || extraidosLugar.entreCalle,
+    yCalle: extraidos.yCalle || extraidosLugar.yCalle,
   };
   drawWrappedValue(page2Narrativa, geo.calle || geo.cruce, font, {
-    x: 72, y: 753, width: 115, maxLines: 1, fontSize: 7.0, lineHeight: 8,
+    x: 151, y: 753, width: 400, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.colonia, font, {
-    x: 72, y: 734, width: 115, maxLines: 1, fontSize: 7.0, lineHeight: 8,
+    x: 151, y: 735, width: 400, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+  });
+  drawWrappedValue(page2Narrativa, geo.numeroExterior, font, {
+    x: 111, y: 727, width: 42, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+  });
+  drawWrappedValue(page2Narrativa, geo.numeroInterior, font, {
+    x: 111, y: 711, width: 42, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+  });
+  drawWrappedValue(page2Narrativa, geo.codigoPostal, font, {
+    x: 111, y: 695, width: 45, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+  });
+  drawWrappedValue(page2Narrativa, geo.entreCalle, font, {
+    x: 252, y: 727, width: 300, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+  });
+  drawWrappedValue(page2Narrativa, geo.yCalle, font, {
+    x: 252, y: 695, width: 300, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.entidad, font, {
-    x: 198, y: 682, width: 160, maxLines: 1, fontSize: 7.0, lineHeight: 8,
+    x: 204, y: 681, width: 348, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.municipio, font, {
-    x: 198, y: 664, width: 160, maxLines: 1, fontSize: 7.0, lineHeight: 8,
+    x: 204, y: 664, width: 348, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.latitud, font, {
-    x: 205, y: 601, width: 75, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 205, y: 592, width: 75, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(page2Narrativa, geo.longitud, font, {
-    x: 405, y: 601, width: 75, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 405, y: 592, width: 75, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
 
   // SECCIÓN 2.1: marcar la vía de conocimiento sólo cuando la narrativa la identifica.
