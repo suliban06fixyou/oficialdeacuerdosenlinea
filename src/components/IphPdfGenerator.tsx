@@ -317,6 +317,7 @@ export function extraerCamposNarrativa(narrativa: string): {
   nacionalidadDetenido: string;
   curpDetenido: string;
   domicilioDetenido: string;
+  lugarDetencion: string;
   documentoDetenido: string;
   autoridadEntrega: string;
   fechaEntrega: string;
@@ -378,6 +379,7 @@ export function extraerCamposNarrativa(narrativa: string): {
   const nacionalidadDetenido = obtener("nacionalidad");
   const curpDetenido = obtener("CURP");
   const domicilioDetenido = obtener("domicilio de la persona detenida|domicilio del detenido|domicilio particular");
+  const lugarDetencion = obtener("lugar de la detenci[oó]n|domicilio de la detenci[oó]n|ubicaci[oó]n de la detenci[oó]n");
   const documentoDetenido = obtener("documento de identificaci[oó]n|identificaci[oó]n presentada|credencial INE|licencia|pasaporte");
   const autoridadEntrega = obtener("juzgado o instituci[oó]n correspondiente|juzgado|instituci[oó]n correspondiente|autoridad competente");
   const fechaEntrega = obtener("fecha de entrega|fecha de presentaci[oó]n");
@@ -390,7 +392,7 @@ export function extraerCamposNarrativa(narrativa: string): {
     latitud, longitud, numeroExterior, numeroInterior, codigoPostal, entreCalle, yCalle,
     fechaConocimiento, fechaArribo, fechaDetencion, tipoConocimiento, tipoLugar, horas,
     nombreDetenido, aliasDetenido, sexoDetenido, fechaNacimientoDetenido, nacionalidadDetenido,
-    curpDetenido, domicilioDetenido, documentoDetenido, autoridadEntrega, fechaEntrega, horaEntrega,
+    curpDetenido, domicilioDetenido, lugarDetencion, documentoDetenido, autoridadEntrega, fechaEntrega, horaEntrega,
     policiaEntrega, autoridadRecibe,
   };
 }
