@@ -277,7 +277,7 @@ export function extraerCamposNarrativa(narrativa: string): {
   const horas: Record<string, string> = {};
   const conocimiento = obtener("hora(?: de)? conocimiento|conocimiento") || grupo(/(?:a las|siendo las)\\s+([0-2]?\\d:[0-5]\\d)\\s+horas?[^.]{0,100}(?:reporte|llamada|tableta|radio)/i);
   const llegada = obtener("hora(?: de)? llegada|llegada al lugar") || grupo(/(?:arrib[eé]|lleg[uó]|arribo)\\s+(?:al lugar )?(?:a las )([0-2]?\\d:[0-5]\\d)\\s+horas?/i);
-  const detencion = obtener("hora(?: de)? detenci[oó]n|detenci[oó]n") || grupo(/(?:detenci[oó]n|detuvo|detener)[^.]{0,100}?(?:siendo las|a las)\\s+([0-2]?\\d:[0-5]\\d)\\s+horas?/i);
+  const detencion = obtener("hora(?: de)? detenci[oó]n|detenci[oó]n") || grupo(/(?:siendo las|a las)\\s+([0-2]?\\d:[0-5]\\d)\\s+horas?[^.]{0,120}(?:detenci[oó]n|detuvo|detener)/i);
   if (splitTime(conocimiento)) horas.conocimiento = conocimiento;
   if (splitTime(llegada)) horas.llegada = llegada;
   if (splitTime(detencion)) horas.detencion = detencion;
