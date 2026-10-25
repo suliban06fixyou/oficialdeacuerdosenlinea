@@ -29,17 +29,33 @@ try {
     oficial: "Oficial de prueba",
     folio: "TEST-IPH-2026-001",
     falta: "Ejemplo ficticio de falta administrativa",
-    lugar: "Calle de Prueba 123, Chihuahua, Chihuahua",
+    lugar: "Calle de Prueba 123, Colonia Centro, Chihuahua",
     horas: {
       conocimiento: "21:00",
       llegada: "21:10",
       detencion: "21:20",
     },
-    narrativa:
-      "Siendo las 21:00 horas se tuvo conocimiento del reporte. " +
-      "Al arribar, se indicó a la persona que se detuviera. " +
-      "La persona se negó a obedecer la indicación e intentó evadir al oficial. " +
-      "Se procedió a la detención y traslado a comandancia.",
+    narrativa: [
+      "Fecha de conocimiento: 25/10/2026",
+      "Fecha de arribo: 25/10/2026",
+      "Fecha de detención: 25/10/2026",
+      "Siendo las 21:00 horas se tuvo conocimiento del reporte.",
+      "Al arribar a las 21:10 horas, se indicó a la persona que se detuviera.",
+      "La persona se negó a obedecer la indicación e intentó evadir al oficial.",
+      "Se procedió a la detención a las 21:20 horas y traslado a comandancia.",
+      "Nombre de la persona detenida: Juan Carlos Pérez López",
+      "Sexo: Hombre",
+      "Fecha de nacimiento: 03/04/1990",
+      "Nacionalidad: Mexicana",
+      "CURP: PELJ900403HCHXXX00",
+      "Domicilio de la persona detenida: Calle Ficticia 123, Colonia Centro, Chihuahua",
+      "Lugar de la detención: Calle Ficticia 123, Colonia Centro, Chihuahua",
+      "Juzgado: Juzgado Cívico de Prueba",
+      "Fecha de entrega: 25/10/2026",
+      "Hora de entrega: 21:30",
+      "Policía que entrega: Oficial de Prueba Pérez López",
+      "Autoridad que recibe: Juez Cívico de Prueba",
+    ].join("\n"),
   });
 
   assert.equal(requestedTemplate, true, "Debe solicitar la plantilla oficial.");
