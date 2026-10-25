@@ -289,7 +289,7 @@ export function extraerCamposNarrativa(narrativa: string): {
   const lugarEtiquetado = obtener("lugar de los hechos|ubicaci[oó]n|domicilio de los hechos");
   const cruce = grupo(/(?:intersecci[oó]n|cruce) de?\s*([^.;]+?)(?:,\s*colonia|,\s*col\.?|\s+colonia|\s+col\.|[.;]|$)/i);
   const colonia = grupo(/\bcol(?:onia)?\.?\s+([^,.;]+?)(?=,|\s+(?:municipio|Chihuahua)|[.;]|$)/i);
-  const calle = cruce || grupo(/(?:en|sobre|ubicado en)\s+(?:la intersecci[oó]n de )?((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i);
+  const calle = cruce || grupo(/(?:^|,\\s*)((?:calle|avenida|av\\.?|boulevard|blvd\\.?|carretera)\\s+[^,.;]{3,100})/i) || grupo(/(?:en|sobre|ubicado en)\\s+(?:la intersecci[oó]n de )?((?:calle|avenida|av\\.?|boulevard|blvd\\.?|carretera)\\s+[^,.;]{3,100})/i);
   const municipio = grupo(/\bmunicipio de\s+([^,.;]+)/i) || (/\bChihuahua\b/i.test(plano) ? "Chihuahua" : "");
   const entidad = /\bChihuahua\b/i.test(plano) ? "Chihuahua" : "";
   const latitud = grupo(/latitud\s*[:=]?\s*(-?\d{1,2}\.\d+)/i);
