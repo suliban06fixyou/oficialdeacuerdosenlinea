@@ -85,7 +85,7 @@ function drawTime(
 
 function splitDate(value?: string): string | null {
   if (!value) return null;
-  const match = value.match(/(?:^|\\D)(\\d{1,2})[\\/-](\\d{1,2})[\\/-](\\d{4})(?:\\D|$)/);
+  const match = value.match(/(?:^|\D)(\d{1,2})[/-](\d{1,2})[/-](\d{4})(?:\D|$)/);
   if (!match) return null;
   const day = match[1].padStart(2, "0");
   const month = match[2].padStart(2, "0");
