@@ -429,16 +429,36 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   const page2Narrativa = pages[1];
   const page3Detencion = pages[2];
 
-  // SECCIÓN 1.1: se conserva el nombre completo tal como fue capturado.
-  // No se adivina qué palabras son apellidos y cuáles nombres.
-  const oficial = normalizarTexto(props.oficial).trim();
-  if (oficial) {
-    drawWrappedValue(page1, oficial, font, {
-      x: 389, y: 594, width: 155, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+  // SECCIÓN 1.1: la pantalla solicita nombre y placa. Cuando hay cuatro o más
+  // palabras, se usa la convención mexicana: dos apellidos al final y nombres al inicio.
+  // Si el formato es ambiguo, se conserva completo en Nombre(s), sin adivinar.
+  const oficialCapturado = normalizarTexto(props.oficial).trim();
+  const placaMatch = oficialCapturado.match(/(?:n[uú]mero de placa|no\.?\s*de placa|placa)\s*[:#-]?\s*([A-Za-z0-9-]+)/i);
+  const nombreOficial = oficialCapturado.replace(/[,;]?\s*(?:n[uú]mero de placa|no\.?\s*de placa|placa)\s*[:#-]?\s*[A-Za-z0-9-]+/i, "").trim();
+  const tokensOficial = nombreOficial.split(/\s+/).filter(Boolean);
+  if (tokensOficial.length >= 4) {
+    drawWrappedValue(page1, tokensOficial[tokensOficial.length - 2], font, {
+      x: 43, y: 594, width: 145, maxLines: 1, fontSize: 7.0, lineHeight: 8,
+    });
+    drawWrappedValue(page1, tokensOficial[tokensOficial.length - 1], font, {
+      x: 213, y: 594, width: 145, maxLines: 1, fontSize: 7.0, lineHeight: 8,
+    });
+    drawWrappedValue(page1, tokensOficial.slice(0, -2).join(" "), font, {
+      x: 379, y: 594, width: 165, maxLines: 1, fontSize: 7.0, lineHeight: 8,
+    });
+  } else if (nombreOficial) {
+    drawWrappedValue(page1, nombreOficial, font, {
+      x: 379, y: 594, width: 165, maxLines: 1, fontSize: 6.8, lineHeight: 8,
     });
   }
-  // El formulario y la aplicación son específicos de Policía Municipal de Chihuahua.
-  page1.drawText("X", { x: 506, y: 535, size: 7.2, font, color: rgb(0.05, 0.05, 0.05) });
+  if (placaMatch?.[1]) {
+    page1.drawText(\`Placa \${placaMatch[1]}\`, {
+      x: 40, y: 568, size: 7.0, font, color: rgb(0.05, 0.05, 0.05),
+    });
+  }
+  marcar(page1, 506, 535, font);
+
+
 
   // SECCIÓN 2.2: descripción breve del reporte o hecho extraído de la narrativa.
   drawWrappedValue(page1, falta, font, {
