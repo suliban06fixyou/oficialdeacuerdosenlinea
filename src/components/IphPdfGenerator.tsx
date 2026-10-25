@@ -329,12 +329,12 @@ export function extraerCamposNarrativa(narrativa: string): {
   const entidad = /\bChihuahua\b/i.test(plano) ? "Chihuahua" : "";
   const latitud = grupo(/latitud\s*[:=]?\s*(-?\d{1,2}\.\d+)/i);
   const longitud = grupo(/longitud\s*[:=]?\s*(-?\d{1,3}\.\d+)/i);
-  const numeroExterior = obtener("n[uú]mero exterior|no\\.? exterior") || grupo(/(?:n[uú]mero|no\\.?)\\s+ext\\.?\\s*[:#-]?\\s*(\\d+[a-zA-Z]?)/i);
-  const numeroInterior = obtener("n[uú]mero interior|no\\.? interior") || grupo(/(?:n[uú]mero|no\\.?)\\s+int\\.?\\s*[:#-]?\\s*([a-zA-Z0-9-]+)/i);
-  const codigoPostal = obtener("c[oó]digo postal|C\\.?P\\.?") || grupo(/(?:c[oó]digo postal|C\\.?P\\.?)[\\s:#-]*(\\d{5})/i);
-  const entreCalle = obtener("entre calle|entre calles") || grupo(/entre calles?\\s+([^,.;]+?)(?=\\s+y calle|,|[.;]|$)/i);
-  const yCalle = obtener("y calle") || grupo(/\\by calle\\s+([^,.;]+)/i);
-  const fechaGeneral = grupo(/(?:fecha(?: de los hechos)?|el d[ií]a|d[ií]a)\\s*[:,-]?\\s*(\\d{1,2}[/-]\\d{1,2}[/-]\\d{4})/i);
+  const numeroExterior = obtener("n[uú]mero exterior|no\\.? exterior") || grupo(/(?:n[uú]mero|no\.?)\s+ext\.?\s*[:#-]?\s*(\d+[a-zA-Z]?)/i);
+  const numeroInterior = obtener("n[uú]mero interior|no\\.? interior") || grupo(/(?:n[uú]mero|no\.?)\s+int\.?\s*[:#-]?\s*([a-zA-Z0-9-]+)/i);
+  const codigoPostal = obtener("c[oó]digo postal|C\\.?P\\.?") || grupo(/(?:c[oó]digo postal|C\.?P\.?)[\s:#-]*(\d{5})/i);
+  const entreCalle = obtener("entre calle|entre calles") || grupo(/entre calles?\s+([^,.;]+?)(?=\s+y calle|,|[.;]|$)/i);
+  const yCalle = obtener("y calle") || grupo(/\by calle\s+([^,.;]+)/i);
+  const fechaGeneral = grupo(/(?:fecha(?: de los hechos)?|el d[ií]a|d[ií]a)\s*[:,-]?\s*(\d{1,2}[/-]\d{1,2}[/-]\d{4})/i);
   const fechaConocimiento = obtener("fecha de conocimiento|fecha del reporte") || fechaGeneral;
   const fechaArribo = obtener("fecha de arribo|fecha de llegada") || fechaGeneral;
   const fechaDetencion = obtener("fecha de detenci[oó]n") || fechaGeneral;
