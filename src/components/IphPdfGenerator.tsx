@@ -300,6 +300,16 @@ export function extraerCamposNarrativa(narrativa: string): {
   entidad: string;
   latitud: string;
   longitud: string;
+  numeroExterior: string;
+  numeroInterior: string;
+  codigoPostal: string;
+  entreCalle: string;
+  yCalle: string;
+  fechaConocimiento: string;
+  fechaArribo: string;
+  fechaDetencion: string;
+  tipoConocimiento: "llamada" | "presencia" | "queja" | "otro" | "";
+  tipoLugar: "hogar" | "viaPublica" | "transporte" | "taxi" | "metro" | "otro" | "";
   horas: Record<string, string>;
 } {
   const texto = normalizarTexto(narrativa);
