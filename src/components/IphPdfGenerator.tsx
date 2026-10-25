@@ -386,7 +386,7 @@ export function extraerCamposNarrativa(narrativa: string): {
   const horaEntrega = obtener("hora de entrega|hora de presentaci[oó]n");
   const policiaEntrega = obtener("polic[ií]a que entrega|elemento que entrega|oficial que entrega");
   const autoridadRecibe = obtener("juez o autoridad competente que recibe|autoridad que recibe|persona que recibe");
-  const lugar = lugarEtiquetado || [calle, numeroExterior, colonia && \`colonia \${colonia}\`, municipio].filter(Boolean).join(", ");
+  const lugar = lugarEtiquetado || [calle, numeroExterior, colonia && `colonia ${colonia}`, municipio].filter(Boolean).join(", ");
   return {
     falta, lugar, conocimientoReporte: reporte, calle, cruce, colonia, municipio, entidad,
     latitud, longitud, numeroExterior, numeroInterior, codigoPostal, entreCalle, yCalle,
@@ -483,7 +483,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     });
   }
   if (placaMatch?.[1]) {
-    page1.drawText(\`Placa \${placaMatch[1]}\`, {
+    page1.drawText(`Placa ${placaMatch[1]}`, {
       x: 40, y: 568, size: 7.0, font, color: rgb(0.05, 0.05, 0.05),
     });
   }
