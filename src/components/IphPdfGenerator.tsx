@@ -583,6 +583,117 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   // Apartado 5.1: extraer sólo frases explícitas sobre resistencia y uso de la fuerza.
   dibujarUsoFuerza(page3Detencion, props.narrativa, font);
 
+  // SECCIÓN 6.1: datos de la persona detenida. Sólo se imprimen valores
+  // que aparezcan expresamente etiquetados en la narrativa.
+  const nombreDetenido = extraidos.nombreDetenido.trim();
+  const partesDetenido = nombreDetenido.split(/\s+/).filter(Boolean);
+  if (partesDetenido.length >= 4) {
+    drawWrappedValue(page3Detencion, partesDetenido[partesDetenido.length - 2], font, {
+      x: 42, y: 362, width: 145, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    });
+    drawWrappedValue(page3Detencion, partesDetenido[partesDetenido.length - 1], font, {
+      x: 204, y: 362, width: 145, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    });
+    drawWrappedValue(page3Detencion, partesDetenido.slice(0, -2).join(" "), font, {
+      x: 368, y: 362, width: 180, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    });
+  } else if (nombreDetenido) {
+    drawWrappedValue(page3Detencion, nombreDetenido, font, {
+      x: 368, y: 362, width: 180, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    });
+  }
+  drawWrappedValue(page3Detencion, extraidos.aliasDetenido, font, {
+    x: 42, y: 339, width: 500, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+  });
+  if (/^mujer|^femenino|^f$/i.test(extraidos.sexoDetenido.trim())) marcar(page3Detencion, 177, 294, font);
+  if (/^hombre|^masculino|^m$/i.test(extraidos.sexoDetenido.trim())) marcar(page3Detencion, 208, 294, font);
+  drawDate(page3Detencion, extraidos.fechaNacimientoDetenido, 354, 294, 13.0, font);
+  if (/mexican/i.test(extraidos.nacionalidadDetenido)) marcar(page3Detencion, 176, 267, font);
+  if (/extranj/i.test(extraidos.nacionalidadDetenido)) marcar(page3Detencion, 246, 267, font);
+  drawWrappedValue(page3Detencion, extraidos.curpDetenido, font, {
+    x: 344, y: 267, width: 210, maxLines: 1, fontSize: 6.3, lineHeight: 7,
+  });
+  if (/INE|credencial/i.test(extraidos.documentoDetenido)) marcar(page3Detencion, 266, 325, font);
+  if (/licencia/i.test(extraidos.documentoDetenido)) marcar(page3Detencion, 322, 325, font);
+  if (/pasaporte/i.test(extraidos.documentoDetenido)) marcar(page3Detencion, 395, 325, font);
+
+  // SECCIÓN 6.2: domicilio de la persona detenida, sólo cuando esté expresamente señalado.
+  const domicilioDetenido = extraerCamposNarrativa(extraidos.domicilioDetenido);
+  drawWrappedValue(page3Detencion, domicilioDetenido.calle, font, {
+    x: 151, y: 226, width: 400, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+  drawWrappedValue(page3Detencion, domicilioDetenido.colonia, font, {
+    x: 151, y: 211, width: 400, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+  drawWrappedValue(page3Detencion, domicilioDetenido.numeroExterior, font, {
+    x: 111, y: 195, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+  drawWrappedValue(page3Detencion, domicilioDetenido.numeroInterior, font, {
+    x: 111, y: 179, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+  drawWrappedValue(page3Detencion, domicilioDetenido.codigoPostal, font, {
+    x: 111, y: 163, width: 45, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+  drawWrappedValue(page3Detencion, domicilioDetenido.entidad, font, {
+    x: 204, y: 140, width: 348, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+  drawWrappedValue(page3Detencion, domicilioDetenido.municipio, font, {
+    x: 204, y: 124, width: 348, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+
+  // SECCIÓN 6.4: ubicación de detención distinta del lugar de los hechos.
+  // No se copia automáticamente el lugar original: debe aparecer etiquetada como lugar de detención.
+  const lugarDetencion = extraerCamposNarrativa(extraidos.lugarDetencion);
+  drawWrappedValue(pages[3], lugarDetencion.calle, font, {
+    x: 151, y: 753, width: 400, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+  drawWrappedValue(pages[3], lugarDetencion.colonia, font, {
+    x: 151, y: 735, width: 400, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+  drawWrappedValue(pages[3], lugarDetencion.numeroExterior, font, {
+    x: 111, y: 711, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+  drawWrappedValue(pages[3], lugarDetencion.numeroInterior, font, {
+    x: 111, y: 695, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+  drawWrappedValue(pages[3], lugarDetencion.codigoPostal, font, {
+    x: 111, y: 679, width: 45, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+  drawWrappedValue(pages[3], lugarDetencion.entidad, font, {
+    x: 204, y: 663, width: 348, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+  drawWrappedValue(pages[3], lugarDetencion.municipio, font, {
+    x: 204, y: 646, width: 348, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+
+  // SECCIÓN 7: datos de presentación/entrega sólo cuando estén disponibles.
+  drawWrappedValue(pages[3], extraidos.autoridadEntrega, font, {
+    x: 40, y: 632, width: 510, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+  });
+  drawDate(pages[3], extraidos.fechaEntrega, 155, 610, 6.8, font);
+  drawTime(pages[3], extraidos.horaEntrega, 388, 409, 610, font);
+
+  const policiaEntrega = extraidos.policiaEntrega.trim();
+  const partesPoliciaEntrega = policiaEntrega.split(/\s+/).filter(Boolean);
+  if (partesPoliciaEntrega.length >= 4) {
+    drawWrappedValue(pages[3], partesPoliciaEntrega[partesPoliciaEntrega.length - 2], font, {
+      x: 42, y: 582, width: 235, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    });
+    drawWrappedValue(pages[3], partesPoliciaEntrega[partesPoliciaEntrega.length - 1], font, {
+      x: 42, y: 565, width: 235, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    });
+    drawWrappedValue(pages[3], partesPoliciaEntrega.slice(0, -2).join(" "), font, {
+      x: 42, y: 548, width: 235, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    });
+  } else {
+    drawWrappedValue(pages[3], policiaEntrega, font, {
+      x: 42, y: 548, width: 235, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    });
+  }
+  drawWrappedValue(pages[3], extraidos.autoridadRecibe, font, {
+    x: 290, y: 548, width: 260, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+
   return pdf.save();
 }
 
