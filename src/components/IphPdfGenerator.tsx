@@ -522,10 +522,10 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     yCalle: extraidos.yCalle || extraidosLugar.yCalle,
   };
   drawWrappedValue(page2Narrativa, geo.calle || geo.cruce, font, {
-    x: 151, y: 753, width: 400, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    x: 200, y: 753, width: 350, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.colonia, font, {
-    x: 151, y: 735, width: 400, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    x: 200, y: 735, width: 350, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.numeroExterior, font, {
     x: 111, y: 727, width: 42, maxLines: 1, fontSize: 6.8, lineHeight: 8,
@@ -537,10 +537,10 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     x: 111, y: 695, width: 45, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.entreCalle, font, {
-    x: 252, y: 727, width: 300, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    x: 310, y: 727, width: 240, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.yCalle, font, {
-    x: 252, y: 695, width: 300, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    x: 310, y: 695, width: 240, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.entidad, font, {
     x: 204, y: 681, width: 348, maxLines: 1, fontSize: 6.8, lineHeight: 8,
@@ -565,10 +565,10 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
 
   // SECCIÓN 3.1: las horas de arribo van en las casillas de la izquierda,
   // no en las coordenadas de la hora de conocimiento de la sección 2.
-  drawDate(page1, extraidos.fechaArribo, 133, 134, 8.0, font);
-  drawTime(page1, horas.llegada, 163, 186, 134, font);
-  drawDate(page3Detencion, extraidos.fechaDetencion, 145, 104, 8.5, font);
-  drawTime(page3Detencion, horas.detencion, 357, 395, 104, font);
+  drawDate(page1, extraidos.fechaArribo, 133, 126, 8.0, font);
+  drawTime(page1, horas.llegada, 460, 483, 126, font);
+  drawDate(page3Detencion, extraidos.fechaDetencion, 145, 98, 8.5, font);
+  drawTime(page3Detencion, horas.detencion, 357, 395, 98, font);
 
   // SECCIÓN 3.2: marcar únicamente el tipo de lugar expresamente identificable.
   if (extraidos.tipoLugar === "hogar") marcar(page1, 157, 83, font);
@@ -624,10 +624,10 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   // SECCIÓN 6.2: domicilio de la persona detenida, sólo cuando esté expresamente señalado.
   const domicilioDetenido = extraerCamposNarrativa(extraidos.domicilioDetenido);
   drawWrappedValue(page3Detencion, domicilioDetenido.calle, font, {
-    x: 151, y: 226, width: 400, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 200, y: 226, width: 350, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(page3Detencion, domicilioDetenido.colonia, font, {
-    x: 151, y: 211, width: 400, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 200, y: 211, width: 350, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(page3Detencion, domicilioDetenido.numeroExterior, font, {
     x: 111, y: 195, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
@@ -649,30 +649,30 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   // No se copia automáticamente el lugar original: debe aparecer etiquetada como lugar de detención.
   const lugarDetencion = extraerCamposNarrativa(extraidos.lugarDetencion);
   drawWrappedValue(pages[3], lugarDetencion.calle, font, {
-    x: 151, y: 753, width: 400, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 200, y: 753, width: 350, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(pages[3], lugarDetencion.colonia, font, {
-    x: 151, y: 735, width: 400, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 200, y: 735, width: 350, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(pages[3], lugarDetencion.numeroExterior, font, {
-    x: 111, y: 711, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 111, y: 727, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(pages[3], lugarDetencion.numeroInterior, font, {
-    x: 111, y: 695, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 111, y: 711, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(pages[3], lugarDetencion.codigoPostal, font, {
-    x: 111, y: 679, width: 45, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 111, y: 695, width: 45, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(pages[3], lugarDetencion.entidad, font, {
-    x: 204, y: 663, width: 348, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 204, y: 681, width: 348, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(pages[3], lugarDetencion.municipio, font, {
-    x: 204, y: 646, width: 348, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 204, y: 664, width: 348, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
 
   // SECCIÓN 7: datos de presentación/entrega sólo cuando estén disponibles.
   drawWrappedValue(pages[3], extraidos.autoridadEntrega, font, {
-    x: 40, y: 632, width: 510, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    x: 40, y: 624, width: 510, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawDate(pages[3], extraidos.fechaEntrega, 155, 610, 6.8, font);
   drawTime(pages[3], extraidos.horaEntrega, 388, 409, 610, font);
@@ -681,13 +681,13 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   const partesPoliciaEntrega = policiaEntrega.split(/\s+/).filter(Boolean);
   if (partesPoliciaEntrega.length >= 4) {
     drawWrappedValue(pages[3], partesPoliciaEntrega[partesPoliciaEntrega.length - 2], font, {
-      x: 42, y: 582, width: 235, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+      x: 42, y: 570, width: 235, maxLines: 1, fontSize: 6.5, lineHeight: 7,
     });
     drawWrappedValue(pages[3], partesPoliciaEntrega[partesPoliciaEntrega.length - 1], font, {
-      x: 42, y: 565, width: 235, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+      x: 42, y: 557, width: 235, maxLines: 1, fontSize: 6.5, lineHeight: 7,
     });
     drawWrappedValue(pages[3], partesPoliciaEntrega.slice(0, -2).join(" "), font, {
-      x: 42, y: 548, width: 235, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+      x: 42, y: 544, width: 235, maxLines: 1, fontSize: 6.5, lineHeight: 7,
     });
   } else {
     drawWrappedValue(pages[3], policiaEntrega, font, {
@@ -695,7 +695,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     });
   }
   drawWrappedValue(pages[3], extraidos.autoridadRecibe, font, {
-    x: 290, y: 548, width: 260, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 290, y: 516, width: 260, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
 
   return pdf.save();
