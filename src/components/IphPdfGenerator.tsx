@@ -375,15 +375,15 @@ export function extraerCamposNarrativa(narrativa: string): {
     /\bmetro\b/i.test(plano) ? "metro" :
     /\b(?:transporte p[uú]blico|cami[oó]n|microb[uú]s|combi)\b/i.test(plano) ? "transporte" :
     /\b(?:domicilio particular|casa habitaci[oó]n|hogar)\b/i.test(plano) ? "hogar" : "";
-  const nombreDetenido = obtener("nombre de la persona detenida|nombre completo del detenido|nombre del detenido|persona detenida");
-  const aliasDetenido = obtener("alias|apodo");
-  const sexoDetenido = obtener("sexo de la persona detenida|sexo");
+  const nombreDetenido = obtener("nombre de la persona detenida|nombre completo del detenido|nombre del detenido|persona detenida") || grupo(/(?:quien dijo llamarse|dijo llamarse|manifest[oó] llamarse|se identific[oó] como|quien responde al nombre de)\\s+([^,.;]+?)(?=\\s+(?:con domicilio|conocido como|alias|de \\d+ a[nñ]os)|[,.;]|$)/i);
+  const aliasDetenido = obtener("alias|apodo") || grupo(/(?:alias|apodad[oa] como|conocid[oa] como)\\s+([^,.;]+)/i);
+  const sexoDetenido = obtener("sexo de la persona detenida|sexo") || grupo(/persona\\s+(?:del sexo\\s+)?(masculin[oa]|femenin[oa]|hombre|mujer)/i);
   const fechaNacimientoDetenido = obtener("fecha de nacimiento");
-  const nacionalidadDetenido = obtener("nacionalidad");
+  const nacionalidadDetenido = obtener("nacionalidad") || grupo(/nacionalidad\\s+(mexicana|extranjera)/i);
   const curpDetenido = obtener("CURP");
-  const domicilioDetenido = obtener("domicilio de la persona detenida|domicilio del detenido|domicilio particular");
+  const domicilioDetenido = obtener("domicilio de la persona detenida|domicilio del detenido|domicilio particular") || grupo(/(?:con domicilio (?:en|ubicado en)|domiciliad[oa] en)\\s+([^.;]+)/i);
   const lugarDetencion = obtener("lugar de la detenci[oó]n|domicilio de la detenci[oó]n|ubicaci[oó]n de la detenci[oó]n");
-  const documentoDetenido = obtener("documento de identificaci[oó]n|identificaci[oó]n presentada|credencial INE|licencia|pasaporte");
+  const documentoDetenido = obtener("documento de identificaci[oó]n|identificaci[oó]n presentada|credencial INE|licencia|pasaporte") || grupo(/(?:se identific[oó] con|present[oó])\\s+(credencial INE|INE|licencia|pasaporte)/i);
   const autoridadEntrega = obtener("juzgado o instituci[oó]n correspondiente|juzgado|instituci[oó]n correspondiente|autoridad competente");
   const fechaEntrega = obtener("fecha de entrega|fecha de presentaci[oó]n");
   const horaEntrega = obtener("hora de entrega|hora de presentaci[oó]n");
@@ -608,8 +608,8 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   drawWrappedValue(page3Detencion, extraidos.aliasDetenido, font, {
     x: 42, y: 339, width: 500, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
-  if (/^mujer|^femenino|^f$/i.test(extraidos.sexoDetenido.trim())) marcar(page3Detencion, 177, 294, font);
-  if (/^hombre|^masculino|^m$/i.test(extraidos.sexoDetenido.trim())) marcar(page3Detencion, 208, 294, font);
+  if (/^mujer|^femenin[oa]|^f$/i.test(extraidos.sexoDetenido.trim())) marcar(page3Detencion, 177, 294, font);
+  if (/^hombre|^masculin[oa]|^m$/i.test(extraidos.sexoDetenido.trim())) marcar(page3Detencion, 208, 294, font);
   drawDate(page3Detencion, extraidos.fechaNacimientoDetenido, 354, 294, 13.0, font);
   if (/mexican/i.test(extraidos.nacionalidadDetenido)) marcar(page3Detencion, 176, 267, font);
   if (/extranj/i.test(extraidos.nacionalidadDetenido)) marcar(page3Detencion, 246, 267, font);
