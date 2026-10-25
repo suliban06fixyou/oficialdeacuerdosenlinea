@@ -395,10 +395,10 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     longitud: extraidos.longitud || extraidosLugar.longitud,
   };
   drawWrappedValue(page2Narrativa, geo.calle || geo.cruce, font, {
-    x: 145, y: 760, width: 405, maxLines: 1, fontSize: 7.0, lineHeight: 8,
+    x: 72, y: 753, width: 115, maxLines: 1, fontSize: 7.0, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.colonia, font, {
-    x: 148, y: 741, width: 390, maxLines: 1, fontSize: 7.0, lineHeight: 8,
+    x: 72, y: 734, width: 115, maxLines: 1, fontSize: 7.0, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.entidad, font, {
     x: 198, y: 682, width: 160, maxLines: 1, fontSize: 7.0, lineHeight: 8,
