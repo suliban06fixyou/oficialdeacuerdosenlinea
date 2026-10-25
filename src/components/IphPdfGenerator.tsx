@@ -588,6 +588,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
 
   // SECCIÓN 6.1: datos de la persona detenida. Sólo se imprimen valores
   // que aparezcan expresamente etiquetados en la narrativa.
+  if (extraerDatosUsoFuerza(props.narrativa).detencion) marcar(page3Detencion, 160, 402, font);
   const nombreDetenido = extraidos.nombreDetenido.trim();
   const partesDetenido = nombreDetenido.split(/\s+/).filter(Boolean);
   if (partesDetenido.length >= 4) {
