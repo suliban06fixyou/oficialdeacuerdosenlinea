@@ -310,6 +310,19 @@ export function extraerCamposNarrativa(narrativa: string): {
   fechaDetencion: string;
   tipoConocimiento: "llamada" | "presencia" | "queja" | "otro" | "";
   tipoLugar: "hogar" | "viaPublica" | "transporte" | "taxi" | "metro" | "otro" | "";
+  nombreDetenido: string;
+  aliasDetenido: string;
+  sexoDetenido: string;
+  fechaNacimientoDetenido: string;
+  nacionalidadDetenido: string;
+  curpDetenido: string;
+  domicilioDetenido: string;
+  documentoDetenido: string;
+  autoridadEntrega: string;
+  fechaEntrega: string;
+  horaEntrega: string;
+  policiaEntrega: string;
+  autoridadRecibe: string;
   horas: Record<string, string>;
 } {
   const texto = normalizarTexto(narrativa);
@@ -358,11 +371,27 @@ export function extraerCamposNarrativa(narrativa: string): {
     /\bmetro\b/i.test(plano) ? "metro" :
     /\b(?:transporte p[uú]blico|cami[oó]n|microb[uú]s|combi)\b/i.test(plano) ? "transporte" :
     /\b(?:domicilio particular|casa habitaci[oó]n|hogar)\b/i.test(plano) ? "hogar" : "";
+  const nombreDetenido = obtener("nombre de la persona detenida|nombre completo del detenido|nombre del detenido|persona detenida");
+  const aliasDetenido = obtener("alias|apodo");
+  const sexoDetenido = obtener("sexo de la persona detenida|sexo");
+  const fechaNacimientoDetenido = obtener("fecha de nacimiento");
+  const nacionalidadDetenido = obtener("nacionalidad");
+  const curpDetenido = obtener("CURP");
+  const domicilioDetenido = obtener("domicilio de la persona detenida|domicilio del detenido|domicilio particular");
+  const documentoDetenido = obtener("documento de identificaci[oó]n|identificaci[oó]n presentada|credencial INE|licencia|pasaporte");
+  const autoridadEntrega = obtener("juzgado o instituci[oó]n correspondiente|juzgado|instituci[oó]n correspondiente|autoridad competente");
+  const fechaEntrega = obtener("fecha de entrega|fecha de presentaci[oó]n");
+  const horaEntrega = obtener("hora de entrega|hora de presentaci[oó]n");
+  const policiaEntrega = obtener("polic[ií]a que entrega|elemento que entrega|oficial que entrega");
+  const autoridadRecibe = obtener("juez o autoridad competente que recibe|autoridad que recibe|persona que recibe");
   const lugar = lugarEtiquetado || [calle, numeroExterior, colonia && \`colonia \${colonia}\`, municipio].filter(Boolean).join(", ");
   return {
     falta, lugar, conocimientoReporte: reporte, calle, cruce, colonia, municipio, entidad,
     latitud, longitud, numeroExterior, numeroInterior, codigoPostal, entreCalle, yCalle,
     fechaConocimiento, fechaArribo, fechaDetencion, tipoConocimiento, tipoLugar, horas,
+    nombreDetenido, aliasDetenido, sexoDetenido, fechaNacimientoDetenido, nacionalidadDetenido,
+    curpDetenido, domicilioDetenido, documentoDetenido, autoridadEntrega, fechaEntrega, horaEntrega,
+    policiaEntrega, autoridadRecibe,
   };
 }
 
