@@ -382,23 +382,34 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     x: 31, y: 54, width: page1.getWidth() - 62, maxLines: 2, fontSize: 7.0, lineHeight: 8.2,
   });
 
-  // SECCIÓN 3.3: dirección estructurada. No se inventan coordenadas geográficas.
-  drawWrappedValue(page2Narrativa, extraidos.calle || extraidos.cruce, font, {
+  // SECCIÓN 3.3: combina lo extraído de la narrativa con el lugar capturado en pantalla.
+  // Las coordenadas sólo se imprimen si se proporcionaron expresamente.
+  const extraidosLugar = extraerCamposNarrativa(props.lugar);
+  const geo = {
+    calle: extraidos.calle || extraidosLugar.calle,
+    cruce: extraidos.cruce || extraidosLugar.cruce,
+    colonia: extraidos.colonia || extraidosLugar.colonia,
+    municipio: extraidos.municipio || extraidosLugar.municipio,
+    entidad: extraidos.entidad || extraidosLugar.entidad,
+    latitud: extraidos.latitud || extraidosLugar.latitud,
+    longitud: extraidos.longitud || extraidosLugar.longitud,
+  };
+  drawWrappedValue(page2Narrativa, geo.calle || geo.cruce, font, {
     x: 145, y: 760, width: 405, maxLines: 1, fontSize: 7.0, lineHeight: 8,
   });
-  drawWrappedValue(page2Narrativa, extraidos.colonia, font, {
+  drawWrappedValue(page2Narrativa, geo.colonia, font, {
     x: 148, y: 741, width: 390, maxLines: 1, fontSize: 7.0, lineHeight: 8,
   });
-  drawWrappedValue(page2Narrativa, extraidos.entidad, font, {
+  drawWrappedValue(page2Narrativa, geo.entidad, font, {
     x: 198, y: 682, width: 160, maxLines: 1, fontSize: 7.0, lineHeight: 8,
   });
-  drawWrappedValue(page2Narrativa, extraidos.municipio, font, {
+  drawWrappedValue(page2Narrativa, geo.municipio, font, {
     x: 198, y: 664, width: 160, maxLines: 1, fontSize: 7.0, lineHeight: 8,
   });
-  drawWrappedValue(page2Narrativa, extraidos.latitud, font, {
+  drawWrappedValue(page2Narrativa, geo.latitud, font, {
     x: 205, y: 601, width: 75, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
-  drawWrappedValue(page2Narrativa, extraidos.longitud, font, {
+  drawWrappedValue(page2Narrativa, geo.longitud, font, {
     x: 405, y: 601, width: 75, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
 
