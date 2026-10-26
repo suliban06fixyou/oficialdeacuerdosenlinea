@@ -566,7 +566,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   // SECCIÓN 3.1: las horas de arribo van en las casillas de la izquierda,
   // no en las coordenadas de la hora de conocimiento de la sección 2.
   drawDate(page1, extraidos.fechaArribo, 133, 126, 8.0, font);
-  drawTime(page1, horas.llegada, 460, 483, 126, font);
+  drawTime(page1, horas.llegada, 458, 476, 126, font);
   drawDate(page3Detencion, extraidos.fechaDetencion, 145, 98, 8.5, font);
   drawTime(page3Detencion, horas.detencion, 357, 395, 98, font);
 
@@ -672,7 +672,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
 
   // SECCIÓN 7: datos de presentación/entrega sólo cuando estén disponibles.
   drawWrappedValue(pages[3], extraidos.autoridadEntrega, font, {
-    x: 40, y: 624, width: 510, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    x: 180, y: 624, width: 370, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawDate(pages[3], extraidos.fechaEntrega, 155, 610, 6.8, font);
   drawTime(pages[3], extraidos.horaEntrega, 388, 409, 610, font);
@@ -681,21 +681,21 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   const partesPoliciaEntrega = policiaEntrega.split(/\s+/).filter(Boolean);
   if (partesPoliciaEntrega.length >= 4) {
     drawWrappedValue(pages[3], partesPoliciaEntrega[partesPoliciaEntrega.length - 2], font, {
-      x: 42, y: 570, width: 235, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+      x: 85, y: 570, width: 192, maxLines: 1, fontSize: 6.5, lineHeight: 7,
     });
     drawWrappedValue(pages[3], partesPoliciaEntrega[partesPoliciaEntrega.length - 1], font, {
-      x: 42, y: 557, width: 235, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+      x: 85, y: 557, width: 192, maxLines: 1, fontSize: 6.5, lineHeight: 7,
     });
     drawWrappedValue(pages[3], partesPoliciaEntrega.slice(0, -2).join(" "), font, {
-      x: 42, y: 544, width: 235, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+      x: 85, y: 544, width: 192, maxLines: 1, fontSize: 6.5, lineHeight: 7,
     });
   } else {
     drawWrappedValue(pages[3], policiaEntrega, font, {
-      x: 42, y: 548, width: 235, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+      x: 85, y: 544, width: 192, maxLines: 1, fontSize: 6.5, lineHeight: 7,
     });
   }
   drawWrappedValue(pages[3], extraidos.autoridadRecibe, font, {
-    x: 290, y: 516, width: 260, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 345, y: 516, width: 205, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
 
   return pdf.save();
