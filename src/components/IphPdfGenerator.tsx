@@ -202,7 +202,7 @@ export function extraerDatosUsoFuerza(narrativa: string): { resistencia: string;
   // que estén expresamente narrados; una agresión verbal no se convierte por sí sola
   // en resistencia física ni justifica inferir un nivel de fuerza.
   const resistencia = frases
-    .filter((frase) => /resisten|se neg[oó] a obedecer|agresi[oó]n|conductas? verbales? agresivas?|palabras ofensivas|se opuso|forceje|intent[oó] evadir/i.test(frase))
+    .filter((frase) => /resisten|se neg[oó] a obedecer|agresi[oó]n|agresiv[oa]s?|conductas? verbales? agresivas?|palabras ofensivas|se opuso|forceje|intent[oó] evadir/i.test(frase))
     .join(" ");
 
   // Se conserva lo que la narrativa diga expresamente sobre técnicas/medios empleados.
