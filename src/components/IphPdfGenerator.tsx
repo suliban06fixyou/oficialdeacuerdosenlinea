@@ -377,7 +377,7 @@ export function extraerCamposNarrativa(narrativa: string): {
     /\b(?:domicilio particular|casa habitaci[oó]n|hogar)\b/i.test(plano) ? "hogar" : "";
   const nombreDetenido = obtener("nombre de la persona detenida|nombre completo del detenido|nombre del detenido|persona detenida") || grupo(/(?:quien dijo llamarse|dijo llamarse|manifest[oó] llamarse|se identific[oó] como|quien responde al nombre de)\s+([^,.;]+?)(?=\s+(?:con domicilio|conocido como|alias|de \d+ a[nñ]os)|[,.;]|$)/i);
   const aliasDetenido = obtener("alias|apodo") || grupo(/(?:alias|apodad[oa] como|conocid[oa] como)\s+([^,.;]+)/i);
-  const sexoDetenido = obtener("sexo de la persona detenida|sexo") || grupo(/persona\s+(?:del sexo\s+)?(masculin[oa]|femenin[oa]|hombre|mujer)/i);
+  const sexoDetenido = obtener("sexo de la persona detenida|sexo") || grupo(/(?:\bsexo\s+|\bpersona\s+(?:del sexo\s+)?)(masculin[oa]|femenin[oa]|hombre|mujer)\b/i);
   const fechaNacimientoDetenido = obtener("fecha de nacimiento");
   const nacionalidadDetenido = obtener("nacionalidad") || grupo(/nacionalidad\s+(mexicana|extranjera)/i);
   const curpDetenido = obtener("CURP");
