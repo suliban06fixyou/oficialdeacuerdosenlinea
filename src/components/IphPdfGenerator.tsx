@@ -522,37 +522,37 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     yCalle: extraidos.yCalle || extraidosLugar.yCalle,
   };
   drawWrappedValue(page2Narrativa, geo.calle || geo.cruce, font, {
-    x: 200, y: 753, width: 350, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    x: 195, y: 752, width: 355, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.colonia, font, {
-    x: 200, y: 735, width: 350, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    x: 190, y: 738, width: 360, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.numeroExterior, font, {
-    x: 111, y: 727, width: 42, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    x: 111, y: 722, width: 42, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.numeroInterior, font, {
-    x: 111, y: 711, width: 42, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    x: 111, y: 706, width: 42, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.codigoPostal, font, {
-    x: 111, y: 695, width: 45, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    x: 111, y: 690, width: 45, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.entreCalle, font, {
-    x: 310, y: 727, width: 240, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    x: 290, y: 722, width: 260, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.yCalle, font, {
-    x: 310, y: 695, width: 240, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    x: 286, y: 698, width: 264, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.entidad, font, {
-    x: 204, y: 681, width: 348, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    x: 190, y: 675, width: 362, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.municipio, font, {
-    x: 204, y: 664, width: 348, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    x: 190, y: 661, width: 362, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.latitud, font, {
-    x: 205, y: 592, width: 75, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 205, y: 586, width: 75, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(page2Narrativa, geo.longitud, font, {
-    x: 405, y: 592, width: 75, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 405, y: 586, width: 75, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
 
   // SECCIÓN 2.1: marcar la vía de conocimiento sólo cuando la narrativa la identifica.
@@ -565,8 +565,8 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
 
   // SECCIÓN 3.1: las horas de arribo van en las casillas de la izquierda,
   // no en las coordenadas de la hora de conocimiento de la sección 2.
-  drawDate(page1, extraidos.fechaArribo, 133, 126, 8.0, font);
-  drawTime(page1, horas.llegada, 458, 476, 126, font);
+  drawDate(page1, extraidos.fechaArribo, 133, 126, 11.5, font);
+  drawTime(page1, horas.llegada, 415, 445, 126, font);
   drawDate(page3Detencion, extraidos.fechaDetencion, 145, 98, 8.5, font);
   drawTime(page3Detencion, horas.detencion, 357, 395, 98, font);
 
@@ -624,55 +624,67 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   // SECCIÓN 6.2: domicilio de la persona detenida, sólo cuando esté expresamente señalado.
   const domicilioDetenido = extraerCamposNarrativa(extraidos.domicilioDetenido);
   drawWrappedValue(page3Detencion, domicilioDetenido.calle, font, {
-    x: 200, y: 226, width: 350, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 172, y: 222, width: 378, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(page3Detencion, domicilioDetenido.colonia, font, {
-    x: 200, y: 211, width: 350, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 172, y: 208, width: 378, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(page3Detencion, domicilioDetenido.numeroExterior, font, {
-    x: 111, y: 195, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 111, y: 190, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(page3Detencion, domicilioDetenido.numeroInterior, font, {
-    x: 111, y: 179, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 111, y: 173, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(page3Detencion, domicilioDetenido.codigoPostal, font, {
-    x: 111, y: 163, width: 45, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 111, y: 157, width: 45, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+  drawWrappedValue(page3Detencion, domicilioDetenido.entreCalle, font, {
+    x: 287, y: 190, width: 264, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+  drawWrappedValue(page3Detencion, domicilioDetenido.yCalle, font, {
+    x: 285, y: 165, width: 266, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(page3Detencion, domicilioDetenido.entidad, font, {
-    x: 204, y: 140, width: 348, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 140, y: 143, width: 412, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(page3Detencion, domicilioDetenido.municipio, font, {
-    x: 204, y: 124, width: 348, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 140, y: 129, width: 412, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
 
   // SECCIÓN 6.4: ubicación de detención distinta del lugar de los hechos.
   // No se copia automáticamente el lugar original: debe aparecer etiquetada como lugar de detención.
   const lugarDetencion = extraerCamposNarrativa(extraidos.lugarDetencion);
   drawWrappedValue(pages[3], lugarDetencion.calle, font, {
-    x: 200, y: 753, width: 350, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 172, y: 750, width: 378, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(pages[3], lugarDetencion.colonia, font, {
-    x: 200, y: 735, width: 350, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 172, y: 733, width: 378, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(pages[3], lugarDetencion.numeroExterior, font, {
-    x: 111, y: 727, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 111, y: 716, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(pages[3], lugarDetencion.numeroInterior, font, {
-    x: 111, y: 711, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 111, y: 702, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(pages[3], lugarDetencion.codigoPostal, font, {
-    x: 111, y: 695, width: 45, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 111, y: 687, width: 45, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+  drawWrappedValue(pages[3], lugarDetencion.entreCalle, font, {
+    x: 290, y: 716, width: 260, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
+  drawWrappedValue(pages[3], lugarDetencion.yCalle, font, {
+    x: 286, y: 694, width: 264, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(pages[3], lugarDetencion.entidad, font, {
-    x: 204, y: 681, width: 348, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 140, y: 671, width: 412, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(pages[3], lugarDetencion.municipio, font, {
-    x: 204, y: 664, width: 348, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 140, y: 658, width: 412, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
 
   // SECCIÓN 7: datos de presentación/entrega sólo cuando estén disponibles.
   drawWrappedValue(pages[3], extraidos.autoridadEntrega, font, {
-    x: 180, y: 624, width: 370, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+    x: 195, y: 622, width: 355, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawDate(pages[3], extraidos.fechaEntrega, 155, 610, 6.8, font);
   drawTime(pages[3], extraidos.horaEntrega, 388, 409, 610, font);
@@ -681,21 +693,21 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   const partesPoliciaEntrega = policiaEntrega.split(/\s+/).filter(Boolean);
   if (partesPoliciaEntrega.length >= 4) {
     drawWrappedValue(pages[3], partesPoliciaEntrega[partesPoliciaEntrega.length - 2], font, {
-      x: 85, y: 570, width: 192, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+      x: 106, y: 570, width: 171, maxLines: 1, fontSize: 6.5, lineHeight: 7,
     });
     drawWrappedValue(pages[3], partesPoliciaEntrega[partesPoliciaEntrega.length - 1], font, {
-      x: 85, y: 557, width: 192, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+      x: 106, y: 557, width: 171, maxLines: 1, fontSize: 6.5, lineHeight: 7,
     });
     drawWrappedValue(pages[3], partesPoliciaEntrega.slice(0, -2).join(" "), font, {
-      x: 85, y: 544, width: 192, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+      x: 106, y: 544, width: 171, maxLines: 1, fontSize: 6.5, lineHeight: 7,
     });
   } else {
     drawWrappedValue(pages[3], policiaEntrega, font, {
-      x: 85, y: 544, width: 192, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+      x: 106, y: 544, width: 171, maxLines: 1, fontSize: 6.5, lineHeight: 7,
     });
   }
   drawWrappedValue(pages[3], extraidos.autoridadRecibe, font, {
-    x: 345, y: 516, width: 205, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 360, y: 519, width: 190, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
 
   return pdf.save();
