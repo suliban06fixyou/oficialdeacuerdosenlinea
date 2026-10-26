@@ -352,8 +352,9 @@ export function extraerCamposNarrativa(narrativa: string): {
   const cruce = grupoUbicacion(/(?:intersecci[oó]n|cruce) de?\s*([^.;]+?)(?:,\s*colonia|,\s*col\.?|\s+colonia|\s+col\.|[.;]|$)/i) || grupo(/(?:intersecci[oó]n|cruce) de?\s*([^.;]+?)(?:,\s*colonia|,\s*col\.?|\s+colonia|\s+col\.|[.;]|$)/i);
   const colonia = grupoUbicacion(/\bcol(?:onia)?\.?\s+([^,.;]+?)(?=,|\s+(?:municipio|Chihuahua)|[.;]|$)/i) || grupo(/\bcol(?:onia)?\.?\s+([^,.;]+?)(?=,|\s+(?:municipio|Chihuahua)|[.;]|$)/i);
   const calle = grupoUbicacion(/(?:^|,\s*)((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i) || cruce || grupo(/(?:^|,\s*)((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i) || grupo(/(?:en|sobre|ubicado en)\s+(?:la intersecci[oó]n de )?((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i);
-  const municipio = grupo(/\bmunicipio de\s+([^,.;]+)/i) || (/\bChihuahua\b/i.test(plano) ? "Chihuahua" : "");
-  const entidad = /\bChihuahua\b/i.test(plano) ? "Chihuahua" : "";
+  const ocurrenciasChihuahua = planoUbicacion.match(/\bChihuahua\b/gi)?.length ?? 0;
+  const municipio = grupo(/\bmunicipio de\s+([^,.;]+)/i) || (ocurrenciasChihuahua >= 1 ? "Chihuahua" : "");
+  const entidad = obtener("entidad federativa|estado") || (ocurrenciasChihuahua >= 2 ? "Chihuahua" : "");
   const latitud = grupo(/latitud\s*[:=]?\s*(-?\d{1,2}\.\d+)/i);
   const longitud = grupo(/longitud\s*[:=]?\s*(-?\d{1,3}\.\d+)/i);
   const numeroExterior = obtener("n[uú]mero exterior|no\\.? exterior") || grupo(/(?:n[uú]mero|no\.?)\s+ext\.?\s*[:#-]?\s*(\d+[a-zA-Z]?)/i) || grupoUbicacion(/(?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,;]{2,80}\s+(\d+[a-zA-Z]?)\s*(?=,|\bcolonia\b|$)/i);
@@ -645,10 +646,10 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     x: 285, y: 165, width: 266, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(page3Detencion, domicilioDetenido.entidad, font, {
-    x: 140, y: 143, width: 412, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 172, y: 143, width: 380, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(page3Detencion, domicilioDetenido.municipio, font, {
-    x: 140, y: 129, width: 412, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 172, y: 129, width: 380, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
 
   // SECCIÓN 6.4: ubicación de detención distinta del lugar de los hechos.
@@ -676,10 +677,10 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     x: 286, y: 694, width: 264, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(pages[3], lugarDetencion.entidad, font, {
-    x: 140, y: 671, width: 412, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 172, y: 671, width: 380, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(pages[3], lugarDetencion.municipio, font, {
-    x: 140, y: 658, width: 412, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 172, y: 658, width: 380, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
 
   // SECCIÓN 7: datos de presentación/entrega sólo cuando estén disponibles.
