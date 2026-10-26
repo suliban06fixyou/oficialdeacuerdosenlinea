@@ -375,15 +375,15 @@ export function extraerCamposNarrativa(narrativa: string): {
     /\bmetro\b/i.test(plano) ? "metro" :
     /\b(?:transporte p[uú]blico|cami[oó]n|microb[uú]s|combi)\b/i.test(plano) ? "transporte" :
     /\b(?:domicilio particular|casa habitaci[oó]n|hogar)\b/i.test(plano) ? "hogar" : "";
-  const nombreDetenido = obtener("nombre de la persona detenida|nombre completo del detenido|nombre del detenido|persona detenida") || grupo(/(?:quien dijo llamarse|dijo llamarse|manifest[oó] llamarse|se identific[oó] como|quien responde al nombre de)\\s+([^,.;]+?)(?=\\s+(?:con domicilio|conocido como|alias|de \\d+ a[nñ]os)|[,.;]|$)/i);
-  const aliasDetenido = obtener("alias|apodo") || grupo(/(?:alias|apodad[oa] como|conocid[oa] como)\\s+([^,.;]+)/i);
-  const sexoDetenido = obtener("sexo de la persona detenida|sexo") || grupo(/persona\\s+(?:del sexo\\s+)?(masculin[oa]|femenin[oa]|hombre|mujer)/i);
+  const nombreDetenido = obtener("nombre de la persona detenida|nombre completo del detenido|nombre del detenido|persona detenida") || grupo(/(?:quien dijo llamarse|dijo llamarse|manifest[oó] llamarse|se identific[oó] como|quien responde al nombre de)\s+([^,.;]+?)(?=\s+(?:con domicilio|conocido como|alias|de \d+ a[nñ]os)|[,.;]|$)/i);
+  const aliasDetenido = obtener("alias|apodo") || grupo(/(?:alias|apodad[oa] como|conocid[oa] como)\s+([^,.;]+)/i);
+  const sexoDetenido = obtener("sexo de la persona detenida|sexo") || grupo(/persona\s+(?:del sexo\s+)?(masculin[oa]|femenin[oa]|hombre|mujer)/i);
   const fechaNacimientoDetenido = obtener("fecha de nacimiento");
-  const nacionalidadDetenido = obtener("nacionalidad") || grupo(/nacionalidad\\s+(mexicana|extranjera)/i);
+  const nacionalidadDetenido = obtener("nacionalidad") || grupo(/nacionalidad\s+(mexicana|extranjera)/i);
   const curpDetenido = obtener("CURP");
-  const domicilioDetenido = obtener("domicilio de la persona detenida|domicilio del detenido|domicilio particular") || grupo(/(?:con domicilio (?:en|ubicado en)|domiciliad[oa] en)\\s+([^.;]+)/i);
+  const domicilioDetenido = obtener("domicilio de la persona detenida|domicilio del detenido|domicilio particular") || grupo(/(?:con domicilio (?:en|ubicado en)|domiciliad[oa] en)\s+([^.;]+)/i);
   const lugarDetencion = obtener("lugar de la detenci[oó]n|domicilio de la detenci[oó]n|ubicaci[oó]n de la detenci[oó]n");
-  const documentoDetenido = obtener("documento de identificaci[oó]n|identificaci[oó]n presentada|credencial INE|licencia|pasaporte") || grupo(/(?:se identific[oó] con|present[oó])\\s+(credencial INE|INE|licencia|pasaporte)/i);
+  const documentoDetenido = obtener("documento de identificaci[oó]n|identificaci[oó]n presentada|credencial INE|licencia|pasaporte") || grupo(/(?:se identific[oó] con|present[oó])\s+(credencial INE|INE|licencia|pasaporte)/i);
   const autoridadEntrega = obtener("juzgado o instituci[oó]n correspondiente|juzgado|instituci[oó]n correspondiente|autoridad competente");
   const fechaEntrega = obtener("fecha de entrega|fecha de presentaci[oó]n");
   const horaEntrega = obtener("hora de entrega|hora de presentaci[oó]n");
