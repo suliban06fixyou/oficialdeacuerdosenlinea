@@ -133,6 +133,20 @@ describe("extracción de campos etiquetados de la narrativa", () => {
     expect(result.autoridadRecibe).toBe("Juez Cívico");
   });
 
+  test("rescata nombre y domicilio expresados naturalmente, sin etiquetas de formulario", () => {
+    const result = extraerCamposNarrativa(
+      "A las 10:01 horas se recibió por radio un reporte por persona consumiendo bebidas alcohólicas en vía pública en Calle Reforma 123, colonia Centro. La persona, quien dijo llamarse Juan Carlos Pérez López, de sexo masculino, con domicilio en Calle Ficticia 22, colonia Centro, fue detenida a las 10:20 horas."
+    );
+    expect(result.calle).toContain("Calle Reforma 123");
+    expect(result.numeroExterior).toBe("123");
+    expect(result.colonia).toBe("Centro");
+    expect(result.tipoConocimiento).toBe("llamada");
+    expect(result.tipoLugar).toBe("viaPublica");
+    expect(result.nombreDetenido).toBe("Juan Carlos Pérez López");
+    expect(result.sexoDetenido).toBe("masculino");
+    expect(result.domicilioDetenido).toContain("Calle Ficticia 22");
+  });
+
   test("recupera el nombre del policía responsable sin requerir etiquetas en la narrativa", () => {
     // El nombre se captura en la pantalla; el generador debe imprimirlo en la sección 1.1.
     expect("Saúl René Mendoza Mendoza".trim()).toBeTruthy();
