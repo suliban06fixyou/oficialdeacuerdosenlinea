@@ -366,7 +366,7 @@ export function extraerCamposNarrativa(narrativa: string): {
   const fechaArribo = obtener("fecha de arribo|fecha de llegada") || fechaGeneral;
   const fechaDetencion = obtener("fecha de detenci[oó]n") || fechaGeneral;
   const tipoConocimiento: "llamada" | "presencia" | "queja" | "otro" | "" =
-    /(?:llamada|reporte por (?:radio|tableta|tel[eé]fono)|cabina|911)/i.test(plano) ? "llamada" :
+    /(?:llamada|reporte por (?:radio|tableta|tel[eé]fono)|por (?:radio|tableta|tel[eé]fono)[^.;]{0,40}reporte|cabina|911)/i.test(plano) ? "llamada" :
     /(?:presencia directa|observaci[oó]n directa|observ[eé] directamente|se percat[oó] directamente)/i.test(plano) ? "presencia" :
     /(?:queja|denuncia de una persona|se acerc[oó] un ciudadano)/i.test(plano) ? "queja" : "";
   const tipoLugar: "hogar" | "viaPublica" | "transporte" | "taxi" | "metro" | "otro" | "" =
