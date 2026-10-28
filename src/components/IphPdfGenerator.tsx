@@ -759,18 +759,23 @@ export default function IphPdfGenerator(props: Props) {
       return;
     }
 
-    // Abrir directamente desde un gesto del usuario suele ser más compatible
-    // con los visores móviles que depender únicamente del iframe incrustado.
+    // La apertura debe ocurrir directamente dentro del gesto del usuario.
+    // Algunos navegadores móviles bloquean los clics sintéticos en enlaces ocultos.
     const url = pdfUrl || URL.createObjectURL(pdfBlob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.target = "_blank";
-    anchor.rel = "noopener";
-    anchor.style.display = "none";
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    setAviso("Se solicitó abrir el PDF en una pestaña o visor nuevo. Si el navegador lo bloquea, use Guardar PDF.");
+    const nuevaVentana = window.open(url, "_blank");
+    if (nuevaVentana) {
+      try {
+        nuevaVentana.opener = null;
+      } catch {
+        // El navegador puede impedir modificar la ventana recién abierta.
+      }
+      setAviso("Se abrió el visor del PDF en otra pestaña.");
+      return;
+    }
+
+    // No informar que se abrió cuando el navegador bloqueó la ventana.
+    // Dejar una alternativa clara y visible para conservar el documento.
+    setAviso("El navegador bloqueó la apertura del PDF. Pulse Guardar PDF para descargarlo y abrirlo desde su dispositivo.");
   }
 
   function descargar() {
