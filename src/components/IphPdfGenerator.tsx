@@ -626,8 +626,8 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   if (/^mujer|^femenin[oa]|^f$/i.test(extraidos.sexoDetenido.trim())) marcar(page3Detencion, 177, 294, font);
   if (/^hombre|^masculin[oa]|^m$/i.test(extraidos.sexoDetenido.trim())) marcar(page3Detencion, 208, 294, font);
   drawDate(page3Detencion, extraidos.fechaNacimientoDetenido, 354, 294, 13.0, font);
-  if (/mexican/i.test(extraidos.nacionalidadDetenido)) marcar(page3Detencion, 176, 267, font);
-  if (/extranj/i.test(extraidos.nacionalidadDetenido)) marcar(page3Detencion, 246, 267, font);
+  if (/mexican/i.test(extraidos.nacionalidadDetenido)) marcar(page3Detencion, 191, 267, font);
+  if (/extranj/i.test(extraidos.nacionalidadDetenido)) marcar(page3Detencion, 267, 267, font);
   drawWrappedValue(page3Detencion, extraidos.curpDetenido, font, {
     x: 344, y: 267, width: 210, maxLines: 1, fontSize: 6.3, lineHeight: 7,
   });
@@ -635,9 +635,14 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   if (/licencia/i.test(extraidos.documentoDetenido)) marcar(page3Detencion, 322, 325, font);
   if (/pasaporte/i.test(extraidos.documentoDetenido)) marcar(page3Detencion, 395, 325, font);
 
+  const calleSinNumeroExterior = (calle: string, numero: string) =>
+    numero && calle.trim().endsWith(" " + numero)
+      ? calle.trim().slice(0, -(numero.length + 1)).trim()
+      : calle;
+
   // SECCIÓN 6.2: domicilio de la persona detenida, sólo cuando esté expresamente señalado.
   const domicilioDetenido = extraerCamposNarrativa(extraidos.domicilioDetenido);
-  drawWrappedValue(page3Detencion, domicilioDetenido.calle, font, {
+  drawWrappedValue(page3Detencion, calleSinNumeroExterior(domicilioDetenido.calle, domicilioDetenido.numeroExterior), font, {
     x: 172, y: 222, width: 378, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(page3Detencion, domicilioDetenido.colonia, font, {
@@ -670,14 +675,14 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   const lugarComisionComparar = normalizarDireccion(lugar);
   const lugarDetencionComparar = normalizarDireccion(extraidos.lugarDetencion);
   const mismoLugar = Boolean(lugarComisionComparar && lugarDetencionComparar && lugarComisionComparar === lugarDetencionComparar);
-  if (mismoLugar) marcar(page3Detencion, 307, 73, font);
-  else if (lugarComisionComparar && lugarDetencionComparar) marcar(page3Detencion, 466, 73, font);
+  if (mismoLugar) marcar(page3Detencion, 377, 73, font);
+  else if (lugarComisionComparar && lugarDetencionComparar) marcar(page3Detencion, 570, 73, font);
 
   // SECCIÓN 6.4: ubicación de detención distinta del lugar de los hechos.
   // No se copia automáticamente el lugar original: debe aparecer etiquetada como lugar de detención.
   const lugarDetencion = extraerCamposNarrativa(extraidos.lugarDetencion);
   if (lugarDetencionComparar && !mismoLugar) {
-  drawWrappedValue(pages[3], lugarDetencion.calle, font, {
+  drawWrappedValue(pages[3], calleSinNumeroExterior(lugarDetencion.calle, lugarDetencion.numeroExterior), font, {
     x: 172, y: 750, width: 378, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(pages[3], lugarDetencion.colonia, font, {
