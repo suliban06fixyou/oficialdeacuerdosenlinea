@@ -173,6 +173,33 @@ describe("extracción de campos etiquetados de la narrativa", () => {
     expect(result.autoridadRecibe).toBe("");
   });
 
+  test("identifica unidad policial y llamada de emergencia recibida por tableta", () => {
+    const result = extraerCamposNarrativa("La unidad P-123 recibió en la tableta un evento del 911 por alteración del orden en Chihuahua, Chihuahua.");
+    expect(result.unidadPolicial).toBe("P-123");
+    expect(result.tipoConocimiento).toBe("llamada");
+    expect(result.municipio).toBe("Chihuahua");
+    expect(result.entidad).toBe("Chihuahua");
+  });
+
+  test("marca llamada de emergencia por reporte del 911 sin asignar otros datos", () => {
+    const result = extraerCamposNarrativa("Se recibió una llamada al 911 sobre una persona en vía pública.");
+    expect(result.tipoConocimiento).toBe("llamada");
+    expect(result.unidadPolicial).toBe("");
+  });
+
+  test("sin vía de conocimiento identificable, no selecciona una opción", () => {
+    const result = extraerCamposNarrativa("Se observó a una persona cerca del parque.");
+    expect(result.tipoConocimiento).toBe("");
+  });
+
+  test("conserva técnicas defensivas documentadas sin inventar esposas", () => {
+    const result = extraerDatosUsoFuerza("Se realizó la detención. El sujeto lanzó patadas al oficial. Se aplicó técnica de sujeción y se utilizó bastón policial.");
+    expect(result.resistencia).toContain("patadas");
+    expect(result.descripcion).toContain("sujeción");
+    expect(result.descripcion).toContain("bastón policial");
+    expect(result.descripcion).not.toContain("candados de mano");
+  });
+
   test("recupera el nombre del policía responsable sin requerir etiquetas en la narrativa", () => {
     // El nombre se captura en la pantalla; el generador debe imprimirlo en la sección 1.1.
     expect("Saúl René Mendoza Mendoza".trim()).toBeTruthy();
