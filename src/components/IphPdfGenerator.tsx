@@ -283,6 +283,7 @@ export function extraerCamposNarrativa(narrativa: string): {
   falta: string;
   lugar: string;
   conocimientoReporte: string;
+  unidadPolicial: string;
   calle: string;
   cruce: string;
   colonia: string;
@@ -350,7 +351,7 @@ export function extraerCamposNarrativa(narrativa: string): {
   const calle = grupoUbicacion(/(?:^|,\s*)((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i) || cruce || grupo(/(?:^|,\s*)((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i) || grupo(/(?:en|sobre|ubicado en)\s+(?:la intersecci[oó]n de )?((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i);
   const ocurrenciasChihuahua = planoUbicacion.match(/\bChihuahua\b/gi)?.length ?? 0;
   const municipio = grupo(/\bmunicipio de\s+([^,.;]+)/i) || (ocurrenciasChihuahua >= 1 ? "Chihuahua" : "");
-  const entidad = obtener("entidad federativa|estado") || (ocurrenciasChihuahua >= 2 ? "Chihuahua" : "");
+  const entidad = obtener("entidad federativa|estado") || (ocurrenciasChihuahua >= 1 ? "Chihuahua" : "");
   const latitud = grupo(/latitud\s*[:=]?\s*(-?\d{1,2}\.\d+)/i);
   const longitud = grupo(/longitud\s*[:=]?\s*(-?\d{1,3}\.\d+)/i);
   const numeroExterior = obtener("n[uú]mero exterior|no\\.? exterior") || grupo(/(?:n[uú]mero|no\.?)\s+ext\.?\s*[:#-]?\s*(\d+[a-zA-Z]?)/i) || grupoUbicacion(/(?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,;]{2,80}\s+(\d+[a-zA-Z]?)\s*(?=,|\bcolonia\b|$)/i);
@@ -365,8 +366,9 @@ export function extraerCamposNarrativa(narrativa: string): {
   const fechaConocimiento = obtener("fecha de conocimiento|fecha del reporte") || fechaGeneral;
   const fechaArribo = obtener("fecha de arribo|fecha de llegada") || fechaGeneral;
   const fechaDetencion = obtener("fecha de detenci[oó]n") || fechaGeneral;
+  const unidadPolicial = obtener("n[uú]mero de unidad|unidad policial|unidad|patrulla") || grupo(/(?:unidad|patrulla)\s*(?:n[uú]mero|n[uú]m\.?|no\.?|#)?\s*[:#-]?\s*([A-Z0-9-]{2,12})\b/i);
   const tipoConocimiento: "llamada" | "presencia" | "queja" | "otro" | "" =
-    /(?:llamada|reporte por (?:radio|tableta|tel[eé]fono)|por (?:radio|tableta|tel[eé]fono)[^.;]{0,40}reporte|cabina|911)/i.test(plano) ? "llamada" :
+    /(?:llamada(?:\s+(?:de emergencia|al\s*911))?|reporte\s+(?:por|a trav[eé]s de|en|a)\s+(?:radio|tableta|tel[eé]fono)|(?:evento|reporte|aviso)[^.;]{0,65}(?:tableta|911)|(?:tableta|911)[^.;]{0,65}(?:evento|reporte|aviso)|por (?:radio|tableta|tel[eé]fono)[^.;]{0,40}reporte|cabina|911)/i.test(plano) ? "llamada" :
     /(?:presencia directa|observaci[oó]n directa|observ[eé] directamente|se percat[oó] directamente)/i.test(plano) ? "presencia" :
     /(?:queja|denuncia de una persona|se acerc[oó] un ciudadano)/i.test(plano) ? "queja" : "";
   const tipoLugar: "hogar" | "viaPublica" | "transporte" | "taxi" | "metro" | "otro" | "" =
@@ -396,7 +398,7 @@ export function extraerCamposNarrativa(narrativa: string): {
   const autoridadRecibe = obtener("juez o autoridad competente que recibe|autoridad que recibe|persona que recibe");
   const lugar = lugarEtiquetado || [calle, numeroExterior, colonia && `colonia ${colonia}`, municipio].filter(Boolean).join(", ");
   return {
-    falta, lugar, conocimientoReporte: reporte, calle: calleCruce || calle, cruce, colonia, municipio, entidad,
+    falta, lugar, conocimientoReporte: reporte, unidadPolicial, calle: calleCruce || calle, cruce, colonia, municipio, entidad,
     latitud, longitud, numeroExterior, numeroInterior, codigoPostal, entreCalle, yCalle: yCalle || transversalCruce,
     fechaConocimiento, fechaArribo, fechaDetencion, tipoConocimiento, tipoLugar, horas,
     nombreDetenido, aliasDetenido, sexoDetenido, fechaNacimientoDetenido, nacionalidadDetenido,
@@ -495,7 +497,9 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
       x: 40, y: 568, size: 7.0, font, color: rgb(0.05, 0.05, 0.05),
     });
   }
-  // La institución sólo se marca si el relato o el campo del oficial la identifica.\n  if (/polic[ií]a municipal|direcci[oó]n de seguridad p[uú]blica municipal|\\bDSPM\\b/i.test(`${props.oficial} ${props.narrativa}`)) {\n    marcar(page1, 506, 535, font);\n  }
+  // Este generador está destinado al IPH de Policía Municipal de Chihuahua.
+  marcar(page1, 506, 535, font);
+  drawWrappedValue(page1, extraerCamposNarrativa(props.narrativa).unidadPolicial, font, { x: 337, y: 551, width: 210, maxLines: 1, fontSize: 7, lineHeight: 8 });
 
 
 
