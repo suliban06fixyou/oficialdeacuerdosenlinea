@@ -675,8 +675,8 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   const lugarComisionComparar = normalizarDireccion(lugar);
   const lugarDetencionComparar = normalizarDireccion(extraidos.lugarDetencion);
   const mismoLugar = Boolean(lugarComisionComparar && lugarDetencionComparar && lugarComisionComparar === lugarDetencionComparar);
-  if (mismoLugar) marcar(page3Detencion, 300, 73, font);
-  else if (lugarComisionComparar && lugarDetencionComparar) marcar(page3Detencion, 456, 73, font);
+  if (mismoLugar) marcar(page3Detencion, 300, 92, font);
+  else if (lugarComisionComparar && lugarDetencionComparar) marcar(page3Detencion, 456, 92, font);
 
   // SECCIÓN 6.4: ubicación de detención distinta del lugar de los hechos.
   // No se copia automáticamente el lugar original: debe aparecer etiquetada como lugar de detención.
