@@ -351,7 +351,8 @@ export function extraerCamposNarrativa(narrativa: string): {
   const calle = grupoUbicacion(/(?:^|,\s*)((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i) || cruce || grupo(/(?:^|,\s*)((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i) || grupo(/(?:en|sobre|ubicado en)\s+(?:la intersecci[oó]n de )?((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i);
   const ocurrenciasChihuahua = planoUbicacion.match(/\bChihuahua\b/gi)?.length ?? 0;
   const municipio = grupo(/\bmunicipio de\s+([^,.;]+)/i) || (ocurrenciasChihuahua >= 1 ? "Chihuahua" : "");
-  const entidad = obtener("entidad federativa|estado") || (ocurrenciasChihuahua >= 1 ? "Chihuahua" : "");
+  const entidadExplicita = obtener("entidad federativa|estado");
+  const entidad = entidadExplicita || (/\bmunicipio de chihuahua\b/i.test(planoUbicacion) || /\bchihuahua\b/i.test(planoUbicacion) ? "Chihuahua" : "");
   const latitud = grupo(/latitud\s*[:=]?\s*(-?\d{1,2}\.\d+)/i);
   const longitud = grupo(/longitud\s*[:=]?\s*(-?\d{1,3}\.\d+)/i);
   const numeroExterior = obtener("n[uú]mero exterior|no\\.? exterior") || grupo(/(?:n[uú]mero|no\.?)\s+ext\.?\s*[:#-]?\s*(\d+[a-zA-Z]?)/i) || grupoUbicacion(/(?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,;]{2,80}\s+(\d+[a-zA-Z]?)\s*(?=,|\bcolonia\b|$)/i);
@@ -653,16 +654,25 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   drawWrappedValue(page3Detencion, domicilioDetenido.yCalle, font, {
     x: 285, y: 165, width: 266, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
-  drawWrappedValue(page3Detencion, domicilioDetenido.entidad, font, {
+  drawWrappedValue(page3Detencion, domicilioDetenido.entidad || (domicilioDetenido.municipio === "Chihuahua" ? "Chihuahua" : ""), font, {
     x: 172, y: 143, width: 380, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(page3Detencion, domicilioDetenido.municipio, font, {
     x: 172, y: 129, width: 380, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
 
+  // SECCIÓN 6.3: marcar coincidencia sólo cuando ambas ubicaciones se conocen.
+  const normalizarDireccion = (valor: string) => valor.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\b(calle|colonia|municipio de)\b/g, "").replace(/[^a-z0-9]/g, "");
+  const lugarComisionComparar = normalizarDireccion(lugar);
+  const lugarDetencionComparar = normalizarDireccion(extraidos.lugarDetencion);
+  const mismoLugar = Boolean(lugarComisionComparar && lugarDetencionComparar && lugarComisionComparar === lugarDetencionComparar);
+  if (mismoLugar) marcar(page3Detencion, 307, 73, font);
+  else if (lugarComisionComparar && lugarDetencionComparar) marcar(page3Detencion, 466, 73, font);
+
   // SECCIÓN 6.4: ubicación de detención distinta del lugar de los hechos.
   // No se copia automáticamente el lugar original: debe aparecer etiquetada como lugar de detención.
   const lugarDetencion = extraerCamposNarrativa(extraidos.lugarDetencion);
+  if (lugarDetencionComparar && !mismoLugar) {
   drawWrappedValue(pages[3], lugarDetencion.calle, font, {
     x: 172, y: 750, width: 378, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
@@ -684,12 +694,13 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   drawWrappedValue(pages[3], lugarDetencion.yCalle, font, {
     x: 286, y: 694, width: 264, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
-  drawWrappedValue(pages[3], lugarDetencion.entidad, font, {
+  drawWrappedValue(pages[3], (lugarDetencion.entidad || (lugarDetencion.municipio === "Chihuahua" ? "Chihuahua" : "")), font, {
     x: 172, y: 671, width: 380, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   drawWrappedValue(pages[3], lugarDetencion.municipio, font, {
     x: 172, y: 658, width: 380, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
+  }
 
   // SECCIÓN 7: datos de presentación/entrega sólo cuando estén disponibles.
   drawWrappedValue(pages[3], extraidos.autoridadEntrega, font, {
