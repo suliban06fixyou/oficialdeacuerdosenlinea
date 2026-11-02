@@ -350,6 +350,11 @@ export function extraerCamposNarrativa(narrativa: string): {
   const planoUbicacion = textoUbicacion.replace(/\s+/g, " ").trim();
   const grupoUbicacion = (re: RegExp): string => planoUbicacion.match(re)?.[1]?.trim() ?? "";
   const cruce = grupoUbicacion(/(?:intersecci[oó]n|cruce) de?\s*([^.;]+?)(?:,\s*colonia|,\s*col\.?|\s+colonia|\s+col\.|[.;]|$)/i) || grupo(/(?:intersecci[oó]n|cruce) de?\s*([^.;]+?)(?:,\s*colonia|,\s*col\.?|\s+colonia|\s+col\.|[.;]|$)/i);
+  // Un cruce identificado como "Calle A y B" permite llenar la calle y la
+  // transversal sin confundirla con el domicilio de la persona detenida.
+  const partesCruce = cruce.match(/^(?:(?:calle|avenida|av\\.?|boulevard|blvd\\.?)\\s+)?(.+?)\\s+(?:y|con|esquina con)\\s+((?:(?:calle|avenida|av\\.?|boulevard|blvd\\.?)\\s+)?[^,.;]+)$/i);
+  const calleCruce = partesCruce?.[1]?.trim() ?? "";
+  const transversalCruce = partesCruce?.[2]?.trim() ?? "";
   const colonia = grupoUbicacion(/\bcol(?:onia)?\.?\s+([^,.;]+?)(?=,|\s+(?:municipio|Chihuahua)|[.;]|$)/i) || grupo(/\bcol(?:onia)?\.?\s+([^,.;]+?)(?=,|\s+(?:municipio|Chihuahua)|[.;]|$)/i);
   const calle = grupoUbicacion(/(?:^|,\s*)((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i) || cruce || grupo(/(?:^|,\s*)((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i) || grupo(/(?:en|sobre|ubicado en)\s+(?:la intersecci[oó]n de )?((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i);
   const ocurrenciasChihuahua = planoUbicacion.match(/\bChihuahua\b/gi)?.length ?? 0;
@@ -395,8 +400,8 @@ export function extraerCamposNarrativa(narrativa: string): {
   const autoridadRecibe = obtener("juez o autoridad competente que recibe|autoridad que recibe|persona que recibe");
   const lugar = lugarEtiquetado || [calle, numeroExterior, colonia && `colonia ${colonia}`, municipio].filter(Boolean).join(", ");
   return {
-    falta, lugar, conocimientoReporte: reporte, calle, cruce, colonia, municipio, entidad,
-    latitud, longitud, numeroExterior, numeroInterior, codigoPostal, entreCalle, yCalle,
+    falta, lugar, conocimientoReporte: reporte, calle: calleCruce || calle, cruce, colonia, municipio, entidad,
+    latitud, longitud, numeroExterior, numeroInterior, codigoPostal, entreCalle, yCalle: yCalle || transversalCruce,
     fechaConocimiento, fechaArribo, fechaDetencion, tipoConocimiento, tipoLugar, horas,
     nombreDetenido, aliasDetenido, sexoDetenido, fechaNacimientoDetenido, nacionalidadDetenido,
     curpDetenido, domicilioDetenido, lugarDetencion, documentoDetenido, autoridadEntrega, fechaEntrega, horaEntrega,
@@ -494,7 +499,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
       x: 40, y: 568, size: 7.0, font, color: rgb(0.05, 0.05, 0.05),
     });
   }
-  marcar(page1, 506, 535, font);
+  // La institución sólo se marca si el relato o el campo del oficial la identifica.\n  if (/polic[ií]a municipal|direcci[oó]n de seguridad p[uú]blica municipal|\\bDSPM\\b/i.test(`${props.oficial} ${props.narrativa}`)) {\n    marcar(page1, 506, 535, font);\n  }
 
 
 
