@@ -397,7 +397,7 @@ export function extraerCamposNarrativa(narrativa: string): {
   const horaEntrega = obtener("hora de entrega|hora de presentaci[oó]n");
   const policiaEntrega = obtener("polic[ií]a que entrega|elemento que entrega|oficial que entrega");
   const autoridadRecibe = obtener("juez o autoridad competente que recibe|autoridad que recibe|persona que recibe");
-  const lugar = lugarEtiquetado || [calle, numeroExterior, colonia && `colonia ${colonia}`, municipio].filter(Boolean).join(", ");
+  const lugar = lugarEtiquetado || [calle, numeroExterior && !new RegExp(`\\b${numeroExterior}\\b`).test(calle) ? numeroExterior : "", colonia && `colonia ${colonia}`, municipio].filter(Boolean).join(", ");
   return {
     falta, lugar, conocimientoReporte: reporte, unidadPolicial, calle: calleCruce || calle, cruce, colonia, municipio, entidad,
     latitud, longitud, numeroExterior, numeroInterior, codigoPostal, entreCalle, yCalle: yCalle || transversalCruce,
@@ -531,7 +531,8 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     entreCalle: extraidos.entreCalle || extraidosLugar.entreCalle,
     yCalle: extraidos.yCalle || extraidosLugar.yCalle,
   };
-  drawWrappedValue(page2Narrativa, geo.calle || geo.cruce, font, {
+  const calleSinNumero = geo.numeroExterior ? (geo.calle || geo.cruce).replace(new RegExp(`\\s+${geo.numeroExterior.replace(/[.*+?^${}()|[\\]\\]/g, "\\  drawWrappedValue(page2Narrativa, geo.calle || geo.cruce, font, {")}(?=\\s*(?:,|$))`, "i"), "").trim() : (geo.calle || geo.cruce);
+  drawWrappedValue(page2Narrativa, calleSinNumero, font, {
     x: 195, y: 752, width: 355, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawWrappedValue(page2Narrativa, geo.colonia, font, {
