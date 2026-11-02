@@ -165,6 +165,14 @@ describe("extracción de campos etiquetados de la narrativa", () => {
     expect(result.descripcion).toBe("");
   });
 
+  test("reconoce destino de traslado sin inventar hora ni autoridad receptora", () => {
+    const result = extraerCamposNarrativa("A las 10:05 horas se trasladó a la persona a las instalaciones de la Comandancia Sur para su presentación ante el juez cívico.");
+    expect(result.autoridadEntrega).toBe("Comandancia Sur");
+    expect(result.fechaEntrega).toBe("");
+    expect(result.horaEntrega).toBe("");
+    expect(result.autoridadRecibe).toBe("");
+  });
+
   test("recupera el nombre del policía responsable sin requerir etiquetas en la narrativa", () => {
     // El nombre se captura en la pantalla; el generador debe imprimirlo en la sección 1.1.
     expect("Saúl René Mendoza Mendoza".trim()).toBeTruthy();
