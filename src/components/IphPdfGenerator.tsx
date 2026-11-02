@@ -344,7 +344,8 @@ export function extraerCamposNarrativa(narrativa: string): {
   // transversal sin confundirla con el domicilio de la persona detenida.
   const partesCruce = cruce.match(/^(?:(?:calle|avenida|av\\.?|boulevard|blvd\\.?)\\s+)?(.+?)\\s+(?:y|con|esquina con)\\s+((?:(?:calle|avenida|av\\.?|boulevard|blvd\\.?)\\s+)?[^,.;]+)$/i);
   const calleCruce = partesCruce?.[1]?.trim() ?? "";
-  const transversalCruce = partesCruce?.[2]?.trim() ?? "";
+  const transversalCruce = partesCruce?.[2]?.trim() ||
+    grupo(/(?:intersecci[oó]n|cruce)\s+de\s+(?:calle\s+)?[^,.;]+?\s+y\s+([^,.;]+?)(?=,\s*colonia|\s+colonia|[.;]|$)/i);
   const colonia = grupoUbicacion(/\bcol(?:onia)?\.?\s+([^,.;]+?)(?=,|\s+(?:municipio|Chihuahua)|[.;]|$)/i) || grupo(/\bcol(?:onia)?\.?\s+([^,.;]+?)(?=,|\s+(?:municipio|Chihuahua)|[.;]|$)/i);
   const calle = grupoUbicacion(/(?:^|,\s*)((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i) || cruce || grupo(/(?:^|,\s*)((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i) || grupo(/(?:en|sobre|ubicado en)\s+(?:la intersecci[oó]n de )?((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i);
   const ocurrenciasChihuahua = planoUbicacion.match(/\bChihuahua\b/gi)?.length ?? 0;
