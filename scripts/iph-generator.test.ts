@@ -2,23 +2,24 @@ import { describe, expect, test } from "bun:test";
 import { extraerCamposNarrativa, extraerDatosUsoFuerza } from "../src/components/IphPdfGenerator";
 
 describe("extracción del apartado de uso de la fuerza", () => {
-  test("una detención sin detalles conserva los dos medios generales acordados", () => {
+  test("una detención sin detalles registra presencia y verbalización sin inventar esposas", () => {
     const result = extraerDatosUsoFuerza("Se procedió a la detención de la persona.");
     expect(result.detencion).toBe(true);
     expect(result.descripcion).toContain("comandos verbales");
-    expect(result.descripcion).toContain("candados de mano");
+    expect(result.descripcion).toContain("Presencia policial");
+    expect(result.descripcion).not.toContain("candados de mano");
   });
 
-  test("si la narrativa ya menciona comandos verbales, agrega sólo candados de mano", () => {
+  test("si la narrativa menciona comandos verbales, conserva el hecho sin inventar esposas", () => {
     const result = extraerDatosUsoFuerza(
       "Se procedió a la detención. Se utilizaron comandos verbales para indicar a la persona que se detuviera.",
     );
     expect(result.descripcion.match(/comandos verbales/g)?.length).toBe(1);
-    expect(result.descripcion).toContain("candados de mano");
+    expect(result.descripcion).not.toContain("candados de mano");
     expect(result.descripcion).toContain("indicar a la persona");
   });
 
-  test("si la narrativa ya menciona esposas, agrega sólo comandos verbales", () => {
+  test("si la narrativa menciona esposas, conserva el hecho y añade verbalización general", () => {
     const result = extraerDatosUsoFuerza(
       "Se realizó la detención y se colocaron esposas a la persona.",
     );
@@ -78,7 +79,8 @@ describe("extracción de campos etiquetados de la narrativa", () => {
       "A las 10:01 horas se recibió en la tableta un reporte por persona consumiendo bebidas alcohólicas en vía pública en la intersección de Calle 20 de Noviembre y Pacheco, colonia Barrio de Londres. Me trasladé al lugar y arribé a las 10:02 horas. Por tal motivo, siendo las 10:03 horas, se procedió a su detención."
     );
     expect(result.falta).toContain("persona consumiendo bebidas alcohólicas");
-    expect(result.calle).toContain("Calle 20 de Noviembre y Pacheco");
+    expect(result.calle).toContain("20 de Noviembre");
+    expect(result.yCalle).toBe("Pacheco");
     expect(result.colonia).toBe("Barrio de Londres");
     expect(result.horas.conocimiento).toBe("10:01");
     expect(result.horas.llegada).toBe("10:02");
@@ -145,6 +147,22 @@ describe("extracción de campos etiquetados de la narrativa", () => {
     expect(result.nombreDetenido).toBe("Juan Carlos Pérez López");
     expect(result.sexoDetenido).toBe("masculino");
     expect(result.domicilioDetenido).toContain("Calle Ficticia 22");
+  });
+
+  test("reconoce fecha escrita y mantiene vacía la hora de entrega no narrada", () => {
+    const result = extraerCamposNarrativa("Con fecha 17 de octubre de 2026, a las 10:01 horas se recibió un reporte. Arribé al lugar a las 10:02 horas. Se procedió a la detención a las 10:03 horas.");
+    expect(result.fechaConocimiento).toBe("17/10/2026");
+    expect(result.fechaArribo).toBe("17/10/2026");
+    expect(result.fechaDetencion).toBe("17/10/2026");
+    expect(result.horas.conocimiento).toBe("10:01");
+    expect(result.horas.llegada).toBe("10:02");
+    expect(result.horaEntrega).toBe("");
+  });
+
+  test("identifica insultos como conducta narrada sin inventar fuerza física", () => {
+    const result = extraerDatosUsoFuerza("La persona insultó al oficial y se negó a obedecer la indicación.");
+    expect(result.resistencia).toContain("insultó");
+    expect(result.descripcion).toBe("");
   });
 
   test("recupera el nombre del policía responsable sin requerir etiquetas en la narrativa", () => {
