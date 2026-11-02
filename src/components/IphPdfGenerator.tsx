@@ -626,8 +626,8 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   if (/^mujer|^femenin[oa]|^f$/i.test(extraidos.sexoDetenido.trim())) marcar(page3Detencion, 177, 294, font);
   if (/^hombre|^masculin[oa]|^m$/i.test(extraidos.sexoDetenido.trim())) marcar(page3Detencion, 208, 294, font);
   drawDate(page3Detencion, extraidos.fechaNacimientoDetenido, 354, 294, 13.0, font);
-  if (/mexican/i.test(extraidos.nacionalidadDetenido)) marcar(page3Detencion, 191, 267, font);
-  if (/extranj/i.test(extraidos.nacionalidadDetenido)) marcar(page3Detencion, 267, 267, font);
+  if (/mexican/i.test(extraidos.nacionalidadDetenido)) marcar(page3Detencion, 151, 267, font);
+  if (/extranj/i.test(extraidos.nacionalidadDetenido)) marcar(page3Detencion, 214, 267, font);
   drawWrappedValue(page3Detencion, extraidos.curpDetenido, font, {
     x: 344, y: 267, width: 210, maxLines: 1, fontSize: 6.3, lineHeight: 7,
   });
@@ -675,8 +675,8 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   const lugarComisionComparar = normalizarDireccion(lugar);
   const lugarDetencionComparar = normalizarDireccion(extraidos.lugarDetencion);
   const mismoLugar = Boolean(lugarComisionComparar && lugarDetencionComparar && lugarComisionComparar === lugarDetencionComparar);
-  if (mismoLugar) marcar(page3Detencion, 377, 73, font);
-  else if (lugarComisionComparar && lugarDetencionComparar) marcar(page3Detencion, 570, 73, font);
+  if (mismoLugar) marcar(page3Detencion, 300, 73, font);
+  else if (lugarComisionComparar && lugarDetencionComparar) marcar(page3Detencion, 456, 73, font);
 
   // SECCIÓN 6.4: ubicación de detención distinta del lugar de los hechos.
   // No se copia automáticamente el lugar original: debe aparecer etiquetada como lugar de detención.
