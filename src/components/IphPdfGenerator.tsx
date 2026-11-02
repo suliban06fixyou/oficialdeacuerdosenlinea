@@ -334,8 +334,8 @@ export function extraerCamposNarrativa(narrativa: string): {
   };
   const grupo = (re: RegExp): string => plano.match(re)?.[1]?.trim() ?? "";
   const horas: Record<string, string> = {};
-  const conocimiento = obtener("hora(?: de)? conocimiento|conocimiento") || grupo(/(?:a las|siendo las)\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,100}(?:reporte|llamada|tableta|radio)/i);
-  const llegada = obtener("hora(?: de)? llegada|llegada al lugar") || grupo(/(?:arrib[eé]|lleg[uó]|arribo)\s+(?:al lugar )?(?:a las )([0-2]?\d:[0-5]\d)\s+horas?/i);
+  const conocimiento = obtener("hora(?: de)? conocimiento|conocimiento") || grupo(/(?:a las|siendo las)\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,100}(?:reporte|llamada|tableta|radio)/i) || grupo(/(?:a las|siendo las)\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,120}(?:se recibi[oó]|recibimos|recib[ií])[^.]{0,80}(?:reporte|llamada|aviso)/i);
+  const llegada = obtener("hora(?: de)? llegada|llegada al lugar") || grupo(/(?:arrib[eé]|lleg[uó]|arribo)\s+(?:al lugar )?(?:a las )([0-2]?\d:[0-5]\d)\s+horas?/i) || grupo(/(?:arrib[eé]|lleg[uó]|arribo)\s+(?:al lugar\s+)?a\s+las\s+([0-2]?\d:[0-5]\d)\s+horas?/i);
   const detencion = obtener("hora(?: de)? detenci[oó]n|detenci[oó]n") || grupo(/(?:siendo las|a las)\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,120}(?:detenci[oó]n|detuvo|detener)/i);
   if (splitTime(conocimiento)) horas.conocimiento = conocimiento;
   if (splitTime(llegada)) horas.llegada = llegada;
@@ -362,7 +362,10 @@ export function extraerCamposNarrativa(narrativa: string): {
   const codigoPostal = obtener("c[oó]digo postal|C\\.?P\\.?") || grupo(/(?:c[oó]digo postal|C\.?P\.?)[\s:#-]*(\d{5})/i);
   const entreCalle = obtener("entre calle|entre calles") || grupo(/entre calles?\s+([^,.;]+?)(?=\s+y calle|,|[.;]|$)/i);
   const yCalle = obtener("y calle") || grupo(/\by calle\s+([^,.;]+)/i);
-  const fechaGeneral = grupo(/(?:fecha(?: de los hechos)?|el d[ií]a|d[ií]a)\s*[:,-]?\s*(\d{1,2}[/-]\d{1,2}[/-]\d{4})/i);
+  const fechaNumerica = grupo(/(?:fecha(?: de los hechos)?|el d[ií]a|d[ií]a)\s*[:,-]?\s*(\d{1,2}[/-]\d{1,2}[/-]\d{4})/i);
+  const meses: Record<string, string> = { enero: "01", febrero: "02", marzo: "03", abril: "04", mayo: "05", junio: "06", julio: "07", agosto: "08", septiembre: "09", octubre: "10", noviembre: "11", diciembre: "12" };
+  const fechaEscrita = plano.match(/(?:\bfecha\s+|\bel\s+|\bd[ií]a\s+)?(\d{1,2})\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+de\s+(\d{4})\b/i);
+  const fechaGeneral = fechaNumerica || (fechaEscrita ? `${fechaEscrita[1]}/${meses[fechaEscrita[2].toLowerCase()]}/${fechaEscrita[3]}` : "");
   const fechaConocimiento = obtener("fecha de conocimiento|fecha del reporte") || fechaGeneral;
   const fechaArribo = obtener("fecha de arribo|fecha de llegada") || fechaGeneral;
   const fechaDetencion = obtener("fecha de detenci[oó]n") || fechaGeneral;
