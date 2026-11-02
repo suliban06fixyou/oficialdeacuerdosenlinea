@@ -384,8 +384,11 @@ export function extraerCamposNarrativa(narrativa: string): {
   const lugarDetencion = obtener("lugar de la detenci[oó]n|domicilio de la detenci[oó]n|ubicaci[oó]n de la detenci[oó]n") ||
     grupo(/(?:se (?:procedi[oó] a su |realiz[oó] la )?detenci[oó]n|fue detenid[oa])\s+(?:en|sobre)\s+([^.;]+?)(?=\s+(?:a las|siendo las|para|por)|[.;]|$)/i);
   const documentoDetenido = obtener("documento de identificaci[oó]n|identificaci[oó]n presentada|credencial INE|licencia|pasaporte") || grupo(/(?:se identific[oó] con|present[oó])\s+(credencial INE|INE|licencia|pasaporte)/i);
+  // El traslado a una comandancia identifica el destino, no acredita por sí
+  // solo la entrega efectiva ni su fecha u hora.
   const autoridadEntrega = obtener("juzgado o instituci[oó]n correspondiente|juzgado|instituci[oó]n correspondiente|autoridad competente") ||
-    grupo(/(?:presentad[oa]|entregad[oa]|puesta? a disposici[oó]n)\s+(?:ante|en|a)\s+(?:el|la|las|los)?\s*((?:juzgado|juez c[ií]vico|comandancia|fiscal[ií]a|autoridad)[^.;,]{0,90})/i);
+    grupo(/(?:presentad[oa]|entregad[oa]|puesta? a disposici[oó]n)\s+(?:ante|en|a)\s+(?:el|la|las|los)?\s*((?:juzgado|juez c[ií]vico|comandancia|fiscal[ií]a|autoridad)[^.;,]{0,90})/i) ||
+    grupo(/(?:traslad[oó]|trasladamos|se traslad[oó])[^.;]{0,120}?\b(?:a|hacia)\s+(?:las instalaciones de\s+)?(?:la|el)\s+((?:comandancia|juzgado|fiscal[ií]a)[^.;,]{0,70}?)(?=\s+para\s+|[.;,]|$)/i);
   const fechaEntrega = obtener("fecha de entrega|fecha de presentaci[oó]n");
   const horaEntrega = obtener("hora de entrega|hora de presentaci[oó]n");
   const policiaEntrega = obtener("polic[ií]a que entrega|elemento que entrega|oficial que entrega");
