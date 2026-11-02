@@ -79,7 +79,8 @@ try {
   const usoFuerza = extraerDatosUsoFuerza("Se procedió a la detención de la persona.");
   assert.equal(usoFuerza.detencion, true);
   assert.match(usoFuerza.descripcion, /comandos verbales/i);
-  assert.match(usoFuerza.descripcion, /candados de mano/i);
+  assert.match(usoFuerza.descripcion, /presencia policial/i);
+  assert.doesNotMatch(usoFuerza.descripcion, /candados de mano/i);
   assert.equal(usoFuerza.resistencia, "");
 
   console.log("Prueba de generación IPH PDF completada: plantilla oficial, firma, cuatro páginas y dimensiones verificadas.");
