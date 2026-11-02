@@ -531,7 +531,10 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     entreCalle: extraidos.entreCalle || extraidosLugar.entreCalle,
     yCalle: extraidos.yCalle || extraidosLugar.yCalle,
   };
-  const calleSinNumero = geo.numeroExterior ? (geo.calle || geo.cruce).replace(new RegExp(`\\s+${geo.numeroExterior.replace(/[.*+?^${}()|[\\]\\]/g, "\\  drawWrappedValue(page2Narrativa, geo.calle || geo.cruce, font, {")}(?=\\s*(?:,|$))`, "i"), "").trim() : (geo.calle || geo.cruce);
+  const calleBase = geo.calle || geo.cruce;
+  const calleSinNumero = geo.numeroExterior && calleBase.endsWith(" " + geo.numeroExterior)
+    ? calleBase.slice(0, -(geo.numeroExterior.length + 1)).trim()
+    : calleBase;
   drawWrappedValue(page2Narrativa, calleSinNumero, font, {
     x: 195, y: 752, width: 355, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
