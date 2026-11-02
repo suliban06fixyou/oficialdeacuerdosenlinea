@@ -202,12 +202,12 @@ export function extraerDatosUsoFuerza(narrativa: string): { resistencia: string;
   // que estén expresamente narrados; una agresión verbal no se convierte por sí sola
   // en resistencia física ni justifica inferir un nivel de fuerza.
   const resistencia = frases
-    .filter((frase) => /resisten|se neg[oó] a (?:obedecer|seguir|acatar)|no (?:obedeci[oó]|acat[oó])|desobedeci[oó]|insult[oó]|insultos?|agresi[oó]n|agresiv[oa]s?|conductas? verbales? agresivas?|palabras ofensivas|se opuso|forceje|intent[oó] evadir|golpes?|patadas?|pu[nñ]etazos?|arma blanca|amenaz[oó]/i.test(frase))
+    .filter((frase) => /resisten|se neg[oó] a (?:obedecer|seguir|acatar)|no (?:obedeci[oó]|acat[oó])|desobedeci[oó]|insult[oó]|insultos?|agresi[oó]n|agresiv[oa]s?|conductas? verbales? agresivas?|palabras ofensivas|se opuso|forceje|intent[oó] evadir|golpes?|patadas?|pu[nñ]etazos?|arma blanca|amenaz[oó]|empuj[oó]|empujones?|escupi[oó]|escupitajos?|agredi[oó]|intent[oó] golpear|intent[oó] huir|se resisti[oó]|jalone[oó]/i.test(frase))
     .join(" ");
 
   // Se conserva lo que la narrativa diga expresamente sobre técnicas/medios empleados.
   const descripcionExpresa = frases
-    .filter((frase) => /comandos? verbales?|instrucciones? verbales?|uso de la fuerza|utilizando la fuerza|fuerza estrictamente necesaria|candados? de mano|esposas|control(?:ar)? f[ií]sic|t[eé]cnica de control/i.test(frase))
+    .filter((frase) => /comandos? verbales?|instrucciones? verbales?|uso de la fuerza|utilizando la fuerza|fuerza estrictamente necesaria|candados? de mano|esposas|control(?:ar)? f[ií]sic|t[eé]cnica de control|sujeci[oó]n|inmovilizaci[oó]n|bast[oó]n policial|bast[oó]n pr-?24|gas pimienta|aerosol|dispositivo el[eé]ctrico|taser|arma de fuego|defensa policial|llave de control|reducci[oó]n f[ií]sica|esposamiento|aseguramiento f[ií]sico/i.test(frase))
     .join(" ");
 
   // Presencia y verbalización son componentes generales de una intervención
