@@ -202,7 +202,7 @@ export function extraerDatosUsoFuerza(narrativa: string): { resistencia: string;
   // que estén expresamente narrados; una agresión verbal no se convierte por sí sola
   // en resistencia física ni justifica inferir un nivel de fuerza.
   const resistencia = frases
-    .filter((frase) => /resisten|se neg[oó] a obedecer|agresi[oó]n|agresiv[oa]s?|conductas? verbales? agresivas?|palabras ofensivas|se opuso|forceje|intent[oó] evadir/i.test(frase))
+    .filter((frase) => /resisten|se neg[oó] a (?:obedecer|seguir|acatar)|no (?:obedeci[oó]|acat[oó])|desobedeci[oó]|insult[oó]|insultos?|agresi[oó]n|agresiv[oa]s?|conductas? verbales? agresivas?|palabras ofensivas|se opuso|forceje|intent[oó] evadir|golpes?|patadas?|pu[nñ]etazos?|arma blanca|amenaz[oó]/i.test(frase))
     .join(" ");
 
   // Se conserva lo que la narrativa diga expresamente sobre técnicas/medios empleados.
@@ -210,25 +210,15 @@ export function extraerDatosUsoFuerza(narrativa: string): { resistencia: string;
     .filter((frase) => /comandos? verbales?|instrucciones? verbales?|uso de la fuerza|utilizando la fuerza|fuerza estrictamente necesaria|candados? de mano|esposas|control(?:ar)? f[ií]sic|t[eé]cnica de control/i.test(frase))
     .join(" ");
 
-  // Regla general solicitada: cuando la narrativa refiere una detención, consignar
-  // comandos verbales y candados de mano. Si la narrativa ya menciona uno de ellos,
-  // completar sólo el elemento general que falte y conservar los detalles expresos.
-  // No se infieren lesiones, atención médica, resistencia física ni niveles de fuerza.
-  const mediosGenerales = "Se utilizaron comandos verbales y candados de mano (esposas) durante la detención.";
-  const descripcion = detencion
-    ? [
-        /comandos? verbales?|instrucciones? verbales?/i.test(descripcionExpresa)
-          ? ""
-          : "Se utilizaron comandos verbales.",
-        /candados? de mano|esposas/i.test(descripcionExpresa)
-          ? ""
-          : "Se utilizaron candados de mano (esposas).",
-        descripcionExpresa,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .trim() || mediosGenerales
-    : descripcionExpresa;
+  // Presencia y verbalización son componentes generales de una intervención
+  // policial con uso legítimo de la fuerza, pero no se inventan maniobras físicas.
+  // Sólo se añaden cuando el relato identifica una actuación policial de fuerza.
+  const hayActuacion = detencion || /uso de la fuerza|control f[ií]sico|sujeci[oó]n|esposas|candados? de mano/i.test(narrativa);
+  const descripcion = [
+    hayActuacion && !/presencia policial/i.test(descripcionExpresa) ? "Presencia policial." : "",
+    hayActuacion && !/comandos? verbales?|instrucciones? verbales?|verbalizaci[oó]n/i.test(descripcionExpresa) ? "Verbalización y comandos verbales." : "",
+    descripcionExpresa,
+  ].filter(Boolean).join(" ").trim();
 
   return { resistencia, descripcion, detencion };
 }
@@ -391,9 +381,11 @@ export function extraerCamposNarrativa(narrativa: string): {
   const nacionalidadDetenido = obtener("nacionalidad") || grupo(/nacionalidad\s+(mexicana|extranjera)/i);
   const curpDetenido = obtener("CURP");
   const domicilioDetenido = obtener("domicilio de la persona detenida|domicilio del detenido|domicilio particular") || grupo(/(?:con domicilio (?:en|ubicado en)|domiciliad[oa] en)\s+([^.;]+)/i);
-  const lugarDetencion = obtener("lugar de la detenci[oó]n|domicilio de la detenci[oó]n|ubicaci[oó]n de la detenci[oó]n");
+  const lugarDetencion = obtener("lugar de la detenci[oó]n|domicilio de la detenci[oó]n|ubicaci[oó]n de la detenci[oó]n") ||
+    grupo(/(?:se (?:procedi[oó] a su |realiz[oó] la )?detenci[oó]n|fue detenid[oa])\s+(?:en|sobre)\s+([^.;]+?)(?=\s+(?:a las|siendo las|para|por)|[.;]|$)/i);
   const documentoDetenido = obtener("documento de identificaci[oó]n|identificaci[oó]n presentada|credencial INE|licencia|pasaporte") || grupo(/(?:se identific[oó] con|present[oó])\s+(credencial INE|INE|licencia|pasaporte)/i);
-  const autoridadEntrega = obtener("juzgado o instituci[oó]n correspondiente|juzgado|instituci[oó]n correspondiente|autoridad competente");
+  const autoridadEntrega = obtener("juzgado o instituci[oó]n correspondiente|juzgado|instituci[oó]n correspondiente|autoridad competente") ||
+    grupo(/(?:presentad[oa]|entregad[oa]|puesta? a disposici[oó]n)\s+(?:ante|en|a)\s+(?:el|la|las|los)?\s*((?:juzgado|juez c[ií]vico|comandancia|fiscal[ií]a|autoridad)[^.;,]{0,90})/i);
   const fechaEntrega = obtener("fecha de entrega|fecha de presentaci[oó]n");
   const horaEntrega = obtener("hora de entrega|hora de presentaci[oó]n");
   const policiaEntrega = obtener("polic[ií]a que entrega|elemento que entrega|oficial que entrega");
