@@ -439,9 +439,27 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     throw new Error("La fuente del formato oficial no devolvió un PDF válido.");
   }
 
+  // Nunca convertir borradores, instrucciones editoriales o discrepancias de
+  // horarios en hechos asentados en un informe policial oficial.
+  if (/\\[(?:pendiente|confirmar|aclarar|verificar)[^\\]]*\\]/i.test(props.narrativa) ||
+      /nota final:\\s*existen inconsistencias/i.test(props.narrativa)) {
+    throw new Error("La narrativa contiene anotaciones pendientes o inconsistencias. Corrija y confirme los hechos antes de generar un IPH oficial.");
+  }
+
   const extraidos = extraerCamposNarrativa(props.narrativa);
   const falta = props.falta.trim() || extraidos.falta;
   const lugar = props.lugar.trim() || extraidos.lugar;
+  // Si el formulario y la narrativa discrepan, solicitar confirmación en vez
+  // de sobrescribir silenciosamente la hora que relata el policía.
+  for (const [evento, horaNarrada] of Object.entries(extraidos.horas)) {
+    const horaFormulario = props.horas[evento]?.trim();
+    if (horaFormulario && splitTime(horaFormulario) &&
+        splitTime(horaNarrada) &&
+        (splitTime(horaFormulario)?.hours !== splitTime(horaNarrada)?.hours ||
+         splitTime(horaFormulario)?.minutes !== splitTime(horaNarrada)?.minutes)) {
+      throw new Error(`La hora de ${evento} del formulario (${horaFormulario}) no coincide con la narrativa (${horaNarrada}). Confirme el dato antes de generar el IPH.`);
+    }
+  }
   const horas = { ...extraidos.horas, ...Object.fromEntries(Object.entries(props.horas).filter(([, value]) => Boolean(value?.trim()))) };
   const textos = [props.oficial, falta, lugar, props.narrativa].map(normalizarTexto);
   if (textos.some((texto) => /[^\u0000-\u00FF]/u.test(texto))) {
