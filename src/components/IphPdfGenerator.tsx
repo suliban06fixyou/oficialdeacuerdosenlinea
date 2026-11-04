@@ -781,31 +781,6 @@ export default function IphPdfGenerator(props: Props) {
     }
   }
 
-  function abrirPdf() {
-    if (!pdfBlob) {
-      setError("Primero genere el PDF para poder abrirlo.");
-      return;
-    }
-
-    // La apertura debe ocurrir directamente dentro del gesto del usuario.
-    // Algunos navegadores móviles bloquean los clics sintéticos en enlaces ocultos.
-    const url = pdfUrl || URL.createObjectURL(pdfBlob);
-    const nuevaVentana = window.open(url, "_blank");
-    if (nuevaVentana) {
-      try {
-        nuevaVentana.opener = null;
-      } catch {
-        // El navegador puede impedir modificar la ventana recién abierta.
-      }
-      setAviso("Se abrió el visor del PDF en otra pestaña.");
-      return;
-    }
-
-    // No informar que se abrió cuando el navegador bloqueó la ventana.
-    // Dejar una alternativa clara y visible para conservar el documento.
-    setAviso("El navegador bloqueó la apertura del PDF. Pulse Guardar PDF para descargarlo y abrirlo desde su dispositivo.");
-  }
-
   function descargar() {
     if (!pdfBlob) return;
     // Crear una URL desde el Blob vigente evita depender de una URL temporal
@@ -899,14 +874,7 @@ export default function IphPdfGenerator(props: Props) {
             />
           </div>
 
-          <footer className="grid grid-cols-1 gap-3 border-t bg-background p-3 sm:grid-cols-3 sm:p-4">
-            <button
-              type="button"
-              onClick={abrirPdf}
-              className="rounded-xl border px-4 py-3 text-sm font-semibold"
-            >
-              Abrir PDF
-            </button>
+          <footer className="grid grid-cols-1 gap-3 border-t bg-background p-3 sm:grid-cols-2 sm:p-4">
             <button
               type="button"
               onClick={descargar}
