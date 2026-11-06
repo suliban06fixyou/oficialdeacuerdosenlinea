@@ -231,4 +231,12 @@ describe("regresión: narrativa completa de intervención en Chihuahua", () => {
     expect(d.calle).toContain("Reforma");
     expect(d.calle).not.toContain("Libertad");
   });
+  test("rescata juzgado y fecha de presentación del mismo día sin inventar autoridad receptora", () => {
+    const d = extraerCamposNarrativa(narrativa);
+    expect(d.autoridadEntrega).toBe("Juzgado Cívico Municipal de Chihuahua");
+    expect(d.fechaEntrega).toBe("02/11/2026");
+    expect(d.horaEntrega).toBe("21:05");
+    expect(d.autoridadRecibe).toBe("");
+  });
+
 });
