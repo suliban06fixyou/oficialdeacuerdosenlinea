@@ -391,9 +391,10 @@ export function extraerCamposNarrativa(narrativa: string): {
   // El traslado a una comandancia identifica el destino, no acredita por sí
   // solo la entrega efectiva ni su fecha u hora.
   const autoridadEntrega = obtener("juzgado o instituci[oó]n correspondiente|juzgado|instituci[oó]n correspondiente|autoridad competente") ||
+    grupo(/(?:trasladad[oa]|traslad[oó]|trasladamos|se traslad[oó])\s+(?:al|a la|hacia el|hacia la)\s+((?:Juzgado|Comandancia|Fiscal[ií]a)[^,.;]{0,85}?)(?=,\s*donde|\s+donde\s+|[.;,]|$)/i) ||
     grupo(/(?:presentad[oa]|entregad[oa]|puesta? a disposici[oó]n)\s+(?:ante|en|a)\s+(?:el|la|las|los)?\s*((?:juzgado|juez c[ií]vico|comandancia|fiscal[ií]a|autoridad)[^.;,]{0,90})/i) ||
     grupo(/(?:traslad[oó]|trasladamos|se traslad[oó])[^.;]{0,120}?\b(?:a|hacia)\s+(?:las instalaciones de\s+)?(?:la|el)\s+((?:comandancia|juzgado|fiscal[ií]a)[^.;,]{0,70}?)(?=\s+para\s+|[.;,]|$)/i);
-  const fechaEntrega = obtener("fecha de entrega|fecha de presentaci[oó]n");
+  const fechaEntrega = obtener("fecha de entrega|fecha de presentaci[oó]n") || (/(?:presentad[oa]|entregad[oa])[^.;]{0,100}\b(?:del mismo d[ií]a|ese mismo d[ií]a|del mismo d[ií]a|mismo d[ií]a)\b/i.test(plano) ? fechaGeneral : "");
   const horaEntrega = obtener("hora de entrega|hora de presentaci[oó]n") || grupo(/(?:presentad[oa]|entregad[oa]|puest[oa]\s+a\s+disposici[oó]n)\s+a\s+las\s+([0-2]?\d:[0-5]\d)\s+horas?/i);
   const policiaEntrega = obtener("polic[ií]a que entrega|elemento que entrega|oficial que entrega");
   const autoridadRecibe = obtener("juez o autoridad competente que recibe|autoridad que recibe|persona que recibe");
