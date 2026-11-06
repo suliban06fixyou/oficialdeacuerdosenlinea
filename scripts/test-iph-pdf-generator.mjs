@@ -34,7 +34,7 @@ try {
     "La persona detenida manifestó llamarse José Manuel Hernández García, de sexo masculino, nacionalidad mexicana, nacido el 15 de marzo de 1995, con domicilio en calle Libertad número 245, colonia Obrera, municipio de Chihuahua, Chihuahua. Manifestó no contar en ese momento con documento de identificación.",
     "Posteriormente, el detenido fue trasladado al Juzgado Cívico Municipal de Chihuahua, donde fue presentado a las 21:05 horas del mismo día ante la autoridad competente.",
     "No se observaron lesiones visibles en la persona detenida ni en el oficial interviniente. No fue necesaria asistencia médica.",
-  ].join("\\n\\n");
+  ].join("\n\n");
 
   const { extraerCamposNarrativa } = await import("../src/components/IphPdfGenerator.tsx");
   const datos = extraerCamposNarrativa(narrativa);
