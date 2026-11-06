@@ -325,7 +325,7 @@ export function extraerCamposNarrativa(narrativa: string): {
   };
   const grupo = (re: RegExp): string => plano.match(re)?.[1]?.trim() ?? "";
   const horas: Record<string, string> = {};
-  const conocimiento = obtener("hora(?: de)? conocimiento|conocimiento") || grupo(/(?:a las|siendo las)\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,100}(?:reporte|llamada|tableta|radio)/i) || grupo(/(?:a las|siendo las)\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,120}(?:se recibi[oó]|recibimos|recib[ií])[^.]{0,80}(?:reporte|llamada|aviso)/i);
+  const conocimiento = obtener("hora(?: de)? conocimiento|conocimiento") || grupo(/(?:recibi[oó]|recibimos|recib[ií])\s+a\s+las\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,120}(?:evento|reporte|llamada|aviso)/i) || grupo(/(?:a las|siendo las)\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,100}(?:reporte|llamada|tableta|radio)/i) || grupo(/(?:a las|siendo las)\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,120}(?:se recibi[oó]|recibimos|recib[ií])[^.]{0,80}(?:reporte|llamada|aviso)/i);
   const llegada = obtener("hora(?: de)? llegada|llegada al lugar") || grupo(/(?:arrib[eé]|lleg[uó]|arribo)\s+(?:al lugar\s+)?(?:a\s+las\s+)?([0-2]?\d:[0-5]\d)\s+horas?/i) || grupo(/(?:a las|siendo las)\s+([0-2]?\d:[0-5]\d)\s+horas?\s+(?:arrib[eé]|lleg[uó]|arribo)/i);
   const detencion = obtener("hora(?: de)? detenci[oó]n|detenci[oó]n") || grupo(/(?:la\s+)?detenci[oó]n\s+(?:se\s+realiz[oó]\s+)?(?:fue\s+)?a\s+las\s+([0-2]?\d:[0-5]\d)\s+horas?/i) || grupo(/(?:siendo las|a las)\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,120}(?:detenci[oó]n|detuvo|detener)/i);
   if (splitTime(conocimiento)) horas.conocimiento = conocimiento;
