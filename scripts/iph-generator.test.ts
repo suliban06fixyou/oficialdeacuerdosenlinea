@@ -205,3 +205,30 @@ describe("extracción de campos etiquetados de la narrativa", () => {
     expect("Saúl René Mendoza Mendoza".trim()).toBeTruthy();
   });
 });
+
+describe("regresión: narrativa completa de intervención en Chihuahua", () => {
+  const narrativa = [
+    "El día 2 de noviembre de 2026, el Policía Tercero Carlos Alberto Ramírez López, a bordo de la unidad P-123, recibió a las 20:15 horas un evento del sistema de emergencias 911 mediante la tableta en la calle Reforma número 150, colonia Centro, municipio de Chihuahua, Chihuahua.",
+    "A las 20:22 horas arribé al lugar señalado.",
+    "La detención se realizó a las 20:30 horas en la calle Reforma número 150, colonia Centro, municipio de Chihuahua, Chihuahua.",
+    "La persona detenida manifestó llamarse José Manuel Hernández García, de sexo masculino, nacionalidad mexicana, nacido el 15 de marzo de 1995, con domicilio en calle Libertad número 245, colonia Obrera, municipio de Chihuahua, Chihuahua.",
+    "Posteriormente, el detenido fue trasladado al Juzgado Cívico Municipal de Chihuahua, donde fue presentado a las 21:05 horas del mismo día ante la autoridad competente.",
+  ].join(" ");
+
+  test("distingue las horas de conocimiento, arribo y detención", () => {
+    const d = extraerCamposNarrativa(narrativa);
+    expect(d.horas.conocimiento).toBe("20:15");
+    expect(d.horas.llegada).toBe("20:22");
+    expect(d.horas.detencion).toBe("20:30");
+  });
+
+  test("rescata nombre, nacimiento, domicilio y hora de presentación sin mezclarlos", () => {
+    const d = extraerCamposNarrativa(narrativa);
+    expect(d.nombreDetenido).toBe("José Manuel Hernández García");
+    expect(d.fechaNacimientoDetenido).toBe("15 de marzo de 1995");
+    expect(d.domicilioDetenido).toContain("Libertad número 245");
+    expect(d.horaEntrega).toBe("21:05");
+    expect(d.calle).toContain("Reforma");
+    expect(d.calle).not.toContain("Libertad");
+  });
+});
