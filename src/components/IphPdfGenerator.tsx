@@ -496,7 +496,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   const placaMatch = oficialCapturado.match(/(?:n[uú]mero de placa|no\.?\s*de placa|placa)\s*[:#-]?\s*([A-Za-z0-9-]+)/i);
   const nombreOficial = oficialCapturado.replace(/[,;]?\s*(?:n[uú]mero de placa|no\.?\s*de placa|placa)\s*[:#-]?\s*[A-Za-z0-9-]+/i, "").trim();
   const tokensOficial = nombreOficial.split(/\s+/).filter(Boolean);
-  if (tokensOficial.length >= 4) {
+  if (tokensOficial.length >= 3 && !/\b(?:de|del|la|las|los)\b/i.test(nombreOficial)) {
     drawWrappedValue(page1, tokensOficial[tokensOficial.length - 2], font, {
       x: 43, y: 594, width: 145, maxLines: 1, fontSize: 7.0, lineHeight: 8,
     });
