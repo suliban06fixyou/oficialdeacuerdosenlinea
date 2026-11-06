@@ -25,37 +25,36 @@ globalThis.fetch = async (input) => {
 };
 
 try {
+  // Caso de referencia aprobado: todos los datos son ficticios.
+  const narrativa = [
+    "El día 2 de noviembre de 2026, el suscrito Policía Tercero Carlos Alberto Ramírez López, adscrito a la Dirección de Seguridad Pública Municipal de Chihuahua, Chihuahua, a bordo de la unidad P-123, recibió a las 20:15 horas un evento del sistema de emergencias 911 mediante la tableta electrónica de la unidad, en el que se reportaba a una persona del sexo masculino alterando el orden público en la calle Reforma número 150, colonia Centro, municipio de Chihuahua, Chihuahua.",
+    "A las 20:22 horas arribé al lugar señalado, ubicado en la vía pública, donde observé a un masculino que gritaba palabras ofensivas a los transeúntes. Me identifiqué como policía municipal y le indiqué mediante comandos verbales que cesara su conducta.",
+    "La persona comenzó a insultarme, se negó a obedecer las indicaciones e intentó retirarse del lugar. Al aproximarme para realizar la intervención, el masculino me empujó con ambas manos e intentó lanzar una patada, por lo que apliqué una técnica de sujeción y control físico para impedir que continuara la agresión.",
+    "Una vez controlada la situación, procedí a colocarle los candados de mano, verificando su correcta colocación. La detención se realizó a las 20:30 horas en la calle Reforma número 150, colonia Centro, municipio de Chihuahua, Chihuahua.",
+    "La persona detenida manifestó llamarse José Manuel Hernández García, de sexo masculino, nacionalidad mexicana, nacido el 15 de marzo de 1995, con domicilio en calle Libertad número 245, colonia Obrera, municipio de Chihuahua, Chihuahua. Manifestó no contar en ese momento con documento de identificación.",
+    "Posteriormente, el detenido fue trasladado al Juzgado Cívico Municipal de Chihuahua, donde fue presentado a las 21:05 horas del mismo día ante la autoridad competente.",
+    "No se observaron lesiones visibles en la persona detenida ni en el oficial interviniente. No fue necesaria asistencia médica.",
+  ].join("\\n\\n");
+
+  const { extraerCamposNarrativa } = await import("../src/components/IphPdfGenerator.tsx");
+  const datos = extraerCamposNarrativa(narrativa);
+  assert.equal(datos.unidadPolicial, "P-123", "Debe recuperar la unidad P-123.");
+  assert.equal(datos.tipoConocimiento, "llamada", "El aviso 911 debe marcar llamada de emergencia.");
+  assert.equal(datos.horas.conocimiento, "20:15");
+  assert.equal(datos.horas.llegada, "20:22");
+  assert.equal(datos.horas.detencion, "20:30");
+  assert.equal(datos.nombreDetenido, "José Manuel Hernández García");
+  assert.equal(datos.horaEntrega, "21:05");
+  assert.match(datos.calle, /Reforma/i, "No debe confundir el lugar de hechos con el domicilio del detenido.");
+  assert.doesNotMatch(datos.calle, /Libertad/i);
+
   const bytes = await generarPdf({
-    oficial: "Oficial de prueba",
+    oficial: "Carlos Alberto Ramírez López",
     folio: "TEST-IPH-2026-001",
-    falta: "Ejemplo ficticio de falta administrativa",
-    lugar: "Calle de Prueba 123, Colonia Centro, Chihuahua",
-    horas: {
-      conocimiento: "21:00",
-      llegada: "21:10",
-      detencion: "21:20",
-    },
-    narrativa: [
-      "Fecha de conocimiento: 25/10/2026",
-      "Fecha de arribo: 25/10/2026",
-      "Fecha de detención: 25/10/2026",
-      "Siendo las 21:00 horas se tuvo conocimiento del reporte.",
-      "Al arribar a las 21:10 horas, se indicó a la persona que se detuviera.",
-      "La persona se negó a obedecer la indicación e intentó evadir al oficial.",
-      "Se procedió a la detención a las 21:20 horas y traslado a comandancia.",
-      "Nombre de la persona detenida: Juan Carlos Pérez López",
-      "Sexo: Hombre",
-      "Fecha de nacimiento: 03/04/1990",
-      "Nacionalidad: Mexicana",
-      "CURP: PELJ900403HCHXXX00",
-      "Domicilio de la persona detenida: Calle Ficticia 123, Colonia Centro, Chihuahua",
-      "Lugar de la detención: Calle Ficticia 123, Colonia Centro, Chihuahua",
-      "Juzgado: Juzgado Cívico de Prueba",
-      "Fecha de entrega: 25/10/2026",
-      "Hora de entrega: 21:30",
-      "Policía que entrega: Oficial de Prueba Pérez López",
-      "Autoridad que recibe: Juez Cívico de Prueba",
-    ].join("\n"),
+    falta: "Alteración del orden público reportada al 911",
+    lugar: "Calle Reforma número 150, colonia Centro, municipio de Chihuahua, Chihuahua",
+    horas: { conocimiento: "20:15", llegada: "20:22", detencion: "20:30" },
+    narrativa,
   });
 
   assert.equal(requestedTemplate, true, "Debe solicitar la plantilla oficial.");
