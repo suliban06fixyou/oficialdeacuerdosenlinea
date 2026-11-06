@@ -255,10 +255,10 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
   const datos = extraerDatosUsoFuerza(narrativa);
   // Apartado 5.1: cada texto se limita al recuadro impreso del formato oficial.
   dibujarTextoAjustado(page, datos.resistencia, font, {
-    x: 32, topY: 710, bottomY: 680, width: page.getWidth() - 66, maxSize: 7.2, minSize: 5.8,
+    x: 28, topY: 710, bottomY: 682, width: page.getWidth() - 65, maxSize: 7.2, minSize: 5.8,
   });
   dibujarTextoAjustado(page, datos.descripcion, font, {
-    x: 32, topY: 650, bottomY: 570, width: page.getWidth() - 66, maxSize: 7.2, minSize: 5.8,
+    x: 28, topY: 649, bottomY: 574, width: page.getWidth() - 65, maxSize: 7.2, minSize: 5.8,
   });
 
   // Marcar "Detención(es)" cuando la narrativa menciona expresamente una detención.
@@ -512,14 +512,14 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
       x: 379, y: 594, width: 165, maxLines: 1, fontSize: 6.8, lineHeight: 8,
     });
   }
-  if (placaMatch?.[1]) {
-    page1.drawText(`Placa ${placaMatch[1]}`, {
-      x: 40, y: 568, size: 7.0, font, color: rgb(0.05, 0.05, 0.05),
-    });
-  }
+  // El grado se obtiene del nombramiento narrado, no del nombre personal.
+  const gradoNarrado = props.narrativa.match(/\b(pol[ií]c[ií]a\s+(?:tercero|tercera|segundo|segunda|primero|primera|[123](?:\s*[°ºªo])?)|suboficial|oficial)\b/i)?.[1] ?? "";
+  const gradoPolicial = gradoNarrado || (/\b(?:pol[ií]c[ií]a|agente)\b/i.test(props.narrativa + " " + props.oficial) ? "Policía de academia" : "");
+  drawWrappedValue(page1, gradoPolicial, font, { x: 130, y: 568, width: 395, maxLines: 1, fontSize: 7, lineHeight: 8 });
+  // No sobreescribir el grado/cargo con el número de placa.
   // Este generador está destinado al IPH de Policía Municipal de Chihuahua.
   marcar(page1, 506, 535, font);
-  drawWrappedValue(page1, extraidos.unidadPolicial, font, { x: 337, y: 551, width: 210, maxLines: 1, fontSize: 7, lineHeight: 8 });
+  drawWrappedValue(page1, extraidos.unidadPolicial, font, { x: 360, y: 551, width: 175, maxLines: 1, fontSize: 7, lineHeight: 8 });
   // Adscripción de esta instancia municipal, no ubicación inferida de la detención.
   drawWrappedValue(page1, "Chihuahua", font, { x: 43, y: 486, width: 215, maxLines: 1, fontSize: 7, lineHeight: 8 });
   drawWrappedValue(page1, "Chihuahua", font, { x: 304, y: 486, width: 215, maxLines: 1, fontSize: 7, lineHeight: 8 });
@@ -603,8 +603,8 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   // no en las coordenadas de la hora de conocimiento de la sección 2.
   drawDate(page1, extraidos.fechaArribo, 133, 126, 11.5, font);
   drawTime(page1, horas.llegada, 415, 445, 126, font);
-  drawDate(page3Detencion, extraidos.fechaDetencion, 145, 98, 8.5, font);
-  drawTime(page3Detencion, horas.detencion, 357, 395, 98, font);
+  drawDate(page3Detencion, extraidos.fechaDetencion, 116, 98, 12.3, font);
+  drawTime(page3Detencion, horas.detencion, 368, 405, 98, font);
 
   // SECCIÓN 3.2: marcar únicamente el tipo de lugar expresamente identificable.
   if (extraidos.tipoLugar === "hogar") marcar(page1, 157, 83, font);
@@ -740,7 +740,11 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   drawDate(pages[3], extraidos.fechaEntrega, 155, 610, 6.8, font);
   drawTime(pages[3], extraidos.horaEntrega, 388, 409, 610, font);
 
-  const policiaEntrega = extraidos.policiaEntrega.trim();
+  // Identidad del suscrito sólo si la narrativa indica que intervino y trasladó.
+  const entregaPorSuscrito = /\b(?:el suscrito|la suscrita)\b/i.test(props.narrativa) &&
+    /\b(?:trasladad[oa]|traslad[oó]|presentad[oa]|present[oó])\b/i.test(props.narrativa);
+  const policiaEntrega = extraidos.policiaEntrega.trim() ||
+    (entregaPorSuscrito ? nombreOficial : "");
   const partesPoliciaEntrega = policiaEntrega.split(/\s+/).filter(Boolean);
   if (partesPoliciaEntrega.length >= 4) {
     drawWrappedValue(pages[3], partesPoliciaEntrega[partesPoliciaEntrega.length - 2], font, {
@@ -757,7 +761,19 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
       x: 106, y: 544, width: 171, maxLines: 1, fontSize: 6.5, lineHeight: 7,
     });
   }
-  drawWrappedValue(pages[3], extraidos.autoridadRecibe, font, {
+  if (policiaEntrega) {
+    drawWrappedValue(pages[3], "Dirección de Seguridad Pública Municipal de Chihuahua", font, {
+      x: 106, y: 531, width: 170, maxLines: 1, fontSize: 5.4, lineHeight: 7,
+    });
+    drawWrappedValue(pages[3], gradoPolicial, font, {
+      x: 106, y: 519, width: 170, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    });
+  }
+  // No inventar nombre de receptor; sólo datos institucionales solicitados.
+  drawWrappedValue(pages[3], "Juzgado Cívico Municipal Chihuahua Chihuahua", font, {
+    x: 360, y: 531, width: 190, maxLines: 1, fontSize: 5.8, lineHeight: 7,
+  });
+  drawWrappedValue(pages[3], "Oficial de Acuerdos", font, {
     x: 360, y: 519, width: 190, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
 
