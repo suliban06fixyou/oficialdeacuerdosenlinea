@@ -239,4 +239,10 @@ describe("regresión: narrativa completa de intervención en Chihuahua", () => {
     expect(d.autoridadRecibe).toBe("");
   });
 
+  test("reconoce lugar de detención expresado después de la hora", () => {
+    const d = extraerCamposNarrativa(narrativa);
+    expect(d.lugarDetencion).toContain("Reforma número 150");
+    expect(d.lugarDetencion).not.toContain("Libertad");
+  });
+
 });
