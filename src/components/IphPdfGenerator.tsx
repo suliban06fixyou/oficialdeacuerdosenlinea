@@ -367,7 +367,7 @@ export function extraerCamposNarrativa(narrativa: string): {
   const fechaConocimiento = obtener("fecha de conocimiento|fecha del reporte") || fechaGeneral;
   const fechaArribo = obtener("fecha de arribo|fecha de llegada") || fechaGeneral;
   const fechaDetencion = obtener("fecha de detenci[oó]n") || fechaGeneral;
-  const unidadPolicial = obtener("n[uú]mero de unidad|unidad policial|unidad|patrulla") || grupo(/(?:unidad|patrulla)\s*(?:n[uú]mero|n[uú]m\.?|no\.?|#)?\s*[:#-]?\s*([A-Z0-9-]{2,12})\b/i);
+  const unidadPolicial = obtener("n[uú]mero de unidad|unidad policial|unidad|patrulla") || grupo(/(?:unidad|patrulla)\s*(?:n[uú]mero|n[uú]m\.?|no\.?|#)?\s*[:#-]?\s*([A-Z0-9-]{2,12})\b/i) || grupo(/\ba\s+bordo\s+de\s+la\s+unidad\s+([A-Z0-9-]{2,12})\b/i);
   const tipoConocimiento: "llamada" | "presencia" | "queja" | "otro" | "" =
     /(?:llamada(?:\s+(?:de emergencia|al\s*911))?|reporte\s+(?:por|a trav[eé]s de|en|a)\s+(?:radio|tableta|tel[eé]fono)|(?:evento|reporte|aviso)[^.;]{0,65}(?:tableta|911)|(?:tableta|911)[^.;]{0,65}(?:evento|reporte|aviso)|por (?:radio|tableta|tel[eé]fono)[^.;]{0,40}reporte|cabina|911)/i.test(plano) ? "llamada" :
     /(?:presencia directa|observaci[oó]n directa|observ[eé] directamente|se percat[oó] directamente)/i.test(plano) ? "presencia" :
@@ -518,7 +518,10 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   }
   // Este generador está destinado al IPH de Policía Municipal de Chihuahua.
   marcar(page1, 506, 535, font);
-  drawWrappedValue(page1, extraerCamposNarrativa(props.narrativa).unidadPolicial, font, { x: 337, y: 551, width: 210, maxLines: 1, fontSize: 7, lineHeight: 8 });
+  drawWrappedValue(page1, extraidos.unidadPolicial, font, { x: 337, y: 551, width: 210, maxLines: 1, fontSize: 7, lineHeight: 8 });
+  // Adscripción de esta instancia municipal, no ubicación inferida de la detención.
+  drawWrappedValue(page1, "Chihuahua", font, { x: 43, y: 486, width: 215, maxLines: 1, fontSize: 7, lineHeight: 8 });
+  drawWrappedValue(page1, "Chihuahua", font, { x: 304, y: 486, width: 215, maxLines: 1, fontSize: 7, lineHeight: 8 });
 
 
 
