@@ -234,7 +234,7 @@ describe("regresión: narrativa completa de intervención en Chihuahua", () => {
   test("rescata juzgado y fecha de presentación del mismo día sin inventar autoridad receptora", () => {
     const d = extraerCamposNarrativa(narrativa);
     expect(d.autoridadEntrega).toBe("Juzgado Cívico Municipal de Chihuahua");
-    expect(d.fechaEntrega).toBe("02/11/2026");
+    expect(d.fechaEntrega).toBe("2/11/2026"); // La fecha narrada es equivalente; el PDF la distribuye en casillas DD/MM/AAAA.
     expect(d.horaEntrega).toBe("21:05");
     expect(d.autoridadRecibe).toBe("");
   });
