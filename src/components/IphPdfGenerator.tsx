@@ -326,8 +326,8 @@ export function extraerCamposNarrativa(narrativa: string): {
   const grupo = (re: RegExp): string => plano.match(re)?.[1]?.trim() ?? "";
   const horas: Record<string, string> = {};
   const conocimiento = obtener("hora(?: de)? conocimiento|conocimiento") || grupo(/(?:a las|siendo las)\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,100}(?:reporte|llamada|tableta|radio)/i) || grupo(/(?:a las|siendo las)\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,120}(?:se recibi[oó]|recibimos|recib[ií])[^.]{0,80}(?:reporte|llamada|aviso)/i);
-  const llegada = obtener("hora(?: de)? llegada|llegada al lugar") || grupo(/(?:arrib[eé]|lleg[uó]|arribo)\s+(?:al lugar )?(?:a las )([0-2]?\d:[0-5]\d)\s+horas?/i) || grupo(/(?:arrib[eé]|lleg[uó]|arribo)\s+(?:al lugar\s+)?a\s+las\s+([0-2]?\d:[0-5]\d)\s+horas?/i);
-  const detencion = obtener("hora(?: de)? detenci[oó]n|detenci[oó]n") || grupo(/(?:siendo las|a las)\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,120}(?:detenci[oó]n|detuvo|detener)/i);
+  const llegada = obtener("hora(?: de)? llegada|llegada al lugar") || grupo(/(?:arrib[eé]|lleg[uó]|arribo)\s+(?:al lugar\s+)?(?:a\s+las\s+)?([0-2]?\d:[0-5]\d)\s+horas?/i) || grupo(/(?:a las|siendo las)\s+([0-2]?\d:[0-5]\d)\s+horas?\s+(?:arrib[eé]|lleg[uó]|arribo)/i);
+  const detencion = obtener("hora(?: de)? detenci[oó]n|detenci[oó]n") || grupo(/(?:la\s+)?detenci[oó]n\s+(?:se\s+realiz[oó]\s+)?(?:fue\s+)?a\s+las\s+([0-2]?\d:[0-5]\d)\s+horas?/i) || grupo(/(?:siendo las|a las)\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,120}(?:detenci[oó]n|detuvo|detener)/i);
   if (splitTime(conocimiento)) horas.conocimiento = conocimiento;
   if (splitTime(llegada)) horas.llegada = llegada;
   if (splitTime(detencion)) horas.detencion = detencion;
@@ -378,13 +378,13 @@ export function extraerCamposNarrativa(narrativa: string): {
     /\bmetro\b/i.test(plano) ? "metro" :
     /\b(?:transporte p[uú]blico|cami[oó]n|microb[uú]s|combi)\b/i.test(plano) ? "transporte" :
     /\b(?:domicilio particular|casa habitaci[oó]n|hogar)\b/i.test(plano) ? "hogar" : "";
-  const nombreDetenido = obtener("nombre de la persona detenida|nombre completo del detenido|nombre del detenido|persona detenida") || grupo(/(?:quien dijo llamarse|dijo llamarse|manifest[oó] llamarse|se identific[oó] como|quien responde al nombre de)\s+([^,.;]+?)(?=\s+(?:con domicilio|conocido como|alias|de \d+ a[nñ]os)|[,.;]|$)/i);
+  const nombreDetenido = obtener("nombre de la persona detenida|nombre completo del detenido|nombre del detenido|persona detenida") || grupo(/(?:quien dijo llamarse|dijo llamarse|manifest[oó] llamarse|se identific[oó] como|quien responde al nombre de)\s+([^,.;]+?)(?=\s+(?:de sexo|de nacionalidad|nacionalidad|nacid[oa]|con domicilio|conocido como|alias|de \d+ a[nñ]os)|[,.;]|$)/i);
   const aliasDetenido = obtener("alias|apodo") || grupo(/(?:alias|apodad[oa] como|conocid[oa] como)\s+([^,.;]+)/i);
   const sexoDetenido = obtener("sexo de la persona detenida|sexo") || grupo(/(?:\bsexo\s+|\bpersona\s+(?:del sexo\s+)?)(masculin[oa]|femenin[oa]|hombre|mujer)\b/i);
-  const fechaNacimientoDetenido = obtener("fecha de nacimiento");
+  const fechaNacimientoDetenido = obtener("fecha de nacimiento") || grupo(/(?:nacid[oa]\s+(?:el\s+)?|fecha de nacimiento\s*[:=]?\s*)(\d{1,2}\s+de\s+(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+de\s+\d{4}|\d{1,2}[/-]\d{1,2}[/-]\d{4})/i);
   const nacionalidadDetenido = obtener("nacionalidad") || grupo(/nacionalidad\s+(mexicana|extranjera)/i);
   const curpDetenido = obtener("CURP");
-  const domicilioDetenido = obtener("domicilio de la persona detenida|domicilio del detenido|domicilio particular") || grupo(/(?:con domicilio (?:en|ubicado en)|domiciliad[oa] en)\s+([^.;]+)/i);
+  const domicilioDetenido = obtener("domicilio de la persona detenida|domicilio del detenido|domicilio particular") || grupo(/(?:con domicilio\s+(?:en|ubicado en)?|domiciliad[oa] en)\s+([^.;]+)/i);
   const lugarDetencion = obtener("lugar de la detenci[oó]n|domicilio de la detenci[oó]n|ubicaci[oó]n de la detenci[oó]n") ||
     grupo(/(?:se (?:procedi[oó] a su |realiz[oó] la )?detenci[oó]n|fue detenid[oa])\s+(?:en|sobre)\s+([^.;]+?)(?=\s+(?:a las|siendo las|para|por)|[.;]|$)/i);
   const documentoDetenido = obtener("documento de identificaci[oó]n|identificaci[oó]n presentada|credencial INE|licencia|pasaporte") || grupo(/(?:se identific[oó] con|present[oó])\s+(credencial INE|INE|licencia|pasaporte)/i);
@@ -394,7 +394,7 @@ export function extraerCamposNarrativa(narrativa: string): {
     grupo(/(?:presentad[oa]|entregad[oa]|puesta? a disposici[oó]n)\s+(?:ante|en|a)\s+(?:el|la|las|los)?\s*((?:juzgado|juez c[ií]vico|comandancia|fiscal[ií]a|autoridad)[^.;,]{0,90})/i) ||
     grupo(/(?:traslad[oó]|trasladamos|se traslad[oó])[^.;]{0,120}?\b(?:a|hacia)\s+(?:las instalaciones de\s+)?(?:la|el)\s+((?:comandancia|juzgado|fiscal[ií]a)[^.;,]{0,70}?)(?=\s+para\s+|[.;,]|$)/i);
   const fechaEntrega = obtener("fecha de entrega|fecha de presentaci[oó]n");
-  const horaEntrega = obtener("hora de entrega|hora de presentaci[oó]n");
+  const horaEntrega = obtener("hora de entrega|hora de presentaci[oó]n") || grupo(/(?:presentad[oa]|entregad[oa]|puest[oa]\s+a\s+disposici[oó]n)\s+a\s+las\s+([0-2]?\d:[0-5]\d)\s+horas?/i);
   const policiaEntrega = obtener("polic[ií]a que entrega|elemento que entrega|oficial que entrega");
   const autoridadRecibe = obtener("juez o autoridad competente que recibe|autoridad que recibe|persona que recibe");
   const lugar = lugarEtiquetado || [calle, numeroExterior && !new RegExp(`\\b${numeroExterior}\\b`).test(calle) ? numeroExterior : "", colonia && `colonia ${colonia}`, municipio].filter(Boolean).join(", ");
