@@ -255,10 +255,10 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
   const datos = extraerDatosUsoFuerza(narrativa);
   // Apartado 5.1: cada texto se limita al recuadro impreso del formato oficial.
   dibujarTextoAjustado(page, datos.resistencia, font, {
-    x: 28, topY: 710, bottomY: 682, width: page.getWidth() - 65, maxSize: 7.2, minSize: 5.8,
+    x: 28, topY: 708, bottomY: 685, width: page.getWidth() - 65, maxSize: 6.2, minSize: 5.0,
   });
   dibujarTextoAjustado(page, datos.descripcion, font, {
-    x: 28, topY: 649, bottomY: 574, width: page.getWidth() - 65, maxSize: 7.2, minSize: 5.8,
+    x: 28, topY: 635, bottomY: 574, width: page.getWidth() - 65, maxSize: 6.5, minSize: 5.0,
   });
 
   // Marcar "Detención(es)" cuando la narrativa menciona expresamente una detención.
@@ -516,11 +516,11 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   // El grado se obtiene del nombramiento narrado, no del nombre personal.
   const gradoNarrado = props.narrativa.match(/\b(pol[ií]c[ií]a\s+(?:tercero|tercera|segundo|segunda|primero|primera|[123](?:\s*[°ºªo])?)|suboficial|oficial)\b/i)?.[1] ?? "";
   const gradoPolicial = gradoNarrado || (/\b(?:pol[ií]c[ií]a|agente)\b/i.test(props.narrativa + " " + props.oficial) ? "Policía de academia" : "");
-  drawWrappedValue(page1, gradoPolicial, font, { x: 130, y: 568, width: 395, maxLines: 1, fontSize: 7, lineHeight: 8 });
+  drawWrappedValue(page1, gradoPolicial, font, { x: 130, y: 563, width: 395, maxLines: 1, fontSize: 7, lineHeight: 8 });
   // No sobreescribir el grado/cargo con el número de placa.
   // Este generador está destinado al IPH de Policía Municipal de Chihuahua.
   marcar(page1, 506, 535, font);
-  drawWrappedValue(page1, extraidos.unidadPolicial, font, { x: 360, y: 551, width: 175, maxLines: 1, fontSize: 7, lineHeight: 8 });
+  drawWrappedValue(page1, extraidos.unidadPolicial, font, { x: 320, y: 555, width: 210, maxLines: 1, fontSize: 7, lineHeight: 8 });
   // Adscripción de esta instancia municipal, no ubicación inferida de la detención.
   drawWrappedValue(page1, "Chihuahua", font, { x: 43, y: 486, width: 215, maxLines: 1, fontSize: 7, lineHeight: 8 });
   drawWrappedValue(page1, "Chihuahua", font, { x: 304, y: 486, width: 215, maxLines: 1, fontSize: 7, lineHeight: 8 });
@@ -655,7 +655,14 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   });
   if (/^mujer|^femenin[oa]|^f$/i.test(extraidos.sexoDetenido.trim())) marcar(page3Detencion, 177, 294, font);
   if (/^hombre|^masculin[oa]|^m$/i.test(extraidos.sexoDetenido.trim())) marcar(page3Detencion, 208, 294, font);
-  drawDate(page3Detencion, extraidos.fechaNacimientoDetenido, 354, 294, 13.0, font);
+  const fechaNacimiento = extraidos.fechaNacimientoDetenido.replace(
+    /^(\\d{1,2})\\s+de\\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\\s+de\\s+(\\d{4})$/i,
+    (_todo, dia: string, mes: string, anio: string) => {
+      const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+      return dia + "/" + String(meses.indexOf(mes.toLowerCase()) + 1).padStart(2, "0") + "/" + anio;
+    },
+  );
+  drawDate(page3Detencion, fechaNacimiento, 354, 294, 13.0, font);
   if (/mexican/i.test(extraidos.nacionalidadDetenido)) marcar(page3Detencion, 151, 267, font);
   if (/extranj/i.test(extraidos.nacionalidadDetenido)) marcar(page3Detencion, 214, 267, font);
   drawWrappedValue(page3Detencion, extraidos.curpDetenido, font, {
@@ -664,11 +671,15 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   if (/INE|credencial/i.test(extraidos.documentoDetenido)) marcar(page3Detencion, 266, 325, font);
   if (/licencia/i.test(extraidos.documentoDetenido)) marcar(page3Detencion, 322, 325, font);
   if (/pasaporte/i.test(extraidos.documentoDetenido)) marcar(page3Detencion, 395, 325, font);
+  if (/\\b(?:no (?:contaba|cuenta|contar)|sin (?:documento|identificaci[oó]n)|no present[oó] (?:documento|identificaci[oó]n))\\b/i.test(props.narrativa)) {
+    marcar(page3Detencion, 555, 325, font);
+  }
 
   const calleSinNumeroExterior = (calle: string, numero: string) =>
-    numero && calle.trim().endsWith(" " + numero)
-      ? calle.trim().slice(0, -(numero.length + 1)).trim()
-      : calle;
+    calle.trim()
+      .replace(numero ? new RegExp("\\s*(?:n[uú]mero|n[uú]m\\.?|no\\.?)?\\s*" + numero + "$", "i") : /$^/, "")
+      .replace(/\\s+(?:n[uú]mero|n[uú]m\\.?|no\\.?)$/i, "")
+      .trim();
 
   // SECCIÓN 6.2: domicilio de la persona detenida, sólo cuando esté expresamente señalado.
   const domicilioDetenido = extraerCamposNarrativa(extraidos.domicilioDetenido);
