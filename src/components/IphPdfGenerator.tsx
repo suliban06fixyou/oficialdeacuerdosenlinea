@@ -597,7 +597,14 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   if (extraidos.tipoConocimiento === "queja") marcar(page1, 87, 391, font);
   if (extraidos.tipoConocimiento === "otro") marcar(page1, 87, 377, font);
   drawDate(page1, extraidos.fechaConocimiento, 457, 420, 11.8, font);
-  drawTime(page1, horas.conocimiento, 457, 482, 379, font);
+  // Cada dígito ocupa su propia casilla en la hora de conocimiento.
+  const horaConocimiento = splitTime(horas.conocimiento);
+  if (horaConocimiento) {
+    const digitos = horaConocimiento.hours + horaConocimiento.minutes;
+    [459, 472, 490, 503].forEach((x, i) => {
+      page1.drawText(digitos[i], { x, y: 379, size: 7, font, color: rgb(0.05, 0.05, 0.05) });
+    });
+  }
 
   // SECCIÓN 3.1: las horas de arribo van en las casillas de la izquierda,
   // no en las coordenadas de la hora de conocimiento de la sección 2.
