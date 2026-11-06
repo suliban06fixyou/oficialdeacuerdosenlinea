@@ -386,6 +386,7 @@ export function extraerCamposNarrativa(narrativa: string): {
   const curpDetenido = obtener("CURP");
   const domicilioDetenido = obtener("domicilio de la persona detenida|domicilio del detenido|domicilio particular") || grupo(/(?:con domicilio\s+(?:en|ubicado en)?|domiciliad[oa] en)\s+([^.;]+)/i);
   const lugarDetencion = obtener("lugar de la detenci[oó]n|domicilio de la detenci[oó]n|ubicaci[oó]n de la detenci[oó]n") ||
+    grupo(/(?:la\s+)?detenci[oó]n\s+se\s+realiz[oó]\s+a\s+las\s+[0-2]?\d:[0-5]\d\s+horas?\s+en\s+(?:la\s+)?((?:calle|avenida|av\.|bulevar)[^.;]+)/i) ||
     grupo(/(?:se (?:procedi[oó] a su |realiz[oó] la )?detenci[oó]n|fue detenid[oa])\s+(?:en|sobre)\s+([^.;]+?)(?=\s+(?:a las|siendo las|para|por)|[.;]|$)/i);
   const documentoDetenido = obtener("documento de identificaci[oó]n|identificaci[oó]n presentada|credencial INE|licencia|pasaporte") || grupo(/(?:se identific[oó] con|present[oó])\s+(credencial INE|INE|licencia|pasaporte)/i);
   // El traslado a una comandancia identifica el destino, no acredita por sí
@@ -776,6 +777,10 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
       x: 106, y: 519, width: 170, maxLines: 1, fontSize: 6.5, lineHeight: 7,
     });
   }
+  // Si se identifica a quien recibe, conservar su nombre sin confundirlo con el cargo.
+  drawWrappedValue(pages[3], extraidos.autoridadRecibe, font, {
+    x: 360, y: 544, width: 190, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
   // No inventar nombre de receptor; sólo datos institucionales solicitados.
   drawWrappedValue(pages[3], "Juzgado Cívico Municipal Chihuahua Chihuahua", font, {
     x: 360, y: 531, width: 190, maxLines: 1, fontSize: 5.8, lineHeight: 7,
