@@ -624,9 +624,9 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   // SECCIÓN 3.1: las horas de arribo van en las casillas de la izquierda,
   // no en las coordenadas de la hora de conocimiento de la sección 2.
   drawDate(page1, extraidos.fechaArribo, 133, 126, 11.5, font);
-  drawTime(page1, horas.llegada, 415, 445, 126, font);
-  drawDate(page3Detencion, extraidos.fechaDetencion, 116, 98, 12.3, font);
-  drawTime(page3Detencion, horas.detencion, 368, 405, 98, font);
+  drawTime(page1, horas.llegada, 426, 464, 126, font);
+  drawDate(page3Detencion, extraidos.fechaDetencion, 124, 98, 11.5, font);
+  drawTime(page3Detencion, horas.detencion, 357, 392, 98, font);
 
   // SECCIÓN 3.2: marcar únicamente el tipo de lugar expresamente identificable.
   if (extraidos.tipoLugar === "hogar") marcar(page1, 42, 83, font);
@@ -676,7 +676,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
       return dia + "/" + String(meses.indexOf(mes.toLowerCase()) + 1).padStart(2, "0") + "/" + anio;
     },
   );
-  drawDate(page3Detencion, fechaNacimiento, 354, 294, 13.0, font);
+  drawDate(page3Detencion, fechaNacimiento, 357, 294, 11.5, font);
   if (/mexican/i.test(extraidos.nacionalidadDetenido)) marcar(page3Detencion, 151, 267, font);
   if (/extranj/i.test(extraidos.nacionalidadDetenido)) marcar(page3Detencion, 214, 267, font);
   drawWrappedValue(page3Detencion, extraidos.curpDetenido, font, {
@@ -771,7 +771,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     x: 195, y: 622, width: 355, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawDate(pages[3], extraidos.fechaEntrega, 159, 603, 11.5, font);
-  drawTime(pages[3], extraidos.horaEntrega, 388, 409, 610, font);
+  drawTime(pages[3], extraidos.horaEntrega, 403, 426, 602, font);
 
   // Identidad del suscrito sólo si la narrativa indica que intervino y trasladó.
   const entregaPorSuscrito = /\b(?:el suscrito|la suscrita)\b/i.test(props.narrativa) &&
