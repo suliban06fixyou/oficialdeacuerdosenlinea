@@ -72,6 +72,31 @@ try {
   await mkdir("test-output", { recursive: true });
   await writeFile("test-output/iph-pdf-preview.pdf", bytes);
 
+  // Segundo escenario independiente: observación directa, sin llamada al 911.
+  // No se deben trasladar al segundo caso los datos del primer detenido.
+  const narrativaDirecta = [
+    "El día 4 de noviembre de 2026, el suscrito Policía Segundo Luis Fernando Ortega Ruiz, adscrito a la Dirección de Seguridad Pública Municipal de Chihuahua, a bordo de la unidad P-456, durante un recorrido de vigilancia observé directamente a las 18:10 horas a una persona alterando el orden en la vía pública, sobre la calle Independencia número 80, colonia Centro, municipio de Chihuahua, Chihuahua.",
+    "A las 18:12 horas arribé al lugar e indiqué mediante comandos verbales que cesara la conducta. La persona obedeció las indicaciones y no opuso resistencia física.",
+    "A las 18:18 horas se realizó la detención en la calle Independencia número 80, colonia Centro, municipio de Chihuahua, Chihuahua. La persona manifestó llamarse Pedro Antonio Silva Torres, de sexo masculino, nacionalidad mexicana, nacido el 10 de abril de 1998, con domicilio en calle Morelos número 320, colonia Santo Niño, Chihuahua, Chihuahua.",
+    "Fue presentado a las 18:45 horas del mismo día en el Juzgado Cívico Municipal de Chihuahua. No se observaron lesiones y no fue necesaria asistencia médica.",
+  ].join("\n\n");
+  const directos = extraerCamposNarrativa(narrativaDirecta);
+  assert.equal(directos.tipoConocimiento, "presencia", "La observación directa no debe marcarse como llamada de emergencia.");
+  assert.equal(directos.unidadPolicial, "P-456");
+  assert.equal(directos.nombreDetenido, "Pedro Antonio Silva Torres");
+  assert.match(directos.calle, /Independencia/i);
+  assert.doesNotMatch(directos.calle, /Morelos/i);
+  const pdfDirecto = await generarPdf({
+    oficial: "Luis Fernando Ortega Ruiz",
+    folio: "TEST-IPH-2026-002",
+    falta: "Alteración del orden observada directamente",
+    lugar: "Calle Independencia número 80, colonia Centro, Chihuahua",
+    horas: { conocimiento: "18:10", llegada: "18:12", detencion: "18:18" },
+    narrativa: narrativaDirecta,
+  });
+  assert.equal((await PDFDocument.load(pdfDirecto)).getPageCount(), 4);
+  await writeFile("test-output/iph-pdf-observacion-directa.pdf", pdfDirecto);
+
   // Confirmar que la extracción usada por el generador respeta la regla acordada
   // sin deducir resistencia física, lesiones o atención médica.
   const { extraerDatosUsoFuerza } = await import("../src/components/IphPdfGenerator.tsx");
