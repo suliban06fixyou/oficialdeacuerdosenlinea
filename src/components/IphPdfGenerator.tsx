@@ -624,7 +624,13 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   // SECCIÓN 3.1: las horas de arribo van en las casillas de la izquierda,
   // no en las coordenadas de la hora de conocimiento de la sección 2.
   drawDate(page1, extraidos.fechaArribo, 133, 126, 11.5, font);
-  drawTime(page1, horas.llegada, 426, 464, 126, font);
+  // Minutos de arribo: cada dígito en su propia casilla del formato.
+  const arriboSeparado = splitTime(horas.llegada);
+  if (arriboSeparado) {
+    page1.drawText(arriboSeparado.hours, { x: 426, y: 126, size: 7.3, font, color: rgb(0.05, 0.05, 0.05) });
+    page1.drawText(arriboSeparado.minutes[0], { x: 449, y: 126, size: 7.3, font, color: rgb(0.05, 0.05, 0.05) });
+    page1.drawText(arriboSeparado.minutes[1], { x: 461, y: 126, size: 7.3, font, color: rgb(0.05, 0.05, 0.05) });
+  }
   drawDate(page3Detencion, extraidos.fechaDetencion, 124, 98, 11.5, font);
   drawTime(page3Detencion, horas.detencion, 357, 392, 98, font);
 
@@ -771,7 +777,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     x: 195, y: 622, width: 355, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
   drawDate(pages[3], extraidos.fechaEntrega, 159, 603, 11.5, font);
-  drawTime(pages[3], extraidos.horaEntrega, 403, 426, 602, font);
+  drawTime(pages[3], extraidos.horaEntrega, 403, 426, 606, font);
 
   // Identidad del suscrito sólo si la narrativa indica que intervino y trasladó.
   const entregaPorSuscrito = /\b(?:el suscrito|la suscrita)\b/i.test(props.narrativa) &&
@@ -796,7 +802,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   }
   if (policiaEntrega) {
     drawWrappedValue(pages[3], "Dirección de Seguridad Pública Municipal de Chihuahua", font, {
-      x: 106, y: 531, width: 170, maxLines: 1, fontSize: 5.4, lineHeight: 7,
+      x: 106, y: 536, width: 180, maxLines: 1, fontSize: 6.0, lineHeight: 7,
     });
     drawWrappedValue(pages[3], gradoPolicial, font, {
       x: 106, y: 519, width: 170, maxLines: 1, fontSize: 6.5, lineHeight: 7,
@@ -808,7 +814,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   });
   // No inventar nombre de receptor; sólo datos institucionales solicitados.
   drawWrappedValue(pages[3], "Juzgado Cívico Municipal Chihuahua Chihuahua", font, {
-    x: 360, y: 531, width: 190, maxLines: 1, fontSize: 5.8, lineHeight: 7,
+    x: 360, y: 536, width: 190, maxLines: 1, fontSize: 6.4, lineHeight: 7,
   });
   drawWrappedValue(pages[3], "Oficial de Acuerdos", font, {
     x: 360, y: 519, width: 190, maxLines: 1, fontSize: 6.5, lineHeight: 7,
