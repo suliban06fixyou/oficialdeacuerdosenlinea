@@ -255,10 +255,10 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
   const datos = extraerDatosUsoFuerza(narrativa);
   // Apartado 5.1: cada texto se limita al recuadro impreso del formato oficial.
   dibujarTextoAjustado(page, datos.resistencia, font, {
-    x: 39, topY: 699, bottomY: 674, width: page.getWidth() - 120, maxSize: 4.9, minSize: 3.8,
+    x: 39, topY: 699, bottomY: 667, width: page.getWidth() - 95, maxSize: 6.2, minSize: 4.4,
   });
   dibujarTextoAjustado(page, datos.descripcion, font, {
-    x: 39, topY: 608, bottomY: 574, width: page.getWidth() - 120, maxSize: 5.1, minSize: 3.8,
+    x: 39, topY: 608, bottomY: 563, width: page.getWidth() - 95, maxSize: 6.2, minSize: 4.4,
   });
 
   // Respuestas negativas únicamente cuando la narrativa las consigna.
@@ -806,8 +806,9 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   // Identidad del suscrito sólo si la narrativa indica que intervino y trasladó.
   const entregaPorSuscrito = /\b(?:el suscrito|la suscrita)\b/i.test(props.narrativa) &&
     /\b(?:traslad[eé]|trasladamos|present[eé]|entregu[eé])\b/i.test(props.narrativa);
-  const policiaEntrega = extraidos.policiaEntrega.trim() ||
-    (entregaPorSuscrito ? nombreOficial : "");
+  // Acuerdo operativo: por defecto entrega el policía responsable del IPH;
+  // si la narrativa identifica a otro elemento, prevalece ese dato.
+  const policiaEntrega = extraidos.policiaEntrega.trim() || nombreOficial;
   const partesPoliciaEntrega = policiaEntrega.split(/\s+/).filter(Boolean);
   if (partesPoliciaEntrega.length >= 4) {
     drawWrappedValue(pages[3], partesPoliciaEntrega[partesPoliciaEntrega.length - 2], font, {
@@ -840,7 +841,11 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   drawWrappedValue(pages[3], extraidos.autoridadEntrega, font, {
     x: 360, y: 536, width: 190, maxLines: 1, fontSize: 6.4, lineHeight: 7,
   });
-  // Cargo de la autoridad receptora: dejar vacío si no está expresamente identificado.
+  // Acuerdo operativo: cargo institucional predeterminado del receptor.
+  // El nombre de la persona que recibe permanece vacío si no se identifica.
+  drawWrappedValue(pages[3], "Oficial de Acuerdos", font, {
+    x: 360, y: 519, width: 190, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+  });
 
   return pdf.save();
 }
