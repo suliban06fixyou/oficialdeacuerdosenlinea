@@ -255,10 +255,10 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
   const datos = extraerDatosUsoFuerza(narrativa);
   // Apartado 5.1: cada texto se limita al recuadro impreso del formato oficial.
   dibujarTextoAjustado(page, datos.resistencia, font, {
-    x: 36, topY: 699, bottomY: 674, width: page.getWidth() - 108, maxSize: 4.9, minSize: 3.8,
+    x: 39, topY: 699, bottomY: 674, width: page.getWidth() - 120, maxSize: 4.9, minSize: 3.8,
   });
   dibujarTextoAjustado(page, datos.descripcion, font, {
-    x: 36, topY: 608, bottomY: 574, width: page.getWidth() - 108, maxSize: 5.1, minSize: 3.8,
+    x: 39, topY: 608, bottomY: 574, width: page.getWidth() - 120, maxSize: 5.1, minSize: 3.8,
   });
 
   // Respuestas negativas únicamente cuando la narrativa las consigna.
@@ -686,7 +686,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   if (/licencia/i.test(extraidos.documentoDetenido)) marcar(page3Detencion, 322, 325, font);
   if (/pasaporte/i.test(extraidos.documentoDetenido)) marcar(page3Detencion, 395, 325, font);
   if (/\b(?:no (?:contaba|cuenta|contar)|sin (?:documento|identificaci[oó]n)|no present[oó] (?:documento|identificaci[oó]n))\b/i.test(props.narrativa)) {
-    marcar(page3Detencion, 548, 312, font);
+    marcar(page3Detencion, 529, 312, font);
   }
 
   const calleSinNumeroExterior = (calle: string, numero: string) =>
