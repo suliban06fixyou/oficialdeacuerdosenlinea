@@ -270,8 +270,7 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
     marcar(page, 274, 523, font);
     marcar(page, 529, 523, font);
   }
-  // "No se observaron lesiones" permite marcar ausencia observada en ambos,
-  // sólo si el contexto identifica tanto al policía como a la persona detenida.
+  // Ausencia observada de lesiones, sin afirmar una valoración médica.
   if (/\bno\s+se\s+observaron\s+lesiones\b/i.test(narrativa) &&
       /\b(?:detenci[oó]n|detenid[oa])\b/i.test(narrativa) &&
       /\b(?:polic[ií]a|oficial|suscrito)\b/i.test(narrativa)) {
