@@ -1,7 +1,6 @@
 name: Validar generador IPH PDF
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - feature/iph-pdf-generator
@@ -39,49 +38,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: iph-pdf-preview-test
-          path: test-output/iph-pdf-preview.pdf
+          path: test-output/iph-pdf-*.pdf
           if-no-files-found: error
           retention-days: 7
 
       - name: Build and type-check
         run: bun run build
 
-  upload-version:
-    name: Cargar versión sin activar producción
-    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feature/iph-pdf-generator-corrections' }}
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout de la rama autorizada
-        uses: actions/checkout@v4
-
-      - name: Comprobar credenciales de Cloudflare
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
-            echo "::error::Faltan los secretos CLOUDFLARE_API_TOKEN y/o CLOUDFLARE_ACCOUNT_ID. No se ha publicado nada."
-            exit 1
-          fi
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Instalar dependencias
-        run: bun install --frozen-lockfile
-
-      - name: Compilar aplicación
-        run: bun run build
-
-      - name: Subir versión a Cloudflare SIN desplegarla
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          bunx wrangler versions upload --message "IPH validado desde GitHub ${GITHUB_SHA}"
-          echo "Versión cargada. NO se ha ejecutado wrangler deploy ni versions deploy."
