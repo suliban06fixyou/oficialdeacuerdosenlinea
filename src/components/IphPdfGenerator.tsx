@@ -261,6 +261,19 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
     x: 31, topY: 614, bottomY: 575, width: page.getWidth() - 85, maxSize: 5.8, minSize: 4.1,
   });
 
+  // Respuestas negativas únicamente cuando la narrativa las consigna.
+  // "No se observaron lesiones visibles" describe ausencia de lesiones observadas,
+  // no una valoración médica concluyente.
+  if (/\bno\s+(?:se\s+)?(?:observaron|reportaron|presentaron)\s+lesiones\s+visibles\b/i.test(narrativa) &&
+      /\b(?:persona detenida|detenido|detenida)\b/i.test(narrativa) &&
+      /\b(?:oficial interviniente|polic[ií]a interviniente)\b/i.test(narrativa)) {
+    marcar(page, 274, 523, font);
+    marcar(page, 529, 523, font);
+  }
+  if (/\bno\s+(?:fue|result[oó])\s+necesaria\s+(?:la\s+)?asistencia\s+m[eé]dica\b/i.test(narrativa)) {
+    marcar(page, 370, 508, font);
+  }
+
   // Marcar "Detención(es)" cuando la narrativa menciona expresamente una detención.
   // La descripción general consigna comandos verbales y candados de mano conforme a la regla acordada;
   // no se marcan lesiones ni atención médica sin datos expresos.
