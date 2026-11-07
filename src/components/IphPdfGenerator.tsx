@@ -255,10 +255,10 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
   const datos = extraerDatosUsoFuerza(narrativa);
   // Apartado 5.1: cada texto se limita al recuadro impreso del formato oficial.
   dibujarTextoAjustado(page, datos.resistencia, font, {
-    x: 31, topY: 694, bottomY: 676, width: page.getWidth() - 85, maxSize: 5.2, minSize: 4.0,
+    x: 36, topY: 687, bottomY: 675, width: page.getWidth() - 108, maxSize: 4.9, minSize: 3.8,
   });
   dibujarTextoAjustado(page, datos.descripcion, font, {
-    x: 31, topY: 614, bottomY: 575, width: page.getWidth() - 85, maxSize: 5.8, minSize: 4.1,
+    x: 36, topY: 606, bottomY: 578, width: page.getWidth() - 108, maxSize: 5.1, minSize: 3.8,
   });
 
   // Respuestas negativas únicamente cuando la narrativa las consigna.
@@ -607,17 +607,17 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   });
 
   // SECCIÓN 2.1: marcar la vía de conocimiento sólo cuando la narrativa la identifica.
-  if (extraidos.tipoConocimiento === "llamada") marcar(page1, 89, 416, font);
-  if (extraidos.tipoConocimiento === "presencia") marcar(page1, 89, 405, font);
-  if (extraidos.tipoConocimiento === "queja") marcar(page1, 89, 394, font);
-  if (extraidos.tipoConocimiento === "otro") marcar(page1, 89, 383, font);
+  if (extraidos.tipoConocimiento === "llamada") marcar(page1, 90, 412, font);
+  if (extraidos.tipoConocimiento === "presencia") marcar(page1, 90, 401, font);
+  if (extraidos.tipoConocimiento === "queja") marcar(page1, 90, 390, font);
+  if (extraidos.tipoConocimiento === "otro") marcar(page1, 90, 379, font);
   drawDate(page1, extraidos.fechaConocimiento, 457, 420, 11.8, font);
   // Cada dígito ocupa su propia casilla en la hora de conocimiento.
   const horaConocimiento = splitTime(horas.conocimiento);
   if (horaConocimiento) {
     const digitos = horaConocimiento.hours + horaConocimiento.minutes;
-    [461, 474, 494, 507].forEach((x, i) => {
-      page1.drawText(digitos[i], { x, y: 375, size: 7, font, color: rgb(0.05, 0.05, 0.05) });
+    [460, 472, 494, 506].forEach((x, i) => {
+      page1.drawText(digitos[i], { x, y: 372, size: 7, font, color: rgb(0.05, 0.05, 0.05) });
     });
   }
 
@@ -629,7 +629,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   drawTime(page3Detencion, horas.detencion, 368, 405, 98, font);
 
   // SECCIÓN 3.2: marcar únicamente el tipo de lugar expresamente identificable.
-  if (extraidos.tipoLugar === "hogar") marcar(page1, 157, 83, font);
+  if (extraidos.tipoLugar === "hogar") marcar(page1, 42, 83, font);
   if (extraidos.tipoLugar === "viaPublica") marcar(page1, 157, 83, font);
   if (extraidos.tipoLugar === "transporte") marcar(page1, 328, 83, font);
   if (extraidos.tipoLugar === "taxi") marcar(page1, 472, 83, font);
@@ -646,7 +646,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
 
   // SECCIÓN 6.1: datos de la persona detenida. Sólo se imprimen valores
   // que aparezcan expresamente etiquetados en la narrativa.
-  if (extraerDatosUsoFuerza(props.narrativa).detencion) marcar(page3Detencion, 148, 402, font);
+  if (extraerDatosUsoFuerza(props.narrativa).detencion) marcar(page3Detencion, 147, 400, font);
   const nombreDetenido = extraidos.nombreDetenido.trim();
   const partesDetenido = nombreDetenido.split(/\s+/).filter(Boolean);
   if (partesDetenido.length >= 4) {
@@ -686,7 +686,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   if (/licencia/i.test(extraidos.documentoDetenido)) marcar(page3Detencion, 322, 325, font);
   if (/pasaporte/i.test(extraidos.documentoDetenido)) marcar(page3Detencion, 395, 325, font);
   if (/\b(?:no (?:contaba|cuenta|contar)|sin (?:documento|identificaci[oó]n)|no present[oó] (?:documento|identificaci[oó]n))\b/i.test(props.narrativa)) {
-    marcar(page3Detencion, 555, 325, font);
+    marcar(page3Detencion, 548, 312, font);
   }
 
   const calleSinNumeroExterior = (calle: string, numero: string) =>
@@ -770,7 +770,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   drawWrappedValue(pages[3], extraidos.autoridadEntrega, font, {
     x: 195, y: 622, width: 355, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
-  drawDate(pages[3], extraidos.fechaEntrega, 155, 610, 12.0, font);
+  drawDate(pages[3], extraidos.fechaEntrega, 159, 603, 11.5, font);
   drawTime(pages[3], extraidos.horaEntrega, 388, 409, 610, font);
 
   // Identidad del suscrito sólo si la narrativa indica que intervino y trasladó.
