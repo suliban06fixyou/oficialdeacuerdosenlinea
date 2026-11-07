@@ -255,10 +255,10 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
   const datos = extraerDatosUsoFuerza(narrativa);
   // Apartado 5.1: cada texto se limita al recuadro impreso del formato oficial.
   dibujarTextoAjustado(page, datos.resistencia, font, {
-    x: 28, topY: 700, bottomY: 677, width: page.getWidth() - 65, maxSize: 5.6, minSize: 4.3,
+    x: 31, topY: 694, bottomY: 676, width: page.getWidth() - 85, maxSize: 5.2, minSize: 4.0,
   });
   dibujarTextoAjustado(page, datos.descripcion, font, {
-    x: 28, topY: 628, bottomY: 575, width: page.getWidth() - 65, maxSize: 6.1, minSize: 4.8,
+    x: 31, topY: 614, bottomY: 575, width: page.getWidth() - 85, maxSize: 5.8, minSize: 4.1,
   });
 
   // Marcar "Detención(es)" cuando la narrativa menciona expresamente una detención.
@@ -555,9 +555,10 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     yCalle: extraidos.yCalle || extraidosLugar.yCalle,
   };
   const calleBase = geo.calle || geo.cruce;
-  const calleSinNumero = geo.numeroExterior && calleBase.endsWith(" " + geo.numeroExterior)
-    ? calleBase.slice(0, -(geo.numeroExterior.length + 1)).trim()
-    : calleBase;
+  const calleSinNumero = calleBase
+    .replace(geo.numeroExterior ? new RegExp("\\s*(?:n[uú]mero|n[uú]m\\.?|no\\.?)?\\s*" + geo.numeroExterior + "$", "i") : /$^/, "")
+    .replace(/\\s+(?:n[uú]mero|n[uú]m\\.?|no\\.?)$/i, "")
+    .trim();
   drawWrappedValue(page2Narrativa, calleSinNumero, font, {
     x: 195, y: 752, width: 355, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
@@ -593,17 +594,17 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   });
 
   // SECCIÓN 2.1: marcar la vía de conocimiento sólo cuando la narrativa la identifica.
-  if (extraidos.tipoConocimiento === "llamada") marcar(page1, 87, 419, font);
-  if (extraidos.tipoConocimiento === "presencia") marcar(page1, 87, 405, font);
-  if (extraidos.tipoConocimiento === "queja") marcar(page1, 87, 391, font);
-  if (extraidos.tipoConocimiento === "otro") marcar(page1, 87, 377, font);
+  if (extraidos.tipoConocimiento === "llamada") marcar(page1, 89, 416, font);
+  if (extraidos.tipoConocimiento === "presencia") marcar(page1, 89, 405, font);
+  if (extraidos.tipoConocimiento === "queja") marcar(page1, 89, 394, font);
+  if (extraidos.tipoConocimiento === "otro") marcar(page1, 89, 383, font);
   drawDate(page1, extraidos.fechaConocimiento, 457, 420, 11.8, font);
   // Cada dígito ocupa su propia casilla en la hora de conocimiento.
   const horaConocimiento = splitTime(horas.conocimiento);
   if (horaConocimiento) {
     const digitos = horaConocimiento.hours + horaConocimiento.minutes;
-    [459, 472, 490, 503].forEach((x, i) => {
-      page1.drawText(digitos[i], { x, y: 379, size: 7, font, color: rgb(0.05, 0.05, 0.05) });
+    [461, 474, 494, 507].forEach((x, i) => {
+      page1.drawText(digitos[i], { x, y: 375, size: 7, font, color: rgb(0.05, 0.05, 0.05) });
     });
   }
 
@@ -632,7 +633,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
 
   // SECCIÓN 6.1: datos de la persona detenida. Sólo se imprimen valores
   // que aparezcan expresamente etiquetados en la narrativa.
-  if (extraerDatosUsoFuerza(props.narrativa).detencion) marcar(page3Detencion, 160, 402, font);
+  if (extraerDatosUsoFuerza(props.narrativa).detencion) marcar(page3Detencion, 148, 402, font);
   const nombreDetenido = extraidos.nombreDetenido.trim();
   const partesDetenido = nombreDetenido.split(/\s+/).filter(Boolean);
   if (partesDetenido.length >= 4) {
@@ -756,7 +757,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   drawWrappedValue(pages[3], extraidos.autoridadEntrega, font, {
     x: 195, y: 622, width: 355, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
-  drawDate(pages[3], extraidos.fechaEntrega, 155, 610, 6.8, font);
+  drawDate(pages[3], extraidos.fechaEntrega, 155, 610, 12.0, font);
   drawTime(pages[3], extraidos.horaEntrega, 388, 409, 610, font);
 
   // Identidad del suscrito sólo si la narrativa indica que intervino y trasladó.
