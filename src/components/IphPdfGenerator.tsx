@@ -270,6 +270,14 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
     marcar(page, 274, 523, font);
     marcar(page, 529, 523, font);
   }
+  // "No se observaron lesiones" permite marcar ausencia observada en ambos,
+  // sólo si el contexto identifica tanto al policía como a la persona detenida.
+  if (/\bno\s+se\s+observaron\s+lesiones\b/i.test(narrativa) &&
+      /\b(?:detenci[oó]n|detenid[oa])\b/i.test(narrativa) &&
+      /\b(?:polic[ií]a|oficial|suscrito)\b/i.test(narrativa)) {
+    marcar(page, 274, 523, font);
+    marcar(page, 529, 523, font);
+  }
   if (/\bno\s+(?:fue|result[oó])\s+necesaria\s+(?:la\s+)?asistencia\s+m[eé]dica\b/i.test(narrativa)) {
     marcar(page, 370, 508, font);
   }
@@ -737,22 +745,22 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   // "municipio de" y la narrativa puede contener detalles adicionales.
   const normalizarComponente = (valor: string) => valor.toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/\\b(?:calle|avenida|av\\.?|numero|num\\.?|no\\.?|colonia|municipio de)\\b/g, " ")
+    .replace(/\b(?:calle|avenida|av|numero|num|no|colonia|municipio|de)\b/g, " ")
     .replace(/[^a-z0-9]/g, "");
-  const ubicacionHechos = extraerCamposNarrativa(lugar);
-  const ubicacionDetencion = extraerCamposNarrativa(extraidos.lugarDetencion);
-  const calleHechos = normalizarComponente(ubicacionHechos.calle || extraidos.calle);
-  const calleDetencion = normalizarComponente(ubicacionDetencion.calle);
-  const numeroHechos = ubicacionHechos.numeroExterior || extraidos.numeroExterior;
-  const numeroDetencion = ubicacionDetencion.numeroExterior;
-  const coloniaHechos = normalizarComponente(ubicacionHechos.colonia || extraidos.colonia);
-  const coloniaDetencion = normalizarComponente(ubicacionDetencion.colonia);
-  const ubicacionesComparables = Boolean(calleHechos && calleDetencion && numeroHechos && numeroDetencion);
-  const mismoLugar = ubicacionesComparables &&
-    calleHechos === calleDetencion &&
-    numeroHechos === numeroDetencion &&
-    (!coloniaHechos || !coloniaDetencion || coloniaHechos === coloniaDetencion);
-  const lugarDetencionComparar = calleDetencion;
+  const extraerDireccionComparable = (valor: string) => {
+    const match = valor.match(/\b(?:calle|avenida|av\.)\s+([^,.;]+?)\s+(?:n[uú]mero|num\.?|no\.?|#)\s*(\d+)\b/i);
+    if (!match) return null;
+    const colonia = valor.match(/\bcolonia\s+([^,.;]+)/i)?.[1] || "";
+    return { calle: normalizarComponente(match[1]), numero: match[2], colonia: normalizarComponente(colonia) };
+  };
+  const direccionHechos = extraerDireccionComparable(lugar) || extraerDireccionComparable(props.narrativa);
+  const direccionDetencion = extraerDireccionComparable(extraidos.lugarDetencion);
+  const ubicacionesComparables = Boolean(direccionHechos && direccionDetencion);
+  const mismoLugar = Boolean(direccionHechos && direccionDetencion &&
+    direccionHechos.calle === direccionDetencion.calle &&
+    direccionHechos.numero === direccionDetencion.numero &&
+    (!direccionHechos.colonia || !direccionDetencion.colonia || direccionHechos.colonia === direccionDetencion.colonia));
+  const lugarDetencionComparar = extraidos.lugarDetencion.trim();
   if (mismoLugar) marcar(page3Detencion, 282, 73, font);
   else if (ubicacionesComparables) marcar(page3Detencion, 426, 73, font);
 
@@ -830,12 +838,10 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     x: 360, y: 544, width: 190, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   // No inventar nombre de receptor; sólo datos institucionales solicitados.
-  drawWrappedValue(pages[3], "Juzgado Cívico Municipal Chihuahua Chihuahua", font, {
+  drawWrappedValue(pages[3], extraidos.autoridadEntrega, font, {
     x: 360, y: 536, width: 190, maxLines: 1, fontSize: 6.4, lineHeight: 7,
   });
-  drawWrappedValue(pages[3], "Oficial de Acuerdos", font, {
-    x: 360, y: 519, width: 190, maxLines: 1, fontSize: 6.5, lineHeight: 7,
-  });
+  // Cargo de la autoridad receptora: dejar vacío si no está expresamente identificado.
 
   return pdf.save();
 }
