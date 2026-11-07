@@ -407,6 +407,7 @@ export function extraerCamposNarrativa(narrativa: string): {
   const autoridadEntrega = obtener("juzgado o instituci[oó]n correspondiente|juzgado|instituci[oó]n correspondiente|autoridad competente") ||
     grupo(/(?:trasladad[oa]|traslad[oó]|trasladamos|se traslad[oó])\s+(?:al|a la|hacia el|hacia la)\s+((?:Juzgado|Comandancia|Fiscal[ií]a)[^,.;]{0,85}?)(?=,\s*donde|\s+donde\s+|[.;,]|$)/i) ||
     grupo(/(?:presentad[oa]|entregad[oa]|puesta? a disposici[oó]n)\s+(?:ante|en|a)\s+(?:el|la|las|los)?\s*((?:juzgado|juez c[ií]vico|comandancia|fiscal[ií]a|autoridad)[^.;,]{0,90})/i) ||
+    grupo(/\ben\s+(?:el\s+)?((?:Juzgado\s+C[ií]vico|Juzgado\s+Municipal|Comandancia|Fiscal[ií]a)[^.;,]{0,85}?)(?=\s*(?:\.|,|$))/i) ||
     grupo(/(?:traslad[oó]|trasladamos|se traslad[oó])[^.;]{0,120}?\b(?:a|hacia)\s+(?:las instalaciones de\s+)?(?:la|el)\s+((?:comandancia|juzgado|fiscal[ií]a)[^.;,]{0,70}?)(?=\s+para\s+|[.;,]|$)/i);
   const fechaEntrega = obtener("fecha de entrega|fecha de presentaci[oó]n") || (/(?:presentad[oa]|entregad[oa])[^.;]{0,100}\b(?:del mismo d[ií]a|ese mismo d[ií]a|del mismo d[ií]a|mismo d[ií]a)\b/i.test(plano) ? fechaGeneral : "");
   const horaEntrega = obtener("hora de entrega|hora de presentaci[oó]n") || grupo(/(?:presentad[oa]|entregad[oa]|puest[oa]\s+a\s+disposici[oó]n)\s+a\s+las\s+([0-2]?\d:[0-5]\d)\s+horas?/i);
@@ -732,12 +733,28 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   });
 
   // SECCIÓN 6.3: marcar coincidencia sólo cuando ambas ubicaciones se conocen.
-  const normalizarDireccion = (valor: string) => valor.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\b(calle|colonia|municipio de)\b/g, "").replace(/[^a-z0-9]/g, "");
-  const lugarComisionComparar = normalizarDireccion(lugar);
-  const lugarDetencionComparar = normalizarDireccion(extraidos.lugarDetencion);
-  const mismoLugar = Boolean(lugarComisionComparar && lugarDetencionComparar && lugarComisionComparar === lugarDetencionComparar);
+  // Comparar componentes esenciales; la dirección del formulario puede omitir
+  // "municipio de" y la narrativa puede contener detalles adicionales.
+  const normalizarComponente = (valor: string) => valor.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/\\b(?:calle|avenida|av\\.?|numero|num\\.?|no\\.?|colonia|municipio de)\\b/g, " ")
+    .replace(/[^a-z0-9]/g, "");
+  const ubicacionHechos = extraerCamposNarrativa(lugar);
+  const ubicacionDetencion = extraerCamposNarrativa(extraidos.lugarDetencion);
+  const calleHechos = normalizarComponente(ubicacionHechos.calle || extraidos.calle);
+  const calleDetencion = normalizarComponente(ubicacionDetencion.calle);
+  const numeroHechos = ubicacionHechos.numeroExterior || extraidos.numeroExterior;
+  const numeroDetencion = ubicacionDetencion.numeroExterior;
+  const coloniaHechos = normalizarComponente(ubicacionHechos.colonia || extraidos.colonia);
+  const coloniaDetencion = normalizarComponente(ubicacionDetencion.colonia);
+  const ubicacionesComparables = Boolean(calleHechos && calleDetencion && numeroHechos && numeroDetencion);
+  const mismoLugar = ubicacionesComparables &&
+    calleHechos === calleDetencion &&
+    numeroHechos === numeroDetencion &&
+    (!coloniaHechos || !coloniaDetencion || coloniaHechos === coloniaDetencion);
+  const lugarDetencionComparar = calleDetencion;
   if (mismoLugar) marcar(page3Detencion, 282, 73, font);
-  else if (lugarComisionComparar && lugarDetencionComparar) marcar(page3Detencion, 426, 73, font);
+  else if (ubicacionesComparables) marcar(page3Detencion, 426, 73, font);
 
   // SECCIÓN 6.4: ubicación de detención distinta del lugar de los hechos.
   // No se copia automáticamente el lugar original: debe aparecer etiquetada como lugar de detención.
@@ -781,7 +798,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
 
   // Identidad del suscrito sólo si la narrativa indica que intervino y trasladó.
   const entregaPorSuscrito = /\b(?:el suscrito|la suscrita)\b/i.test(props.narrativa) &&
-    /\b(?:trasladad[oa]|traslad[oó]|presentad[oa]|present[oó])\b/i.test(props.narrativa);
+    /\b(?:traslad[eé]|trasladamos|present[eé]|entregu[eé])\b/i.test(props.narrativa);
   const policiaEntrega = extraidos.policiaEntrega.trim() ||
     (entregaPorSuscrito ? nombreOficial : "");
   const partesPoliciaEntrega = policiaEntrega.split(/\s+/).filter(Boolean);
