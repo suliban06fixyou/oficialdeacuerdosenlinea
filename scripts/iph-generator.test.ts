@@ -246,3 +246,23 @@ describe("regresión: narrativa completa de intervención en Chihuahua", () => {
   });
 
 });
+
+describe("regresión: presentación pasiva por observación directa", () => {
+  const narrativa = [
+    "El día 4 de noviembre de 2026, el suscrito Policía Segundo Luis Fernando Ortega Ruiz, a bordo de la unidad P-456, observé directamente una falta en la calle Independencia número 80, colonia Centro, municipio de Chihuahua, Chihuahua.",
+    "A las 18:12 horas arribé al lugar. La persona obedeció las indicaciones y no opuso resistencia física.",
+    "A las 18:18 horas se realizó la detención en la calle Independencia número 80, colonia Centro, municipio de Chihuahua, Chihuahua.",
+    "Fue presentado a las 18:45 horas del mismo día en el Juzgado Cívico Municipal de Chihuahua.",
+  ].join(" ");
+  test("recupera el juzgado aunque la presentación se narre en voz pasiva", () => {
+    const d = extraerCamposNarrativa(narrativa);
+    expect(d.autoridadEntrega).toBe("Juzgado Cívico Municipal de Chihuahua");
+    expect(d.horaEntrega).toBe("18:45");
+    expect(d.policiaEntrega).toBe("");
+  });
+  test("conserva el mismo lugar de hechos y detención", () => {
+    const d = extraerCamposNarrativa(narrativa);
+    expect(d.calle).toContain("Independencia");
+    expect(d.lugarDetencion).toContain("Independencia número 80");
+  });
+});
