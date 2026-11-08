@@ -206,8 +206,8 @@ export function extraerDatosUsoFuerza(narrativa: string): { resistencia: string;
     .map((frase) => {
       // Conservar íntegra la conducta descrita y recortar únicamente
       // los antecedentes cuando la oración empieza con el arribo.
-      if (/\barrib[eé]\b/i.test(frase)) {
-        const inicioConducta = frase.search(/\b(?:La persona comenz[oó]|La persona obedeci[oó]|El masculino me empuj[oó]|se neg[oó] a obedecer)\b/i);
+      if (/arrib[eé]/i.test(frase)) {
+        const inicioConducta = frase.search(/(?:La persona comenz[oó]|La persona obedeci[oó]|El masculino me empuj[oó]|se neg[oó] a obedecer)/i);
         return inicioConducta >= 0 ? frase.slice(inicioConducta).trim() : "";
       }
       return frase;
