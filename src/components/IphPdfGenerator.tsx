@@ -203,6 +203,15 @@ export function extraerDatosUsoFuerza(narrativa: string): { resistencia: string;
   // en resistencia física ni justifica inferir un nivel de fuerza.
   const resistencia = frases
     .filter((frase) => /resisten|se neg[oó] a (?:obedecer|seguir|acatar)|no (?:obedeci[oó]|acat[oó])|desobedeci[oó]|insult[oó]|insultos?|agresi[oó]n|agresiv[oa]s?|conductas? verbales? agresivas?|palabras ofensivas|se opuso|forceje|intent[oó] evadir|golpes?|patadas?|pu[nñ]etazos?|arma blanca|amenaz[oó]|empuj[oó]|empujones?|escupi[oó]|escupitajos?|agredi[oó]|intent[oó] golpear|intent[oó] huir|se resisti[oó]|jalone[oó]/i.test(frase))
+    .map((frase) => {
+      // En 5.1 priorizar la agresión o resistencia, no repetir antecedentes
+      // de arribo que ya constan completos en la sección 4.
+      if (/\b(?:empuj[oó]|patada|forceje|se neg[oó] a obedecer|no opuso resistencia)\b/i.test(frase)) {
+        return frase.replace(/^.*?(?=(?:La persona comenz[oó]|El masculino|La persona obedeci[oó]))/i, "");
+      }
+      return frase;
+    })
+    .filter((frase) => !/\barrib[eé]\b/i.test(frase) || /\b(?:empuj[oó]|patada|forceje)\b/i.test(frase))
     .join(" ");
 
   // Se conserva lo que la narrativa diga expresamente sobre técnicas/medios empleados.
@@ -255,10 +264,10 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
   const datos = extraerDatosUsoFuerza(narrativa);
   // Apartado 5.1: cada texto se limita al recuadro impreso del formato oficial.
   dibujarTextoAjustado(page, datos.resistencia, font, {
-    x: 39, topY: 699, bottomY: 667, width: page.getWidth() - 95, maxSize: 6.2, minSize: 4.4,
+    x: 39, topY: 708, bottomY: 679, width: page.getWidth() - 90, maxSize: 6.4, minSize: 4.4,
   });
   dibujarTextoAjustado(page, datos.descripcion, font, {
-    x: 39, topY: 608, bottomY: 563, width: page.getWidth() - 95, maxSize: 6.2, minSize: 4.4,
+    x: 39, topY: 608, bottomY: 563, width: page.getWidth() - 90, maxSize: 6.4, minSize: 4.4,
   });
 
   // Respuestas negativas únicamente cuando la narrativa las consigna.
@@ -284,7 +293,7 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
   // Marcar "Detención(es)" cuando la narrativa menciona expresamente una detención.
   // La descripción general consigna comandos verbales y candados de mano conforme a la regla acordada;
   // no se marcan lesiones ni atención médica sin datos expresos.
-  if (datos.detencion) {
+  if (datos.detencion && (datos.descripcion || datos.resistencia)) {
     page.drawText("X", {
       x: 247,
       y: 555,
@@ -586,8 +595,9 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   drawWrappedValue(page2Narrativa, geo.colonia, font, {
     x: 190, y: 738, width: 360, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
-  drawWrappedValue(page2Narrativa, geo.numeroExterior, font, {
-    x: 111, y: 722, width: 42, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+  // El número exterior ocupa casillas individuales; un dígito por casilla.
+  [...geo.numeroExterior].slice(0, 5).forEach((digito, i) => {
+    page2Narrativa.drawText(digito, { x: 111 + i * 12, y: 722, size: 6.8, font, color: rgb(0.05, 0.05, 0.05) });
   });
   drawWrappedValue(page2Narrativa, geo.numeroInterior, font, {
     x: 111, y: 706, width: 42, maxLines: 1, fontSize: 6.8, lineHeight: 8,
