@@ -213,6 +213,9 @@ export function extraerDatosUsoFuerza(narrativa: string): { resistencia: string;
       return frase;
     })
     .filter(Boolean)
+    // En la pregunta sobre resistencia debe describirse la conducta del detenido.
+    // La técnica aplicada por el policía se conserva en el siguiente recuadro.
+    .map((frase) => frase.replace(/,?\s*por lo que apliqu[eé][^.]*?(?=\.|$)/i, "").replace(/\s+\./g, ".").trim())
     .join(" ");
 
   // Se conserva lo que la narrativa diga expresamente sobre técnicas/medios empleados.
