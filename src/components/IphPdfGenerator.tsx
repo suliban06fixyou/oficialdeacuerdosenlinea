@@ -204,12 +204,10 @@ export function extraerDatosUsoFuerza(narrativa: string): { resistencia: string;
   const resistencia = frases
     .filter((frase) => /resisten|se neg[oó] a (?:obedecer|seguir|acatar)|no (?:obedeci[oó]|acat[oó])|desobedeci[oó]|insult[oó]|insultos?|agresi[oó]n|agresiv[oa]s?|conductas? verbales? agresivas?|palabras ofensivas|se opuso|forceje|intent[oó] evadir|golpes?|patadas?|pu[nñ]etazos?|arma blanca|amenaz[oó]|empuj[oó]|empujones?|escupi[oó]|escupitajos?|agredi[oó]|intent[oó] golpear|intent[oó] huir|se resisti[oó]|jalone[oó]/i.test(frase))
     .map((frase) => {
-      // En 5.1 priorizar la agresión o resistencia, no repetir antecedentes
-      // de arribo que ya constan completos en la sección 4.
-      if (/\b(?:empuj[oó]|patada|forceje|se neg[oó] a obedecer|no opuso resistencia)\b/i.test(frase)) {
-        return frase.replace(/^.*?(?=(?:La persona comenz[oó]|El masculino|La persona obedeci[oó]))/i, "");
-      }
-      return frase;
+      // Omitir únicamente antecedentes anteriores al inicio de la conducta
+      // relevante; preservar literalmente la resistencia o agresión narrada.
+      const inicio = frase.search(/\b(?:La persona comenz[oó]|La persona obedeci[oó]|El masculino me empuj[oó]|Se neg[oó] a obedecer)\b/i);
+      return inicio > 0 ? frase.slice(inicio).trim() : frase;
     })
     .filter((frase) => !/\barrib[eé]\b/i.test(frase) || /\b(?:empuj[oó]|patada|forceje)\b/i.test(frase))
     .join(" ");
@@ -293,7 +291,10 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
   // Marcar "Detención(es)" cuando la narrativa menciona expresamente una detención.
   // La descripción general consigna comandos verbales y candados de mano conforme a la regla acordada;
   // no se marcan lesiones ni atención médica sin datos expresos.
-  if (datos.detencion && (datos.descripcion || datos.resistencia)) {
+  // Esta casilla pertenece al informe de uso de la fuerza, no al registro
+  // general de detención. No marcarla sólo por existir una detención.
+  const fuerzaDocumentada = /\b(?:control f[ií]sico|sujeci[oó]n|candados? de mano|esposas|inmovilizaci[oó]n|forcejeo|uso de la fuerza|t[eé]cnica de control|reducci[oó]n f[ií]sica)\b/i.test(narrativa);
+  if (datos.detencion && fuerzaDocumentada) {
     page.drawText("X", {
       x: 247,
       y: 555,
@@ -597,7 +598,9 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   });
   // El número exterior ocupa casillas individuales; un dígito por casilla.
   [...geo.numeroExterior].slice(0, 5).forEach((digito, i) => {
-    page2Narrativa.drawText(digito, { x: 111 + i * 12, y: 722, size: 6.8, font, color: rgb(0.05, 0.05, 0.05) });
+    const centroCasilla = 111 + i * 12;
+    const anchoDigito = font.widthOfTextAtSize(digito, 6.8);
+    page2Narrativa.drawText(digito, { x: centroCasilla - anchoDigito / 2, y: 722, size: 6.8, font, color: rgb(0.05, 0.05, 0.05) });
   });
   drawWrappedValue(page2Narrativa, geo.numeroInterior, font, {
     x: 111, y: 706, width: 42, maxLines: 1, fontSize: 6.8, lineHeight: 8,
