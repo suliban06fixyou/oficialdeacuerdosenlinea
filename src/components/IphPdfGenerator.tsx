@@ -204,12 +204,15 @@ export function extraerDatosUsoFuerza(narrativa: string): { resistencia: string;
   const resistencia = frases
     .filter((frase) => /resisten|se neg[oó] a (?:obedecer|seguir|acatar)|no (?:obedeci[oó]|acat[oó])|desobedeci[oó]|insult[oó]|insultos?|agresi[oó]n|agresiv[oa]s?|conductas? verbales? agresivas?|palabras ofensivas|se opuso|forceje|intent[oó] evadir|golpes?|patadas?|pu[nñ]etazos?|arma blanca|amenaz[oó]|empuj[oó]|empujones?|escupi[oó]|escupitajos?|agredi[oó]|intent[oó] golpear|intent[oó] huir|se resisti[oó]|jalone[oó]/i.test(frase))
     .map((frase) => {
-      // Omitir únicamente antecedentes anteriores al inicio de la conducta
-      // relevante; preservar literalmente la resistencia o agresión narrada.
-      const inicio = frase.search(/\b(?:La persona comenz[oó]|La persona obedeci[oó]|El masculino me empuj[oó]|Se neg[oó] a obedecer)\b/i);
-      return inicio > 0 ? frase.slice(inicio).trim() : frase;
+      // Conservar íntegra la conducta descrita y recortar únicamente
+      // los antecedentes cuando la oración empieza con el arribo.
+      if (/\barrib[eé]\b/i.test(frase)) {
+        const inicioConducta = frase.search(/\b(?:La persona comenz[oó]|La persona obedeci[oó]|El masculino me empuj[oó]|se neg[oó] a obedecer)\b/i);
+        return inicioConducta >= 0 ? frase.slice(inicioConducta).trim() : "";
+      }
+      return frase;
     })
-    .filter((frase) => !/\barrib[eé]\b/i.test(frase) || /\b(?:empuj[oó]|patada|forceje)\b/i.test(frase))
+    .filter(Boolean)
     .join(" ");
 
   // Se conserva lo que la narrativa diga expresamente sobre técnicas/medios empleados.
