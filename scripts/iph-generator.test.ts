@@ -266,3 +266,20 @@ describe("regresión: presentación pasiva por observación directa", () => {
     expect(d.lugarDetencion).toContain("Independencia número 80");
   });
 });
+
+describe("regresión: resistencia y detención sin fuerza física", () => {
+  test("no arrastra el arribo al resumen de resistencia", () => {
+    const narrativa = "A las 20:22 horas arribé al lugar señalado, donde observé a un masculino que gritaba palabras ofensivas a los transeúntes. La persona comenzó a insultarme, se negó a obedecer las indicaciones e intentó retirarse del lugar. Al aproximarme, el masculino me empujó con ambas manos e intentó lanzar una patada, por lo que apliqué una técnica de sujeción y control físico.";
+    const resultado = extraerDatosUsoFuerza(narrativa);
+    expect(resultado.resistencia).not.toContain("arribé al lugar");
+    expect(resultado.resistencia).toContain("La persona comenzó a insultarme");
+    expect(resultado.resistencia).toContain("me empujó con ambas manos");
+  });
+  test("la detención sin resistencia no inventa maniobras físicas", () => {
+    const narrativa = "La persona obedeció las indicaciones y no opuso resistencia física. A las 18:18 horas se realizó la detención.";
+    const resultado = extraerDatosUsoFuerza(narrativa);
+    expect(resultado.detencion).toBe(true);
+    expect(resultado.resistencia).toContain("no opuso resistencia física");
+    expect(resultado.descripcion).not.toMatch(/candados de mano|sujeción|control físico/i);
+  });
+});
