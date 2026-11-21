@@ -244,7 +244,7 @@ export function extraerDatosUsoFuerza(narrativa: string): { resistencia: string;
   const descripcion = [
     hayActuacion && !/presencia policial/i.test(descripcionExpresa) ? "Presencia policial." : "",
     hayActuacion ? "Comandos verbales." : "",
-    descripcionExpresa.replace(/\b(?:comandos? verbales?|instrucciones? verbales?)\b[.,;]?/gi, "").replace(/\s+/g, " ").trim(),
+    descripcionExpresa,
   ].filter(Boolean).join(" ").trim();
 
   return { resistencia, descripcion, detencion, fuerzaFisica };
