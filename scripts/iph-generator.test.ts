@@ -49,6 +49,7 @@ describe("extracción del apartado de uso de la fuerza", () => {
       resistencia: "",
       descripcion: "",
       detencion: false,
+      fuerzaFisica: false,
     });
   });
 });
@@ -281,5 +282,45 @@ describe("regresión: resistencia y detención sin fuerza física", () => {
     expect(resultado.detencion).toBe(true);
     expect(resultado.resistencia).toContain("no opuso resistencia física");
     expect(resultado.descripcion).not.toMatch(/candados de mano|sujeción|control físico/i);
+  });
+});
+
+describe("regresiones de extracción del IPH municipal", () => {
+  test("respeta una detención y un uso de esposas expresamente negados", () => {
+    const result = extraerDatosUsoFuerza("No hubo detención ni se utilizaron esposas.");
+    expect(result.detencion).toBe(false);
+    expect(result.fuerzaFisica).toBe(false);
+    expect(result.descripcion).toBe("");
+  });
+
+  test("separa el domicilio y la fecha de nacimiento de los datos del hecho", () => {
+    const result = extraerCamposNarrativa(
+      "La persona manifestó llamarse Juan Pérez Soto, nacido el 15 de marzo de 1995, con domicilio en calle Libertad número 245, colonia Obrera.",
+    );
+    expect(result.fechaNacimientoDetenido).toBe("15 de marzo de 1995");
+    expect(result.domicilioDetenido).toContain("calle Libertad");
+    expect(result.calle).toBe("");
+    expect(result.colonia).toBe("");
+    expect(result.fechaConocimiento).toBe("");
+    expect(result.fechaDetencion).toBe("");
+  });
+
+  test("recupera al policía responsable y la hora de observación directa", () => {
+    const result = extraerCamposNarrativa(
+      "El suscrito Policía Tercero Carlos Alberto Ramírez López, a bordo de la unidad P-123. A las 18:10 horas observé directamente a una persona alterando el orden público en la calle Reforma. A las 18:12 horas arribé al lugar.",
+    );
+    expect(result.nombreOficial).toBe("Carlos Alberto Ramírez López");
+    expect(result.horas.conocimiento).toBe("18:10");
+    expect(result.horas.llegada).toBe("18:12");
+    expect(result.falta).toContain("alterando el orden público");
+  });
+
+  test("rescata la conducta reportada en un evento recibido por tableta", () => {
+    const result = extraerCamposNarrativa(
+      "El día 2 de noviembre de 2026 recibí a las 20:15 horas un evento del 911 mediante la tableta, en el que se reportaba a una persona alterando el orden público en la calle Reforma.",
+    );
+    expect(result.tipoConocimiento).toBe("llamada");
+    expect(result.falta).toBe("una persona alterando el orden público");
+    expect(result.fechaDetencion).toBe("");
   });
 });

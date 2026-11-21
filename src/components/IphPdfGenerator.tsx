@@ -189,14 +189,17 @@ function drawNarrativa(page: PDFPage, narrativa: string, font: PDFFont) {
  * Extrae únicamente frases expresamente presentes en la narrativa.
  * No determina lesiones, atención médica ni otros hechos que no estén escritos.
  */
-export function extraerDatosUsoFuerza(narrativa: string): { resistencia: string; descripcion: string; detencion: boolean } {
+export function extraerDatosUsoFuerza(narrativa: string): { resistencia: string; descripcion: string; detencion: boolean; fuerzaFisica: boolean } {
   const frases = normalizarTexto(narrativa)
     .replace(/\s+/g, " ")
     .split(/(?<=[.!?])\s+/)
     .map((frase) => frase.trim())
     .filter(Boolean);
 
-  const detencion = /\bdetenci[oó]n\b|\bdetenido\b|\bdetenida\b|\bse procedi[oó] a detener\b/i.test(narrativa);
+  const hechos = frases.flatMap((frase) => frase.split(/[,;]|\b(?:pero|sin embargo)\b/i))
+    .filter((frase) => !/\bno\s+(?:se\s+)?(?:hubo|hab[ií]a|fue|fueron|realiz[oó]|efectu[oó]|procedi[oó]|detuv\w*|deten\w*)\b|\bsin\s+(?:realizar\s+)?detenci[oó]n\b|\b(?:no|ni)\s+(?:se\s+)?(?:utiliz\w*|aplic\w*|coloc\w*|emple\w*|us[oó]|hizo uso)\b/i.test(frase));
+  const detencion = hechos.some((frase) => /\b(?:detenci[oó]n|detenid[oa]s?|detuv(?:e|o|imos|ieron)|se procedi[oó] a detener)\b/i.test(frase));
+  const fuerzaFisica = hechos.some((frase) => /\b(?:control f[ií]sico|sujeci[oó]n|candados? de mano|esposas|inmovilizaci[oó]n|uso de la fuerza|t[eé]cnica de control|reducci[oó]n f[ií]sica)\b/i.test(frase));
 
   // Rescata únicamente hechos relacionados con resistencia o conducta de la persona
   // que estén expresamente narrados; una agresión verbal no se convierte por sí sola
@@ -220,20 +223,22 @@ export function extraerDatosUsoFuerza(narrativa: string): { resistencia: string;
 
   // Se conserva lo que la narrativa diga expresamente sobre técnicas/medios empleados.
   const descripcionExpresa = frases
+    .map((frase) => frase.replace(/\s*(?:,?\s+y\s+)?(?:no|ni)\s+(?:se\s+)?(?:utiliz\w*|aplic\w*|coloc\w*|emple\w*|us[oó]|hizo uso)[^,;.]*|\bsin\s+(?:uso de la fuerza|esposas|candados? de mano)\b/gi, "").trim())
+    .filter((frase) => /\p{L}/u.test(frase))
     .filter((frase) => /comandos? verbales?|instrucciones? verbales?|uso de la fuerza|utilizando la fuerza|fuerza estrictamente necesaria|candados? de mano|esposas|control(?:ar)? f[ií]sic|t[eé]cnica de control|sujeci[oó]n|inmovilizaci[oó]n|bast[oó]n policial|bast[oó]n pr-?24|gas pimienta|aerosol|dispositivo el[eé]ctrico|taser|arma de fuego|defensa policial|llave de control|reducci[oó]n f[ií]sica|esposamiento|aseguramiento f[ií]sico/i.test(frase))
     .join(" ");
 
   // Presencia y verbalización son componentes generales de una intervención
   // policial con uso legítimo de la fuerza, pero no se inventan maniobras físicas.
   // Sólo se añaden cuando el relato identifica una actuación policial de fuerza.
-  const hayActuacion = detencion || /uso de la fuerza|control f[ií]sico|sujeci[oó]n|esposas|candados? de mano/i.test(narrativa);
+  const hayActuacion = detencion || fuerzaFisica;
   const descripcion = [
     hayActuacion && !/presencia policial/i.test(descripcionExpresa) ? "Presencia policial." : "",
     hayActuacion && !/comandos? verbales?|instrucciones? verbales?|verbalizaci[oó]n/i.test(descripcionExpresa) ? "Verbalización y comandos verbales." : "",
     descripcionExpresa,
   ].filter(Boolean).join(" ").trim();
 
-  return { resistencia, descripcion, detencion };
+  return { resistencia, descripcion, detencion, fuerzaFisica };
 }
 
 function dibujarTextoAjustado(
@@ -299,7 +304,7 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
   // no se marcan lesiones ni atención médica sin datos expresos.
   // Esta casilla pertenece al informe de uso de la fuerza, no al registro
   // general de detención. No marcarla sólo por existir una detención.
-  const fuerzaDocumentada = /\b(?:control f[ií]sico|sujeci[oó]n|candados? de mano|esposas|inmovilizaci[oó]n|forcejeo|uso de la fuerza|t[eé]cnica de control|reducci[oó]n f[ií]sica)\b/i.test(narrativa);
+  const fuerzaDocumentada = datos.fuerzaFisica;
   if (datos.detencion && fuerzaDocumentada) {
     page.drawText("X", {
       x: 247,
@@ -318,6 +323,7 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
 export function extraerCamposNarrativa(narrativa: string): {
   falta: string;
   lugar: string;
+  nombreOficial: string;
   conocimientoReporte: string;
   unidadPolicial: string;
   calle: string;
@@ -361,7 +367,7 @@ export function extraerCamposNarrativa(narrativa: string): {
   };
   const grupo = (re: RegExp): string => plano.match(re)?.[1]?.trim() ?? "";
   const horas: Record<string, string> = {};
-  const conocimiento = obtener("hora(?: de)? conocimiento|conocimiento") || grupo(/(?:recibi[oó]|recibimos|recib[ií])\s+a\s+las\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,120}(?:evento|reporte|llamada|aviso)/i) || grupo(/(?:a las|siendo las)\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,100}(?:reporte|llamada|tableta|radio)/i) || grupo(/(?:a las|siendo las)\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,120}(?:se recibi[oó]|recibimos|recib[ií])[^.]{0,80}(?:reporte|llamada|aviso)/i);
+  const conocimiento = obtener("hora(?: de)? conocimiento|conocimiento") || grupo(/(?:recibi[oó]|recibimos|recib[ií])\s+a\s+las\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,120}(?:evento|reporte|llamada|aviso)/i) || grupo(/(?:a las|siendo las)\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,100}(?:reporte|llamada|tableta|radio)/i) || grupo(/(?:a las|siendo las)\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,120}(?:se recibi[oó]|recibimos|recib[ií])[^.]{0,80}(?:reporte|llamada|aviso)/i) || grupo(/(?:observ[eé]|observamos|observ[oó]|me percat[eé])\s+directamente\s+(?:a las|siendo las)\s+([0-2]?\d:[0-5]\d)\b/i) || grupo(/(?:a las|siendo las)\s+([0-2]?\d:[0-5]\d)\s+horas?\s*(?:,\s*)?(?:observ[eé]|observamos|observ[oó]|me percat[eé])\s+directamente/i);
   const llegada = obtener("hora(?: de)? llegada|llegada al lugar") || grupo(/(?:arrib[eé]|lleg[uó]|arribo)\s+(?:al lugar\s+)?(?:a\s+las\s+)?([0-2]?\d:[0-5]\d)\s+horas?/i) || grupo(/(?:a las|siendo las)\s+([0-2]?\d:[0-5]\d)\s+horas?\s+(?:arrib[eé]|lleg[uó]|arribo)/i);
   const detencion = obtener("hora(?: de)? detenci[oó]n|detenci[oó]n") || grupo(/(?:la\s+)?detenci[oó]n\s+(?:se\s+realiz[oó]\s+)?(?:fue\s+)?a\s+las\s+([0-2]?\d:[0-5]\d)\s+horas?/i) || grupo(/(?:siendo las|a las)\s+([0-2]?\d:[0-5]\d)\s+horas?[^.]{0,120}(?:detenci[oó]n|detuvo|detener)/i);
   if (splitTime(conocimiento)) horas.conocimiento = conocimiento;
@@ -370,39 +376,43 @@ export function extraerCamposNarrativa(narrativa: string): {
 
   const reporte = grupo(/(?:se recibi[oó]|recibimos|recib[ií])[^.]{0,180}?(?:reporte|llamada|aviso)\s+(?:por|de)\s+([^.;]+)/i);
   const consumo = grupo(/(?:observ[eé]|observamos|se detect[oó])[^.]{0,100}?(persona[^.]{0,160}?(?:consumiendo|ingiriendo)[^.]+)/i);
-  const falta = obtener("probable infracci[oó]n|falta administrativa|infracci[oó]n") || reporte || consumo;
+  const hechoReportado = grupo(/\b(?:se reportaba|se report[oó]|reportaron)\s+(?:que\s+|a\s+)?([^.;]+?)(?=\s+(?:sobre|en)\s+(?:la\s+)?(?:calle|avenida|colonia|v[ií]a p[uú]blica)\b|[.;]|$)/i);
+  const hechoObservado = grupo(/\b(?:observ[eé]|observamos|observ[oó])\s+directamente\s+(?:a las\s+[0-2]?\d:[0-5]\d\s+horas?\s+)?(?:a\s+)?((?:una persona|un masculino|una femenina)\s+[^.;]+?)(?=\s+(?:sobre|en)\s+(?:la\s+)?(?:calle|avenida|colonia|v[ií]a p[uú]blica)\b|[.;]|$)/i);
+  const falta = obtener("probable infracci[oó]n|falta administrativa|infracci[oó]n") || hechoReportado || reporte || consumo || hechoObservado;
+  const nombreOficial = obtener("polic[ií]a responsable|nombre del oficial") ||
+    grupo(/\b(?:el suscrito|la suscrita)\s+(?:polic[ií]a(?:\s+(?:tercer[oa]|segund[oa]|primer[oa]|[123](?:[°ºªo])?))?|suboficial|oficial)\s+([\p{L}]+(?:[ '-][\p{L}]+){1,8})(?=\s*,|\s+(?:adscrit[oa]|a bordo)\b|[.;]|$)/iu);
 
   const lugarEtiquetado = obtener("lugar de los hechos|ubicaci[oó]n|domicilio de los hechos");
-  const textoUbicacion = lugarEtiquetado || plano;
+  const textoUbicacion = lugarEtiquetado || plano.replace(/\b(?:con domicilio|domiciliad[oa]s?\s+en|domicilio\s+(?:de la persona detenida|del detenido|particular))\b[^.;]*/gi, "");
   const planoUbicacion = textoUbicacion.replace(/\s+/g, " ").trim();
   const grupoUbicacion = (re: RegExp): string => planoUbicacion.match(re)?.[1]?.trim() ?? "";
-  const cruce = grupoUbicacion(/(?:intersecci[oó]n|cruce) de?\s*([^.;]+?)(?:,\s*colonia|,\s*col\.?|\s+colonia|\s+col\.|[.;]|$)/i) || grupo(/(?:intersecci[oó]n|cruce) de?\s*([^.;]+?)(?:,\s*colonia|,\s*col\.?|\s+colonia|\s+col\.|[.;]|$)/i);
+  const cruce = grupoUbicacion(/(?:intersecci[oó]n|cruce) de?\s*([^.;]+?)(?:,\s*colonia|,\s*col\.?|\s+colonia|\s+col\.|[.;]|$)/i) || grupoUbicacion(/(?:intersecci[oó]n|cruce) de?\s*([^.;]+?)(?:,\s*colonia|,\s*col\.?|\s+colonia|\s+col\.|[.;]|$)/i);
   // Un cruce identificado como "Calle A y B" permite llenar la calle y la
   // transversal sin confundirla con el domicilio de la persona detenida.
   const partesCruce = cruce.match(/^(?:(?:calle|avenida|av\\.?|boulevard|blvd\\.?)\\s+)?(.+?)\\s+(?:y|con|esquina con)\\s+((?:(?:calle|avenida|av\\.?|boulevard|blvd\\.?)\\s+)?[^,.;]+)$/i);
   const calleCruce = partesCruce?.[1]?.trim() ?? "";
   const transversalCruce = partesCruce?.[2]?.trim() ||
-    grupo(/(?:intersecci[oó]n|cruce)\s+de\s+(?:calle\s+)?[^,.;]+?\s+y\s+([^,.;]+?)(?=,\s*colonia|\s+colonia|[.;]|$)/i);
-  const colonia = grupoUbicacion(/\bcol(?:onia)?\.?\s+([^,.;]+?)(?=,|\s+(?:municipio|Chihuahua)|[.;]|$)/i) || grupo(/\bcol(?:onia)?\.?\s+([^,.;]+?)(?=,|\s+(?:municipio|Chihuahua)|[.;]|$)/i);
-  const calle = grupoUbicacion(/(?:\ben\s+la\s+|\ben\s+|\bsobre\s+)((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i) || grupoUbicacion(/(?:^|,\s*)((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i) || cruce || grupo(/(?:^|,\s*)((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i) || grupo(/(?:en|sobre|ubicado en)\s+(?:la intersecci[oó]n de )?((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i);
+    grupoUbicacion(/(?:intersecci[oó]n|cruce)\s+de\s+(?:calle\s+)?[^,.;]+?\s+y\s+([^,.;]+?)(?=,\s*colonia|\s+colonia|[.;]|$)/i);
+  const colonia = grupoUbicacion(/\bcol(?:onia)?\.?\s+([^,.;]+?)(?=,|\s+(?:municipio|Chihuahua)|[.;]|$)/i) || grupoUbicacion(/\bcol(?:onia)?\.?\s+([^,.;]+?)(?=,|\s+(?:municipio|Chihuahua)|[.;]|$)/i);
+  const calle = grupoUbicacion(/(?:\ben\s+la\s+|\ben\s+|\bsobre\s+)((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i) || grupoUbicacion(/(?:^|,\s*)((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i) || cruce || grupoUbicacion(/(?:^|,\s*)((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i) || grupoUbicacion(/(?:en|sobre|ubicado en)\s+(?:la intersecci[oó]n de )?((?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,.;]{3,100})/i);
   const ocurrenciasChihuahua = planoUbicacion.match(/\bChihuahua\b/gi)?.length ?? 0;
-  const municipio = grupo(/\bmunicipio de\s+([^,.;]+)/i) || (ocurrenciasChihuahua >= 1 ? "Chihuahua" : "");
+  const municipio = grupoUbicacion(/\bmunicipio de\s+([^,.;]+)/i) || (ocurrenciasChihuahua >= 1 ? "Chihuahua" : "");
   const entidadExplicita = obtener("entidad federativa|estado");
   const entidad = entidadExplicita || (/\bmunicipio de chihuahua\b/i.test(planoUbicacion) || /\bchihuahua\b/i.test(planoUbicacion) ? "Chihuahua" : "");
-  const latitud = grupo(/latitud\s*[:=]?\s*(-?\d{1,2}\.\d+)/i);
-  const longitud = grupo(/longitud\s*[:=]?\s*(-?\d{1,3}\.\d+)/i);
-  const numeroExterior = obtener("n[uú]mero exterior|no\\.? exterior") || grupo(/(?:n[uú]mero|no\.?)\s+ext\.?\s*[:#-]?\s*(\d+[a-zA-Z]?)/i) || grupoUbicacion(/(?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,;]{2,80}\s+(\d+[a-zA-Z]?)\s*(?=,|\bcolonia\b|$)/i);
-  const numeroInterior = obtener("n[uú]mero interior|no\\.? interior") || grupo(/(?:n[uú]mero|no\.?)\s+int\.?\s*[:#-]?\s*([a-zA-Z0-9-]+)/i);
-  const codigoPostal = obtener("c[oó]digo postal|C\\.?P\\.?") || grupo(/(?:c[oó]digo postal|C\.?P\.?)[\s:#-]*(\d{5})/i);
-  const entreCalle = obtener("entre calle|entre calles") || grupo(/entre calles?\s+([^,.;]+?)(?=\s+y calle|,|[.;]|$)/i);
-  const yCalle = obtener("y calle") || grupo(/\by calle\s+([^,.;]+)/i);
+  const latitud = grupoUbicacion(/latitud\s*[:=]?\s*(-?\d{1,2}\.\d+)/i);
+  const longitud = grupoUbicacion(/longitud\s*[:=]?\s*(-?\d{1,3}\.\d+)/i);
+  const numeroExterior = obtener("n[uú]mero exterior|no\\.? exterior") || grupoUbicacion(/(?:n[uú]mero|no\.?)\s+ext\.?\s*[:#-]?\s*(\d+[a-zA-Z]?)/i) || grupoUbicacion(/(?:calle|avenida|av\.?|boulevard|blvd\.?|carretera)\s+[^,;]{2,80}\s+(\d+[a-zA-Z]?)\s*(?=,|\bcolonia\b|$)/i);
+  const numeroInterior = obtener("n[uú]mero interior|no\\.? interior") || grupoUbicacion(/(?:n[uú]mero|no\.?)\s+int\.?\s*[:#-]?\s*([a-zA-Z0-9-]+)/i);
+  const codigoPostal = obtener("c[oó]digo postal|C\\.?P\\.?") || grupoUbicacion(/(?:c[oó]digo postal|C\.?P\.?)[\s:#-]*(\d{5})/i);
+  const entreCalle = obtener("entre calle|entre calles") || grupoUbicacion(/entre calles?\s+([^,.;]+?)(?=\s+y calle|,|[.;]|$)/i);
+  const yCalle = obtener("y calle") || grupoUbicacion(/\by calle\s+([^,.;]+)/i);
   const fechaNumerica = grupo(/(?:fecha(?: de los hechos)?|el d[ií]a|d[ií]a)\s*[:,-]?\s*(\d{1,2}[/-]\d{1,2}[/-]\d{4})/i);
   const meses: Record<string, string> = { enero: "01", febrero: "02", marzo: "03", abril: "04", mayo: "05", junio: "06", julio: "07", agosto: "08", septiembre: "09", octubre: "10", noviembre: "11", diciembre: "12" };
-  const fechaEscrita = plano.match(/(?:\bfecha\s+|\bel\s+|\bd[ií]a\s+)?(\d{1,2})\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+de\s+(\d{4})\b/i);
+  const fechaEscrita = plano.match(/(?:\bfecha(?: de los hechos)?\s+|\bel d[ií]a\s+|(?:^|[.;]\s*)el\s+)(\d{1,2})\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+de\s+(\d{4})\b/i);
   const fechaGeneral = fechaNumerica || (fechaEscrita ? `${fechaEscrita[1]}/${meses[fechaEscrita[2].toLowerCase()]}/${fechaEscrita[3]}` : "");
   const fechaConocimiento = obtener("fecha de conocimiento|fecha del reporte") || fechaGeneral;
   const fechaArribo = obtener("fecha de arribo|fecha de llegada") || fechaGeneral;
-  const fechaDetencion = obtener("fecha de detenci[oó]n") || fechaGeneral;
+  const fechaDetencion = obtener("fecha de detenci[oó]n") || (horas.detencion ? fechaGeneral : "");
   const unidadPolicial = obtener("n[uú]mero de unidad|unidad policial|unidad|patrulla") || grupo(/(?:unidad|patrulla)\s*(?:n[uú]mero|n[uú]m\.?|no\.?|#)?\s*[:#-]?\s*([A-Z0-9-]{2,12})\b/i) || grupo(/\ba\s+bordo\s+de\s+la\s+unidad\s+([A-Z0-9-]{2,12})\b/i);
   const tipoConocimiento: "llamada" | "presencia" | "queja" | "otro" | "" =
     /(?:llamada(?:\s+(?:de emergencia|al\s*911))?|reporte\s+(?:por|a trav[eé]s de|en|a)\s+(?:radio|tableta|tel[eé]fono)|(?:evento|reporte|aviso)[^.;]{0,65}(?:tableta|911)|(?:tableta|911)[^.;]{0,65}(?:evento|reporte|aviso)|por (?:radio|tableta|tel[eé]fono)[^.;]{0,40}reporte|cabina|911)/i.test(plano) ? "llamada" :
@@ -438,7 +448,7 @@ export function extraerCamposNarrativa(narrativa: string): {
   const autoridadRecibe = obtener("juez o autoridad competente que recibe|autoridad que recibe|persona que recibe");
   const lugar = lugarEtiquetado || [calle, numeroExterior && !new RegExp(`\\b${numeroExterior}\\b`).test(calle) ? numeroExterior : "", colonia && `colonia ${colonia}`, municipio].filter(Boolean).join(", ");
   return {
-    falta, lugar, conocimientoReporte: reporte, unidadPolicial, calle: calleCruce || calle, cruce, colonia, municipio, entidad,
+    falta, lugar, nombreOficial, conocimientoReporte: reporte, unidadPolicial, calle: calleCruce || calle, cruce, colonia, municipio, entidad,
     latitud, longitud, numeroExterior, numeroInterior, codigoPostal, entreCalle, yCalle: yCalle || transversalCruce,
     fechaConocimiento, fechaArribo, fechaDetencion, tipoConocimiento, tipoLugar, horas,
     nombreDetenido, aliasDetenido, sexoDetenido, fechaNacimientoDetenido, nacionalidadDetenido,
@@ -531,7 +541,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   // SECCIÓN 1.1: la pantalla solicita nombre y placa. Cuando hay cuatro o más
   // palabras, se usa la convención mexicana: dos apellidos al final y nombres al inicio.
   // Si el formato es ambiguo, se conserva completo en Nombre(s), sin adivinar.
-  const oficialCapturado = normalizarTexto(props.oficial).trim();
+  const oficialCapturado = normalizarTexto(props.oficial).trim() || extraidos.nombreOficial;
   const placaMatch = oficialCapturado.match(/(?:n[uú]mero de placa|no\.?\s*de placa|placa)\s*[:#-]?\s*([A-Za-z0-9-]+)/i);
   const nombreOficial = oficialCapturado.replace(/[,;]?\s*(?:n[uú]mero de placa|no\.?\s*de placa|placa)\s*[:#-]?\s*[A-Za-z0-9-]+/i, "").trim();
   const tokensOficial = nombreOficial.split(/\s+/).filter(Boolean);
@@ -651,12 +661,12 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   // SECCIÓN 3.1: las horas de arribo van en las casillas de la izquierda,
   // no en las coordenadas de la hora de conocimiento de la sección 2.
   drawDate(page1, extraidos.fechaArribo, 133, 126, 11.5, font);
-  // Minutos de arribo: cada dígito en su propia casilla del formato.
+  // Los minutos de arribo se imprimen juntos.
   const arriboSeparado = splitTime(horas.llegada);
   if (arriboSeparado) {
     page1.drawText(arriboSeparado.hours, { x: 426, y: 126, size: 7.3, font, color: rgb(0.05, 0.05, 0.05) });
-    page1.drawText(arriboSeparado.minutes[0], { x: 449, y: 126, size: 7.3, font, color: rgb(0.05, 0.05, 0.05) });
-    page1.drawText(arriboSeparado.minutes[1], { x: 461, y: 126, size: 7.3, font, color: rgb(0.05, 0.05, 0.05) });
+    page1.drawText(arriboSeparado.minutes, { x: 449, y: 126, size: 7.3, font, color: rgb(0.05, 0.05, 0.05) });
+
   }
   drawDate(page3Detencion, extraidos.fechaDetencion, 124, 98, 11.5, font);
   drawTime(page3Detencion, horas.detencion, 357, 392, 98, font);
@@ -771,7 +781,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     const colonia = valor.match(/\bcolonia\s+([^,.;]+)/i)?.[1] || "";
     return { calle: normalizarComponente(match[1]), numero: match[2], colonia: normalizarComponente(colonia) };
   };
-  const direccionHechos = extraerDireccionComparable(lugar) || extraerDireccionComparable(props.narrativa);
+  const direccionHechos = extraerDireccionComparable(lugar);
   const direccionDetencion = extraerDireccionComparable(extraidos.lugarDetencion);
   const ubicacionesComparables = Boolean(direccionHechos && direccionDetencion);
   const mismoLugar = Boolean(direccionHechos && direccionDetencion &&
@@ -822,12 +832,9 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   drawDate(pages[3], extraidos.fechaEntrega, 159, 603, 11.5, font);
   drawTime(pages[3], extraidos.horaEntrega, 403, 426, 606, font);
 
-  // Identidad del suscrito sólo si la narrativa indica que intervino y trasladó.
-  const entregaPorSuscrito = /\b(?:el suscrito|la suscrita)\b/i.test(props.narrativa) &&
-    /\b(?:traslad[eé]|trasladamos|present[eé]|entregu[eé])\b/i.test(props.narrativa);
-  // Acuerdo operativo: por defecto entrega el policía responsable del IPH;
-  // si la narrativa identifica a otro elemento, prevalece ese dato.
-  const policiaEntrega = extraidos.policiaEntrega.trim() || nombreOficial;
+  const huboEntrega = Boolean(extraidos.fechaEntrega || extraidos.horaEntrega || extraidos.policiaEntrega ||
+    extraidos.autoridadRecibe || /\b(?:fue|qued[oó])\s+(?:presentad[oa]|entregad[oa]|puest[oa]\s+a\s+disposici[oó]n)\b/i.test(props.narrativa));
+  const policiaEntrega = extraidos.policiaEntrega.trim() || (huboEntrega ? nombreOficial : "");
   const partesPoliciaEntrega = policiaEntrega.split(/\s+/).filter(Boolean);
   if (partesPoliciaEntrega.length >= 4) {
     drawWrappedValue(pages[3], partesPoliciaEntrega[partesPoliciaEntrega.length - 2], font, {
@@ -857,12 +864,13 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     x: 360, y: 544, width: 190, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   // No inventar nombre de receptor; sólo datos institucionales solicitados.
-  drawWrappedValue(pages[3], extraidos.autoridadEntrega, font, {
+  drawWrappedValue(pages[3], huboEntrega && /juzgado c[ií]vico municipal de chihuahua/i.test(extraidos.autoridadEntrega)
+    ? "Juzgado Cívico Municipal Chihuahua, Chihuahua" : extraidos.autoridadEntrega, font, {
     x: 360, y: 536, width: 190, maxLines: 1, fontSize: 6.4, lineHeight: 7,
   });
   // Acuerdo operativo: cargo institucional predeterminado del receptor.
   // El nombre de la persona que recibe permanece vacío si no se identifica.
-  drawWrappedValue(pages[3], "Oficial de Acuerdos", font, {
+  drawWrappedValue(pages[3], huboEntrega ? "Oficial de Acuerdos" : "", font, {
     x: 360, y: 519, width: 190, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
 
