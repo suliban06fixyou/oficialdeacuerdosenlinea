@@ -114,6 +114,15 @@ function drawDate(
   });
 }
 
+function dibujarNumeroExterior(page: PDFPage, numero: string, primerCentro: number, y: number, font: PDFFont) {
+  const size = 6.8;
+  [...numero].slice(0, 5).forEach((caracter, index) => {
+    const centro = primerCentro + index * 12;
+    const x = centro - font.widthOfTextAtSize(caracter, size) / 2;
+    page.drawText(caracter, { x, y, size, font, color: rgb(0.05, 0.05, 0.05) });
+  });
+}
+
 function marcar(page: PDFPage, x: number, y: number, font: PDFFont) {
   page.drawText("X", { x, y, size: 7.2, font, color: rgb(0.05, 0.05, 0.05) });
 }
@@ -279,20 +288,13 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
     x: 39, topY: 608, bottomY: 563, width: page.getWidth() - 90, maxSize: 6.4, minSize: 4.4,
   });
 
-  // Respuestas negativas únicamente cuando la narrativa las consigna.
-  // "No se observaron lesiones visibles" describe ausencia de lesiones observadas,
-  // no una valoración médica concluyente.
-  if (/\bno\s+(?:se\s+)?(?:observaron|reportaron|presentaron)\s+lesiones\s+visibles\b/i.test(narrativa) &&
-      /\b(?:persona detenida|detenido|detenida)\b/i.test(narrativa) &&
-      /\b(?:oficial interviniente|polic[ií]a interviniente)\b/i.test(narrativa)) {
+  // Atribuir la ausencia de lesiones únicamente al sujeto de la misma declaración.
+  const ausenciaLesiones = [...narrativa.matchAll(/\bno\s+(?:se\s+)?(?:observaron|reportaron|presentaron)\s+lesiones(?:\s+visibles)?\s+(?:en|a)\s+([^.!?;\n]+)/gi)]
+    .map((coincidencia) => coincidencia[1]);
+  if (ausenciaLesiones.some((sujetos) => /\b(?:oficial|polic[ií]a|agente|autoridad)(?:es)?\b/i.test(sujetos))) {
     marcar(page, 274, 523, font);
-    marcar(page, 529, 523, font);
   }
-  // Ausencia observada de lesiones, sin afirmar una valoración médica.
-  if (/\bno\s+se\s+observaron\s+lesiones\b/i.test(narrativa) &&
-      /\b(?:detenci[oó]n|detenid[oa])\b/i.test(narrativa) &&
-      /\b(?:polic[ií]a|oficial|suscrito)\b/i.test(narrativa)) {
-    marcar(page, 274, 523, font);
+  if (ausenciaLesiones.some((sujetos) => /\b(?:persona\s+detenida|detenid[oa]s?|ciudadan[oa]s?)\b/i.test(sujetos))) {
     marcar(page, 529, 523, font);
   }
   if (/\bno\s+(?:fue|result[oó])\s+necesaria\s+(?:la\s+)?asistencia\s+m[eé]dica\b/i.test(narrativa)) {
@@ -566,7 +568,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   drawWrappedValue(page1, gradoPolicial, font, { x: 205, y: 574, width: 315, maxLines: 1, fontSize: 7, lineHeight: 8 });
   // No sobreescribir el grado/cargo con el número de placa.
   // Este generador está destinado al IPH de Policía Municipal de Chihuahua.
-  marcar(page1, 506, 535, font);
+  marcar(page1, 505, 536, font);
   drawWrappedValue(page1, extraidos.unidadPolicial, font, { x: 395, y: 558, width: 155, maxLines: 1, fontSize: 7, lineHeight: 8 });
   // Adscripción de esta instancia municipal, no ubicación inferida de la detención.
   drawWrappedValue(page1, "Chihuahua", font, { x: 43, y: 486, width: 215, maxLines: 1, fontSize: 7, lineHeight: 8 });
@@ -612,12 +614,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   drawWrappedValue(page2Narrativa, geo.colonia, font, {
     x: 190, y: 738, width: 360, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
-  // El número exterior ocupa casillas individuales; un dígito por casilla.
-  [...geo.numeroExterior].slice(0, 5).forEach((digito, i) => {
-    const centroCasilla = 111 + i * 12;
-    const anchoDigito = font.widthOfTextAtSize(digito, 6.8);
-    page2Narrativa.drawText(digito, { x: centroCasilla - anchoDigito / 2, y: 722, size: 6.8, font, color: rgb(0.05, 0.05, 0.05) });
-  });
+  dibujarNumeroExterior(page2Narrativa, geo.numeroExterior, 106, 724, font);
   drawWrappedValue(page2Narrativa, geo.numeroInterior, font, {
     x: 111, y: 706, width: 42, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
@@ -644,11 +641,11 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   });
 
   // SECCIÓN 2.1: marcar la vía de conocimiento sólo cuando la narrativa la identifica.
-  if (extraidos.tipoConocimiento === "llamada") marcar(page1, 90, 412, font);
-  if (extraidos.tipoConocimiento === "presencia") marcar(page1, 90, 401, font);
-  if (extraidos.tipoConocimiento === "queja") marcar(page1, 90, 390, font);
-  if (extraidos.tipoConocimiento === "otro") marcar(page1, 90, 379, font);
-  drawDate(page1, extraidos.fechaConocimiento, 457, 420, 11.8, font);
+  if (extraidos.tipoConocimiento === "llamada") marcar(page1, 89, 413, font);
+  if (extraidos.tipoConocimiento === "presencia") marcar(page1, 89, 402, font);
+  if (extraidos.tipoConocimiento === "queja") marcar(page1, 89, 391, font);
+  if (extraidos.tipoConocimiento === "otro") marcar(page1, 89, 380, font);
+  drawDate(page1, extraidos.fechaConocimiento, 457, 422, 12.1, font);
   // Cada dígito ocupa su propia casilla en la hora de conocimiento.
   const horaConocimiento = splitTime(horas.conocimiento);
   if (horaConocimiento) {
@@ -660,7 +657,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
 
   // SECCIÓN 3.1: las horas de arribo van en las casillas de la izquierda,
   // no en las coordenadas de la hora de conocimiento de la sección 2.
-  drawDate(page1, extraidos.fechaArribo, 133, 126, 11.5, font);
+  drawDate(page1, extraidos.fechaArribo, 135, 128, 11.7, font);
   // Los minutos de arribo se imprimen juntos.
   const arriboSeparado = splitTime(horas.llegada);
   if (arriboSeparado) {
@@ -668,12 +665,12 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     page1.drawText(arriboSeparado.minutes, { x: 449, y: 126, size: 7.3, font, color: rgb(0.05, 0.05, 0.05) });
 
   }
-  drawDate(page3Detencion, extraidos.fechaDetencion, 124, 98, 11.5, font);
-  drawTime(page3Detencion, horas.detencion, 357, 392, 98, font);
+  drawDate(page3Detencion, extraidos.fechaDetencion, 124, 100, 11.5, font);
+  drawTime(page3Detencion, horas.detencion, 357, 392, 100, font);
 
   // SECCIÓN 3.2: marcar únicamente el tipo de lugar expresamente identificable.
   if (extraidos.tipoLugar === "hogar") marcar(page1, 42, 83, font);
-  if (extraidos.tipoLugar === "viaPublica") marcar(page1, 157, 83, font);
+  if (extraidos.tipoLugar === "viaPublica") marcar(page1, 160, 83, font);
   if (extraidos.tipoLugar === "transporte") marcar(page1, 328, 83, font);
   if (extraidos.tipoLugar === "taxi") marcar(page1, 472, 83, font);
   if (extraidos.tipoLugar === "metro") marcar(page1, 509, 83, font);
@@ -689,7 +686,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
 
   // SECCIÓN 6.1: datos de la persona detenida. Sólo se imprimen valores
   // que aparezcan expresamente etiquetados en la narrativa.
-  if (extraerDatosUsoFuerza(props.narrativa).detencion) marcar(page3Detencion, 147, 400, font);
+  if (extraerDatosUsoFuerza(props.narrativa).detencion) marcar(page3Detencion, 149, 401, font);
   const nombreDetenido = extraidos.nombreDetenido.trim();
   const partesDetenido = nombreDetenido.split(/\s+/).filter(Boolean);
   if (partesDetenido.length >= 4) {
@@ -719,8 +716,8 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
       return dia + "/" + String(meses.indexOf(mes.toLowerCase()) + 1).padStart(2, "0") + "/" + anio;
     },
   );
-  drawDate(page3Detencion, fechaNacimiento, 357, 294, 11.5, font);
-  if (/mexican/i.test(extraidos.nacionalidadDetenido)) marcar(page3Detencion, 151, 267, font);
+  drawDate(page3Detencion, fechaNacimiento, 357, 300, 11.5, font);
+  if (/mexican/i.test(extraidos.nacionalidadDetenido)) marcar(page3Detencion, 153, 269, font);
   if (/extranj/i.test(extraidos.nacionalidadDetenido)) marcar(page3Detencion, 214, 267, font);
   drawWrappedValue(page3Detencion, extraidos.curpDetenido, font, {
     x: 344, y: 267, width: 210, maxLines: 1, fontSize: 6.3, lineHeight: 7,
@@ -746,9 +743,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   drawWrappedValue(page3Detencion, domicilioDetenido.colonia, font, {
     x: 172, y: 208, width: 378, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
-  drawWrappedValue(page3Detencion, domicilioDetenido.numeroExterior, font, {
-    x: 111, y: 190, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
-  });
+  dibujarNumeroExterior(page3Detencion, domicilioDetenido.numeroExterior, 115, 193, font);
   drawWrappedValue(page3Detencion, domicilioDetenido.numeroInterior, font, {
     x: 111, y: 173, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
@@ -789,8 +784,8 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
     direccionHechos.numero === direccionDetencion.numero &&
     (!direccionHechos.colonia || !direccionDetencion.colonia || direccionHechos.colonia === direccionDetencion.colonia));
   const lugarDetencionComparar = extraidos.lugarDetencion.trim();
-  if (mismoLugar) marcar(page3Detencion, 282, 73, font);
-  else if (ubicacionesComparables) marcar(page3Detencion, 426, 73, font);
+  if (mismoLugar) marcar(page3Detencion, 284, 75, font);
+  else if (ubicacionesComparables) marcar(page3Detencion, 427, 75, font);
 
   // SECCIÓN 6.4: ubicación de detención distinta del lugar de los hechos.
   // No se copia automáticamente el lugar original: debe aparecer etiquetada como lugar de detención.
@@ -802,9 +797,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   drawWrappedValue(pages[3], lugarDetencion.colonia, font, {
     x: 172, y: 733, width: 378, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
-  drawWrappedValue(pages[3], lugarDetencion.numeroExterior, font, {
-    x: 111, y: 716, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
-  });
+  dibujarNumeroExterior(pages[3], lugarDetencion.numeroExterior, 110, 719, font);
   drawWrappedValue(pages[3], lugarDetencion.numeroInterior, font, {
     x: 111, y: 702, width: 42, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
@@ -829,8 +822,8 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   drawWrappedValue(pages[3], extraidos.autoridadEntrega, font, {
     x: 195, y: 622, width: 355, maxLines: 1, fontSize: 6.8, lineHeight: 8,
   });
-  drawDate(pages[3], extraidos.fechaEntrega, 159, 603, 11.5, font);
-  drawTime(pages[3], extraidos.horaEntrega, 403, 426, 606, font);
+  drawDate(pages[3], extraidos.fechaEntrega, 159, 605, 11.5, font);
+  drawTime(pages[3], extraidos.horaEntrega, 402, 425, 609, font);
 
   const huboEntrega = Boolean(extraidos.fechaEntrega || extraidos.horaEntrega || extraidos.policiaEntrega ||
     extraidos.autoridadRecibe || /\b(?:fue|qued[oó])\s+(?:presentad[oa]|entregad[oa]|puest[oa]\s+a\s+disposici[oó]n)\b/i.test(props.narrativa));
@@ -838,13 +831,13 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   const partesPoliciaEntrega = policiaEntrega.split(/\s+/).filter(Boolean);
   if (partesPoliciaEntrega.length >= 4) {
     drawWrappedValue(pages[3], partesPoliciaEntrega[partesPoliciaEntrega.length - 2], font, {
-      x: 106, y: 570, width: 171, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+      x: 106, y: 572, width: 171, maxLines: 1, fontSize: 6.5, lineHeight: 7,
     });
     drawWrappedValue(pages[3], partesPoliciaEntrega[partesPoliciaEntrega.length - 1], font, {
-      x: 106, y: 557, width: 171, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+      x: 106, y: 559, width: 171, maxLines: 1, fontSize: 6.5, lineHeight: 7,
     });
     drawWrappedValue(pages[3], partesPoliciaEntrega.slice(0, -2).join(" "), font, {
-      x: 106, y: 544, width: 171, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+      x: 106, y: 546, width: 171, maxLines: 1, fontSize: 6.5, lineHeight: 7,
     });
   } else {
     drawWrappedValue(pages[3], policiaEntrega, font, {
@@ -853,25 +846,25 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   }
   if (policiaEntrega) {
     drawWrappedValue(pages[3], "Dirección de Seguridad Pública Municipal de Chihuahua", font, {
-      x: 106, y: 536, width: 180, maxLines: 1, fontSize: 6.0, lineHeight: 7,
+      x: 106, y: 537, width: 180, maxLines: 1, fontSize: 6.6, lineHeight: 7,
     });
     drawWrappedValue(pages[3], gradoPolicial, font, {
-      x: 106, y: 519, width: 170, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+      x: 106, y: 521, width: 170, maxLines: 1, fontSize: 6.5, lineHeight: 7,
     });
   }
   // Si se identifica a quien recibe, conservar su nombre sin confundirlo con el cargo.
   drawWrappedValue(pages[3], extraidos.autoridadRecibe, font, {
-    x: 360, y: 544, width: 190, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 360, y: 546, width: 190, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
   // No inventar nombre de receptor; sólo datos institucionales solicitados.
   drawWrappedValue(pages[3], huboEntrega && /juzgado c[ií]vico municipal de chihuahua/i.test(extraidos.autoridadEntrega)
     ? "Juzgado Cívico Municipal Chihuahua, Chihuahua" : extraidos.autoridadEntrega, font, {
-    x: 360, y: 536, width: 190, maxLines: 1, fontSize: 6.4, lineHeight: 7,
+    x: 360, y: 537, width: 190, maxLines: 1, fontSize: 7.0, lineHeight: 7,
   });
   // Acuerdo operativo: cargo institucional predeterminado del receptor.
   // El nombre de la persona que recibe permanece vacío si no se identifica.
   drawWrappedValue(pages[3], huboEntrega ? "Oficial de Acuerdos" : "", font, {
-    x: 360, y: 519, width: 190, maxLines: 1, fontSize: 6.5, lineHeight: 7,
+    x: 360, y: 521, width: 190, maxLines: 1, fontSize: 6.5, lineHeight: 7,
   });
 
   return pdf.save();
