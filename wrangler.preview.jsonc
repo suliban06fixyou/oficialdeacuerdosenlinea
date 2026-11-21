@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "oficialdeacuerdosenlinea-iph-pruebas",
+  "compatibility_date": "2026-08-16",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "@tanstack/react-start/server-entry",
+  "observability": {
+    "enabled": true
+  },
+  "secrets": {
+    "required": ["OPENAI_API_KEY"]
+  },
+  "ratelimits": [
+    {
+      "name": "IPH_RATE_LIMITER",
+      "namespace_id": "2026082001",
+      "simple": {
+        "limit": 10,
+        "period": 60
+      }
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "oficial-acuerdos-pruebas-iph",
+      "database_id": "aa9f4a63-1dcc-48d4-a0e2-cf2467fbba3b"
+    }
+  ]
+}
