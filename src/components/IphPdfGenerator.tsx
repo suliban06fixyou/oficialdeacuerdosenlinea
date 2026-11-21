@@ -243,8 +243,8 @@ export function extraerDatosUsoFuerza(narrativa: string): { resistencia: string;
   const hayActuacion = detencion || fuerzaFisica;
   const descripcion = [
     hayActuacion && !/presencia policial/i.test(descripcionExpresa) ? "Presencia policial." : "",
-    hayActuacion && !/comandos? verbales?|instrucciones? verbales?|verbalizaci[oó]n/i.test(descripcionExpresa) ? "Verbalización y comandos verbales." : "",
-    descripcionExpresa,
+    hayActuacion ? "Comandos verbales." : "",
+    descripcionExpresa.replace(/\b(?:comandos? verbales?|instrucciones? verbales?)\b[.,;]?/gi, "").replace(/\s+/g, " ").trim(),
   ].filter(Boolean).join(" ").trim();
 
   return { resistencia, descripcion, detencion, fuerzaFisica };
@@ -304,10 +304,9 @@ function dibujarUsoFuerza(page: PDFPage, narrativa: string, font: PDFFont) {
   // Marcar "Detención(es)" cuando la narrativa menciona expresamente una detención.
   // La descripción general consigna comandos verbales y candados de mano conforme a la regla acordada;
   // no se marcan lesiones ni atención médica sin datos expresos.
-  // Esta casilla pertenece al informe de uso de la fuerza, no al registro
-  // general de detención. No marcarla sólo por existir una detención.
-  const fuerzaDocumentada = datos.fuerzaFisica;
-  if (datos.detencion && fuerzaDocumentada) {
+  // Presencia policial y comandos verbales forman parte de la intervención documentada.
+  // No se infiere fuerza física ni maniobras adicionales.
+  if (datos.detencion && datos.descripcion) {
     page.drawText("X", {
       x: 247,
       y: 555,
@@ -568,7 +567,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   drawWrappedValue(page1, gradoPolicial, font, { x: 205, y: 574, width: 315, maxLines: 1, fontSize: 7, lineHeight: 8 });
   // No sobreescribir el grado/cargo con el número de placa.
   // Este generador está destinado al IPH de Policía Municipal de Chihuahua.
-  marcar(page1, 505, 536, font);
+  marcar(page1, 505, 533, font);
   drawWrappedValue(page1, extraidos.unidadPolicial, font, { x: 395, y: 558, width: 155, maxLines: 1, fontSize: 7, lineHeight: 8 });
   // Adscripción de esta instancia municipal, no ubicación inferida de la detención.
   drawWrappedValue(page1, "Chihuahua", font, { x: 43, y: 486, width: 215, maxLines: 1, fontSize: 7, lineHeight: 8 });
@@ -645,7 +644,7 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   if (extraidos.tipoConocimiento === "presencia") marcar(page1, 89, 402, font);
   if (extraidos.tipoConocimiento === "queja") marcar(page1, 89, 391, font);
   if (extraidos.tipoConocimiento === "otro") marcar(page1, 89, 380, font);
-  drawDate(page1, extraidos.fechaConocimiento, 457, 422, 12.1, font);
+  drawDate(page1, extraidos.fechaConocimiento, 457, 419, 12.1, font);
   // Cada dígito ocupa su propia casilla en la hora de conocimiento.
   const horaConocimiento = splitTime(horas.conocimiento);
   if (horaConocimiento) {
@@ -691,17 +690,17 @@ export async function generarPdf(props: Props): Promise<Uint8Array> {
   const partesDetenido = nombreDetenido.split(/\s+/).filter(Boolean);
   if (partesDetenido.length >= 4) {
     drawWrappedValue(page3Detencion, partesDetenido[partesDetenido.length - 2], font, {
-      x: 42, y: 362, width: 145, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+      x: 42, y: 365, width: 145, maxLines: 1, fontSize: 6.8, lineHeight: 8,
     });
     drawWrappedValue(page3Detencion, partesDetenido[partesDetenido.length - 1], font, {
-      x: 204, y: 362, width: 145, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+      x: 204, y: 365, width: 145, maxLines: 1, fontSize: 6.8, lineHeight: 8,
     });
     drawWrappedValue(page3Detencion, partesDetenido.slice(0, -2).join(" "), font, {
-      x: 368, y: 362, width: 180, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+      x: 368, y: 365, width: 180, maxLines: 1, fontSize: 6.8, lineHeight: 8,
     });
   } else if (nombreDetenido) {
     drawWrappedValue(page3Detencion, nombreDetenido, font, {
-      x: 368, y: 362, width: 180, maxLines: 1, fontSize: 6.8, lineHeight: 8,
+      x: 368, y: 365, width: 180, maxLines: 1, fontSize: 6.8, lineHeight: 8,
     });
   }
   drawWrappedValue(page3Detencion, extraidos.aliasDetenido, font, {
